@@ -61,11 +61,16 @@ func TestAccDCNMInventory_Update(t *testing.T) {
 func testAccCheckDCNMInventoryConfig_basic(ip string) string {
 	return fmt.Sprintf(`
 	resource "dcnm_inventory" "test" {
-		fabric_name = "fab1"
-		username    = "admin"
-		password    = "ins3965!"
-		ip          = "%s"
-	  }
+		fabric_name = "fab2"
+		switch_config {
+			username      = "admin"
+			password      = "ins3965!"
+			ip            = "%s"
+			preserve_config = "false"
+			config_timeout = 10
+			role = "leaf"
+		}
+	}
 	`, ip)
 }
 

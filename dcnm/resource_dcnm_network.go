@@ -451,11 +451,16 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 
-	cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/segments/ids", fabricName))
-	if err != nil {
-		return err
+	var segID string
+	if nid, ok := d.GetOk("network_id"); ok {
+		segID = nid.(string)
+	} else {
+		cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/segments/ids", fabricName))
+		if err != nil {
+			return err
+		}
+		segID = cont.S("segmentId").String()
 	}
-	segID := cont.S("segmentId").String()
 
 	network := models.Network{}
 	networkProfile := models.NetworkProfileConfig{}

@@ -88,6 +88,21 @@ func getRemoteSwitchforDS(dcnmClient *client.Client, fabric, name string) (*cont
 	return nil, fmt.Errorf("Desired switch not found")
 }
 
+func setSwitchAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+
+	d.Set("ip", stripQuotes(cont.S("ipAddress").String()))
+	d.Set("fabric_name", stripQuotes(cont.S("fabricName").String()))
+	d.Set("switch_name", stripQuotes(cont.S("logicalName").String()))
+	d.Set("switch_db_id", stripQuotes(cont.S("switchDbID").String()))
+	d.Set("serial_number", stripQuotes(cont.S("serialNumber").String()))
+	d.Set("model", stripQuotes(cont.S("model").String()))
+	d.Set("mode", stripQuotes(cont.S("mode").String()))
+
+	d.SetId(stripQuotes(cont.S("ipAddress").String()))
+
+	return d
+}
+
 func datasourceDCNMInventoryRead(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Read method ")
 

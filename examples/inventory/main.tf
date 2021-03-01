@@ -6,11 +6,13 @@ provider "dcnm" {
 }
 
 resource "dcnm_inventory" "first" {
-  fabric_name   = "fab1"
-  username      = "username"
-  password      = "password"
-  ip            = "172.25.74.93"
-  max_hops      = 0
-  auth_protocol = 0
-  deploy        = true
+  fabric_name   = "fab2"
+  switch_config {
+    username      = ""
+    password      = ""
+    ip            = ""
+    preserve_config = "false"
+    config_timeout = 10
+    role = "leaf"
+  }
 }
