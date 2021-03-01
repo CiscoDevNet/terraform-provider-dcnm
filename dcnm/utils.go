@@ -1,6 +1,7 @@
 package dcnm
 
 import (
+	"hash/crc32"
 	"reflect"
 	"sort"
 	"strings"
@@ -66,4 +67,40 @@ func compareStrLists(first, second []string) bool {
 		return true
 	}
 	return false
+}
+
+func contains(s []interface{}, e string) bool {
+	for _, a := range s {
+		if a.(string) == e {
+			return true
+		}
+	}
+	return false
+}
+
+func hashString(s string) int {
+	v := int(crc32.ChecksumIEEE([]byte(s)))
+	if v >= 0 {
+		return v
+	}
+	if -v >= 0 {
+		return -v
+	}
+	// v == MinInt
+	return 0
+}
+
+func setDifference(a, b []string) (diff []string) {
+	m := make(map[string]bool)
+
+	for _, item := range b {
+		m[item] = true
+	}
+
+	for _, item := range a {
+		if _, ok := m[item]; !ok {
+			diff = append(diff, item)
+		}
+	}
+	return
 }
