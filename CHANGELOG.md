@@ -1,3 +1,10 @@
+## 0.0.3 (March 2, 2021)
+
+IMPROVEMENTS:
+- Removed computed from description for interface resource.
+- Don't delete the ethernet interfaces
+- Added handling for the safe destroy for vrf and network resource.
+
 ## 0.0.2 (March 1, 2021)
 
 IMPROVEMENTS:
