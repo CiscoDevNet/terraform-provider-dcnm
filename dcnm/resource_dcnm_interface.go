@@ -301,7 +301,6 @@ func resourceDCNMInterface() *schema.Resource {
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"configuration": &schema.Schema{
@@ -1310,7 +1309,10 @@ func resourceDCNMInterfaceDelete(d *schema.ResourceData, m interface{}) error {
 	intfType := d.Get("type").(string)
 
 	if intfType == "ethernet" {
-		return fmt.Errorf("Interface of type Ethernet can not be deleted")
+		d.SetId("")
+
+		log.Println("[DEBUG] End of Delete method ")
+		return nil
 	}
 
 	intfDel := models.InterfaceDelete{}
