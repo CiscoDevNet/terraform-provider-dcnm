@@ -592,7 +592,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(60 * time.Second)
 
 		} else {
 			d.Set("deploy", false)
@@ -781,7 +781,7 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(60 * time.Second)
 
 		} else {
 			d.Set("deploy", false)
@@ -889,7 +889,7 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(60 * time.Second)
 		}
 	}
 
