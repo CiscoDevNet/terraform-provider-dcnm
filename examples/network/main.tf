@@ -8,6 +8,7 @@ provider "dcnm" {
 resource "dcnm_network" "first" {
   fabric_name     = "fab2"
   name            = "first"
+  network_id      = "1234"
   description     = "first network from terraform"
   vrf_name        = "VRF1012"
   l2_only_flag    = false
