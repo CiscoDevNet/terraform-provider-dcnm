@@ -1,3 +1,8 @@
+## 0.0.4 (March 10, 2021)
+
+IMPROVEMENTS:
+- Added network_id to docs and examples.
+
 ## 0.0.3 (March 2, 2021)
 
 IMPROVEMENTS:
