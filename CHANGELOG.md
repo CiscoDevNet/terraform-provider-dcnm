@@ -1,3 +1,7 @@
+## 0.0.5 (March 11, 2021)
+
+IMPROVEMENTS:
+- For dcnm_vrf resource added a way to provide segment_id manually in order to create multiple VRFs in single plan.
 ## 0.0.4 (March 10, 2021)
 
 IMPROVEMENTS:
