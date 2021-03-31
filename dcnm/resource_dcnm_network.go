@@ -639,7 +639,19 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, name)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 
 		} else {
 			d.Set("deploy", false)
@@ -850,7 +862,19 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, name)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 
 		} else {
 			d.Set("deploy", false)
@@ -977,7 +1001,19 @@ func resourceDCNMNetworkDelete(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, dn)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 		}
 	}
 
@@ -1066,4 +1102,33 @@ func difference(a, b []string) []interface{} {
 		}
 	}
 	return diff
+}
+
+func getNetworkDeploymentStatus(client *client.Client, fabricName, vrfName string) (bool, error) {
+
+	dURL := fmt.Sprintf("/rest/top-down/fabrics/%s/networks/%s/status", fabricName, vrfName)
+	cont, err := client.GetviaURL(dURL)
+	if err != nil {
+		return false, err
+	}
+
+	switchCount, err := cont.ArrayCount("switchList")
+	if err != nil {
+		return false, err
+	}
+
+	if switchCount == 0 {
+		return true, nil
+	}
+	flag := true
+	for i := 0; i < switchCount; i++ {
+		switchCont, err := cont.ArrayElement(i, "switchList")
+		if err != nil {
+			return flag, err
+		}
+		if switchCont.S("lanAttachedState").String() != "In-Sync" {
+			flag = false
+		}
+	}
+	return flag, nil
 }

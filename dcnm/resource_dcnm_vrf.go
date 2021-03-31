@@ -596,7 +596,19 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getVRFDeploymentStatus(dcnmClient, vrf.Fabric, vrf.Name)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 
 		} else {
 			d.Set("deploy", false)
@@ -785,7 +797,19 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getVRFDeploymentStatus(dcnmClient, vrf.Fabric, vrf.Name)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 
 		} else {
 			d.Set("deploy", false)
@@ -893,7 +917,19 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				d.Set("deploy", false)
 			}
-			time.Sleep(60 * time.Second)
+
+			for j := 0; j < 5; j++ {
+				deployFlag, err := getVRFDeploymentStatus(dcnmClient, fabricName, dn)
+				if err != nil {
+					return err
+				}
+
+				if !deployFlag {
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
+			}
 		}
 	}
 
@@ -952,4 +988,33 @@ func getSwitchAttachStatus(client *client.Client, fabric, vrf, switchNum string)
 		}
 	}
 	return false, 0, nil
+}
+
+func getVRFDeploymentStatus(client *client.Client, fabricName, vrfName string) (bool, error) {
+
+	dURL := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/attachments?vrf-names=%s", fabricName, vrfName)
+	cont, err := client.GetviaURL(dURL)
+	if err != nil {
+		return false, err
+	}
+
+	vrfCont := cont.Index(0)
+
+	switchCount, err := vrfCont.ArrayCount("lanAttachList")
+	if err != nil {
+		return false, err
+	}
+
+	flag := true
+	for i := 0; i < switchCount; i++ {
+		switchCont, err := vrfCont.ArrayElement(i, "lanAttachList")
+		if err != nil {
+			return flag, err
+		}
+
+		if switchCont.S("lanAttachState").String() != "DEPLOYED" || switchCont.S("lanAttachState").String() != "NA" {
+			flag = false
+		}
+	}
+	return flag, nil
 }
