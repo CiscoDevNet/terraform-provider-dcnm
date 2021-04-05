@@ -24,7 +24,7 @@ func TestAccDCNMNetwork_Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDCNMNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDCNMNetworkConfig_basic("network decription check", "false"),
+				Config: testAccCheckDCNMNetworkConfig_basic("network decription check", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDCNMNetworkExists("dcnm_network.test", &network, &networkProfile),
 					testAccCheckDCNMNetworkAttributes("network decription check", &network, &networkProfile),
@@ -44,7 +44,7 @@ func TestAccDCNMNetwork_Update(t *testing.T) {
 		CheckDestroy:      testAccCheckDCNMNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDCNMNetworkConfig_basic("network decription check", "false"),
+				Config: testAccCheckDCNMNetworkConfig_basic("network decription check", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDCNMNetworkExists("dcnm_network.test", &network, &networkProfile),
 					testAccCheckDCNMNetworkAttributes("network decription check", &network, &networkProfile),
@@ -69,7 +69,7 @@ func testAccCheckDCNMNetworkConfig_basic(desc, deploy string) string {
 		name            = "import"
 		display_name    = "check"
 		description     = "%s"
-		vrf_name        = "MyVRF"
+		vrf_name        = "Test-vrf"
 		vlan_id         = 2301
 		vlan_name       = "vlan1"
 		deploy = %s

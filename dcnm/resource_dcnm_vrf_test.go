@@ -24,7 +24,7 @@ func TestAccDCNMVRF_Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDCNMVRFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDCNMVRFConfig_basic("vrf decription check", "false"),
+				Config: testAccCheckDCNMVRFConfig_basic("vrf decription check", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDCNMVRFExists("dcnm_vrf.vrf_check", &vrf, &vrfProfile),
 					testAccCheckDCNMVRFAttributes("vrf decription check", &vrf, &vrfProfile),
@@ -44,7 +44,7 @@ func TestAccDCNMVRF_Update(t *testing.T) {
 		CheckDestroy:      testAccCheckDCNMVRFDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDCNMVRFConfig_basic("vrf decription check", "false"),
+				Config: testAccCheckDCNMVRFConfig_basic("vrf decription check", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDCNMVRFExists("dcnm_vrf.vrf_check", &vrf, &vrfProfile),
 					testAccCheckDCNMVRFAttributes("vrf decription check", &vrf, &vrfProfile),
@@ -72,11 +72,8 @@ func testAccCheckDCNMVRFConfig_basic(desc string, deploy string) string {
 		intf_description = "vrf"
 		deploy = "%s"
 		attachments {
-			serial_number = "9ZGMF8CBZK5"
-			vlan_id       = 2300
+			serial_number = "9AYOFL6LTML"
 			attach        = %s
-			loopback_id   = 70
-			loopback_ipv4 = "1.2.3.4"
 		}
 	}
 	`, desc, deploy, deploy)

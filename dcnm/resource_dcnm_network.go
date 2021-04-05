@@ -206,6 +206,12 @@ func resourceDCNMNetwork() *schema.Resource {
 				Default:  true,
 			},
 
+			"deploy_timeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  300,
+			},
+
 			"attachments": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -640,7 +646,9 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, name)
 				if err != nil {
 					return err
@@ -649,8 +657,12 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("Network record is created but not deployed yet. deployment timeout occured")
 			}
 
 		} else {
@@ -863,7 +875,9 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, name)
 				if err != nil {
 					return err
@@ -872,8 +886,13 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				d.Set("deploy", false)
+				return fmt.Errorf("Network record is updated and deployment is initialised, but deployment timeout occured before completion of the deployment process")
 			}
 
 		} else {
@@ -1002,7 +1021,9 @@ func resourceDCNMNetworkDelete(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getNetworkDeploymentStatus(dcnmClient, fabricName, dn)
 				if err != nil {
 					return err
@@ -1011,8 +1032,12 @@ func resourceDCNMNetworkDelete(d *schema.ResourceData, m interface{}) error {
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("Network record can not be deleted. deployment timeout occured")
 			}
 		}
 	}
@@ -1126,7 +1151,7 @@ func getNetworkDeploymentStatus(client *client.Client, fabricName, vrfName strin
 		if err != nil {
 			return flag, err
 		}
-		if switchCont.S("lanAttachedState").String() != "In-Sync" {
+		if stripQuotes(switchCont.S("lanAttachedState").String()) != "In-Sync" {
 			flag = false
 		}
 	}

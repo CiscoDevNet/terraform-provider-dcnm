@@ -217,6 +217,12 @@ func resourceDCNMVRF() *schema.Resource {
 				Default:  true,
 			},
 
+			"deploy_timeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  300,
+			},
+
 			"attachments": &schema.Schema{
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -597,7 +603,9 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getVRFDeploymentStatus(dcnmClient, vrf.Fabric, vrf.Name)
 				if err != nil {
 					return err
@@ -606,8 +614,12 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("VRF record is created but not deployed yet. deployment timeout occured")
 			}
 
 		} else {
@@ -798,17 +810,25 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getVRFDeploymentStatus(dcnmClient, vrf.Fabric, vrf.Name)
 				if err != nil {
+					d.Set("deploy", false)
 					return err
 				}
 
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				d.Set("deploy", false)
+				return fmt.Errorf("VRF record is updated and deployment is initialised, but deployment timeout occured before completion of the deployment process")
 			}
 
 		} else {
@@ -918,7 +938,9 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 				d.Set("deploy", false)
 			}
 
-			for j := 0; j < 5; j++ {
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
 				deployFlag, err := getVRFDeploymentStatus(dcnmClient, fabricName, dn)
 				if err != nil {
 					return err
@@ -927,8 +949,12 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 				if !deployFlag {
 					time.Sleep(5 * time.Second)
 				} else {
+					deployTFlag = true
 					break
 				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("VRF record can not be deleted. deployment timeout occured")
 			}
 		}
 	}
@@ -1012,7 +1038,7 @@ func getVRFDeploymentStatus(client *client.Client, fabricName, vrfName string) (
 			return flag, err
 		}
 
-		if switchCont.S("lanAttachState").String() != "DEPLOYED" || switchCont.S("lanAttachState").String() != "NA" {
+		if stripQuotes(switchCont.S("lanAttachState").String()) != "DEPLOYED" && stripQuotes(switchCont.S("lanAttachState").String()) != "NA" {
 			flag = false
 		}
 	}
