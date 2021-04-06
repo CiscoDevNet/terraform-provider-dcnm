@@ -89,7 +89,7 @@ resource "dcnm_network" "first" {
 * `source` - (Optional) source for the network.
 
 * `deploy` - (Optional) deploy flag, used to deploy the network. Default value is "true".
-* `deploy_timeout` - (Optional) deployment timeout, used as the limiter for the deployment status check for Network resource. It is in the unit of seconds and default value is "300".
+* `deploy_timeout` - (Optional) deployment timeout, used as the limiter for the deployment status check for network resource. It is in the unit of seconds and default value is "300".
 
 * `attachments` - (Optional) attachment block, have information regarding the switches which should be attached or detached to/from network. If `deploy` is "true", then atleast one attachment must be configured.
 * `attachments.serial_number` - (Required) serial number of the switch.
