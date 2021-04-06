@@ -297,14 +297,14 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 		dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/test-reachability", strconv.Itoa(fabricID))
 		cont, err := dcnmClient.Save(dUrl, &inv)
 		if err != nil {
-			log.Println("error at test reachability for switch %s : %s", ip, err)
+			log.Println("error at test reachability for switch : ", ip, err)
 			continue
 		}
 
 		switchM := extractSwitchinfo(cont)
 
 		if switchM.Selectable != "true" || switchM.Reachable != "true" {
-			log.Println("Desired switch: %s is not reachable or not selectable or invalid user/password or bad authentication protocol", ip)
+			log.Println("Desired switch is not reachable or not selectable or invalid user/password or bad authentication protocol", ip)
 			continue
 		}
 
@@ -313,7 +313,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 		dUrl = fmt.Sprintf("/rest/control/fabrics/%s/inventory/discover", fabricName)
 		_, err = dcnmClient.Save(dUrl, invModel)
 		if err != nil {
-			log.Println("error at discovery for switch %s : %s", ip, err)
+			log.Println("error at discovery for switch :", ip, err)
 			continue
 		}
 
@@ -323,7 +323,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 		for i := 0; i < 3; i++ {
 			cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 			if err != nil {
-				log.Println("error at get call for switch %s in creation : %s", ip, err)
+				log.Println("error at get call for switch in creation :", ip, err)
 				continue
 			}
 			serialNum = stripQuotes(cont.S("serialNumber").String())
@@ -336,7 +336,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 			time.Sleep(5 * time.Second)
 		}
 		if migrate {
-			log.Println("switch %s still in migration mode. Hence removing it!", ip)
+			log.Println("switch still in migration mode. Hence removing it!", ip)
 			delSwtiches = append(delSwtiches, serialNum)
 			delFlag = true
 			continue
@@ -345,7 +345,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 		err = deployswitch(dcnmClient, fabricName, serialNum, configTimeout)
 		if err != nil {
 			delSwtiches = append(delSwtiches, serialNum)
-			log.Println("error at switch %s deployment : %s", ip, err)
+			log.Println("error at switch deployment :", ip, err)
 			delFlag = true
 			continue
 		}
@@ -358,7 +358,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 
 			_, err := dcnmClient.SaveForAttachment(durl, &sRole)
 			if err != nil {
-				log.Println("error at switch %s role assignment : %s", ip, err)
+				log.Println("error at switch role assignment :", ip, err)
 			}
 		}
 
@@ -368,7 +368,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 
 	err := deployFabric(dcnmClient, fabricName)
 	if err != nil {
-		log.Println("error at fabric deployment : %s", err)
+		log.Println("error at fabric deployment :", err)
 		delFlag = true
 	}
 
@@ -446,7 +446,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 			durl := fmt.Sprintf("/fm/fmrest/lanConfig/saveSwitchCredentials")
 			cont, err = dcnmClient.UpdateCred(durl, body)
 			if err != nil {
-				log.Println("error at updation of switch %s : %s", ip, err)
+				log.Println("error at updation of switch :", ip, err)
 			}
 
 			updateSwitch = true
@@ -485,14 +485,14 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 			dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/test-reachability", strconv.Itoa(fabricID))
 			cont, err := dcnmClient.Save(dUrl, &inv)
 			if err != nil {
-				log.Println("error at test reachability for switch %s : %s", ip, err)
+				log.Println("error at test reachability for switch :", ip, err)
 				continue
 			}
 
 			switchM := extractSwitchinfo(cont)
 
 			if switchM.Selectable != "true" || switchM.Reachable != "true" {
-				log.Println("Desired switch: %s is not reachable or not selectable or invalid user/password or bad authentication protocol", ip)
+				log.Println("Desired switch: is not reachable or not selectable or invalid user/password or bad authentication protocol", ip)
 				continue
 			}
 
@@ -501,7 +501,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 			dUrl = fmt.Sprintf("/rest/control/fabrics/%s/inventory/discover", fabricName)
 			_, err = dcnmClient.Save(dUrl, invModel)
 			if err != nil {
-				log.Println("error at discovery for switch %s : %s", ip, err)
+				log.Println("error at discovery for switch :", ip, err)
 				continue
 			}
 		}
@@ -512,7 +512,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 		for i := 0; i < 3; i++ {
 			cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 			if err != nil {
-				log.Println("error at get call for switch %s in updation : %s", ip, err)
+				log.Println("error at get call for switch in updation :", ip, err)
 				continue
 			}
 			serialNum = stripQuotes(cont.S("serialNumber").String())
@@ -525,7 +525,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 			time.Sleep(5 * time.Second)
 		}
 		if migrate {
-			log.Println("switch %s still in migration mode. Hence removing it!", ip)
+			log.Println("switch still in migration mode. Hence removing it!", ip)
 			delSwtiches = append(delSwtiches, serialNum)
 			delFlag = true
 			continue
@@ -534,7 +534,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 		err := deployswitch(dcnmClient, fabricName, serialNum, configTimeout)
 		if err != nil {
 			delSwtiches = append(delSwtiches, serialNum)
-			log.Println("error at switch %s deployment : %s", ip, err)
+			log.Println("error at switch deployment :", ip, err)
 			delFlag = true
 			continue
 		}
@@ -547,7 +547,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 
 			_, err := dcnmClient.SaveForAttachment(durl, &sRole)
 			if err != nil {
-				log.Println("error at switch %s role assignment : %s", ip, err)
+				log.Println("error at switch role assignment :", ip, err)
 			}
 		}
 
@@ -559,7 +559,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 
 	err = deployFabric(dcnmClient, fabricName)
 	if err != nil {
-		log.Println("error at fabric deployment : %s", err)
+		log.Println("error at fabric deployment :", err)
 		delFlag = true
 	}
 
@@ -617,7 +617,7 @@ func resourceDCNMInventroyRead(d *schema.ResourceData, m interface{}) error {
 
 					role, err := getSwitchRole(dcnmClient, sGetMap["serial_number"].(string))
 					if err != nil {
-						log.Println("error in read at fetching switch %s role : %s", ip, err)
+						log.Println("error in read at fetching switch role :", ip, err)
 					}
 					sGetMap["role"] = role
 
@@ -679,7 +679,7 @@ func resourceDCNMInventroyDelete(d *schema.ResourceData, m interface{}) error {
 		durl = fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serialNumber)
 		_, err = dcnmClient.Delete(durl)
 		if err != nil {
-			log.Println("error at deletion of switch %s : %s", ip, err)
+			log.Println("error at deletion of switch :", ip, err)
 			delErr = true
 		} else {
 			deletedIps = append(deletedIps, ip)

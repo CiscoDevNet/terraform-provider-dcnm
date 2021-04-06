@@ -78,6 +78,7 @@ resource "dcnm_vrf" "first" {
 * `source` - (Optional) source for the VRF.
 
 * `deploy` - (Optional) deploy flag, used to deploy the VRF. Default value is "true".
+* `deploy_timeout` - (Optional) deployment timeout, used as the limiter for the deployment status check for VRF resource. It is in the unit of seconds and default value is "300".
 
 * `attachments` - (Optional) attachment Block, have information regarding the switches which should be attached or detached to/from VRF. If `deploy` is "true", then atleast one attachment must be configured.
 * `attachments.serial_number` - (Required) serial number of the switch.
