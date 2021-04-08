@@ -6,13 +6,13 @@ provider "dcnm" {
 }
 
 resource "dcnm_inventory" "first" {
-  fabric_name   = "fab2"
+  fabric_name     = "fab2"
+  username        = ""
+  password        = ""
+  preserve_config = "false"
+  config_timeout  = 10
   switch_config {
-    username      = ""
-    password      = ""
-    ip            = ""
-    preserve_config = "false"
-    config_timeout = 10
+    ip   = ""
     role = "leaf"
   }
 }
