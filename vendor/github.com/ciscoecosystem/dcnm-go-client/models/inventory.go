@@ -33,11 +33,13 @@ type SwitchRole struct {
 	Role         string `json:",omitempty"`
 }
 
-func NewSwitch(inv *Inventory, s *Switch) *Inventory {
+func NewSwitch(inv *Inventory, s []*Switch) *Inventory {
 	switchList := make([]Switch, 0, 1)
 
 	if s != nil {
-		switchList = append(switchList, *s)
+		for _, val := range s {
+			switchList = append(switchList, *val)
+		}
 	}
 
 	(*inv).Switches = switchList

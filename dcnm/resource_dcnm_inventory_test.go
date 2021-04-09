@@ -61,16 +61,18 @@ func TestAccDCNMInventory_Update(t *testing.T) {
 func testAccCheckDCNMInventoryConfig_basic(ip string) string {
 	return fmt.Sprintf(`
 	resource "dcnm_inventory" "test" {
-		fabric_name = "fab2"
+		fabric_name   = "fab2"
+		username      = "admin"
+		password      = "ins3965!"
+		max_hops      = 0
+		preserve_config = "false"
+		auth_protocol = 0
+		config_timeout = 10
 		switch_config {
-			username      = "admin"
-			password      = "ins3965!"
-			ip            = "%s"
-			preserve_config = "false"
-			config_timeout = 10
-			role = "leaf"
+		  ip   = "%s"
+		  role = "leaf"
 		}
-	}
+	  }
 	`, ip)
 }
 
@@ -88,7 +90,7 @@ func testAccCheckDCNMInventoryExists(name string, inv *models.Inventory) resourc
 
 		dcnmClient := (*providerfInv).Meta().(*client.Client)
 
-		cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/fabrics/%s/inventory", "fab1"))
+		cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/fabrics/%s/inventory", "fab2"))
 		if err != nil {
 			return err
 		}
@@ -119,7 +121,7 @@ func testAccCheckDCNMInventoryDestroy(s *terraform.State) error {
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "dcnm_inventory" {
-			cont, _ := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/fabrics/%s/inventory", "fab1"))
+			cont, _ := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/fabrics/%s/inventory", "fab2"))
 			var flag bool
 			for i := 0; i < len(cont.Data().([]interface{})); i++ {
 				switchCont := cont.Index(i)

@@ -126,6 +126,8 @@ github.com/ciscoecosystem/dcnm-go-client v0.0.30 h1:2QJ45cs1D9Xty5hKExvIHOvZ9s99
 github.com/ciscoecosystem/dcnm-go-client v0.0.30/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
 github.com/ciscoecosystem/dcnm-go-client v0.0.31 h1:Wcj6MHBmLYaM8PYb4041meAEG5f7D8hm3YCQmEcqZbU=
 github.com/ciscoecosystem/dcnm-go-client v0.0.31/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
+github.com/ciscoecosystem/dcnm-go-client v0.0.32 h1:Ypwkaha06gZ8QwVa8sPHC4ssFgWAdbvyIQV//x3ZlPw=
+github.com/ciscoecosystem/dcnm-go-client v0.0.32/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
 github.com/ciscoecosystem/terraform-provider-dcnm v0.0.0-20210202063645-09a848782398 h1:QZI1Yis1T7pu4LLZtC0pBbcKAz+0E3GmD4KLHMzhWYc=
 github.com/ciscoecosystem/terraform-provider-dcnm v0.0.0-20210202063645-09a848782398/go.mod h1:GvZOyxWr2s8O8hYr6NDS5w/KtM1b18P1fzKrAqlfWzk=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
