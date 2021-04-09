@@ -62,6 +62,9 @@ resource "dcnm_network" "first" {
 * `name` - (Required) name of network object.
 * `fabric_name` - (Required) fabric name under which network should be created.
 * `network_id` - (Optional) Network id to be associated with the network to be created. Pass this value while creating multiple networks in single plan to avoid conflict of autogenerating ids. Id will be computed by DCNM if not provided.
+
+<strong>Note: </strong> For auto-generation of network-id while creating multiple networks in the same plan, use the depends on functionality of terraform to avoid any network-id conflicts.  
+
 * `display_name` - (Optional) display name for the network object. If not mentioned, then `name` will be considered as `display_name`.
 * `description` - (Optional) description for the network.
 * `vrf_name` - (Optional) name of the vrf which should be associated with the network. If not given then will be configured as "NA" with `l2_only_flag` as "true".

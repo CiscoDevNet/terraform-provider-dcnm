@@ -53,6 +53,9 @@ resource "dcnm_vrf" "first" {
 * `name` - (Required) name of Object VRF.
 * `fabric_name` - (Required) fabric name under which VRF should be created.
 * `segment_id` - (Optional) VRF-Segment id. This field is auto-calculated if not provided. However while creating multiple VRFs in the same plan use this field to reserve the VRF id to avoid any conflicts due to concurrent execution. 
+
+<strong>Note: </strong> For auto-generation of segment-id while creating multiple VRFs in the same plan, Use the depends on functionality of terraform to avoid any segment-id conflicts.
+
 * `vlan` - (Optional) vlan Id for the VRF.
 * `vlan_name` - (Optional) vlan name for the VRF.
 * `description` - (Optional) description for the VRF.
