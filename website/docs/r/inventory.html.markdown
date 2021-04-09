@@ -15,22 +15,22 @@ Manages DCNM inventory modules
 
 resource "dcnm_inventory" "first" {
   fabric_name   = "fab2"
-  username      = ""
-  password      = ""
+  username      = "username for DCNM switches"
+  password      = "password for DCNM switches"
   max_hops      = 0
   preserve_config = "false"
   auth_protocol = 0
   config_timeout = 10
   switch_config {
-    ip   = ""
+    ip   = "switch IP"
     role = "leaf"
   }
   switch_config {
-    ip   = ""
+    ip   = "switch IP"
     role = "spine"
   }
   switch_config {
-    ip   = ""
+    ip   = "switch IP"
     role = "leaf"
   }
 }
