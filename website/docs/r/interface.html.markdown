@@ -194,5 +194,5 @@ An existing interface can be [imported][docs-import] into this resource via its 
 
 
 ```
-terraform import dcnm_interface.example <type>:<serial_number>:<name>
+terraform import dcnm_interface.example <type>:<serial_number>:<name>:<fabric_name>
 ```

@@ -339,7 +339,7 @@ func setInterfaceAttributes(d *schema.ResourceData, cont *container.Container, i
 	interfaces := cont.S("interfaces").Index(0)
 	d.Set("serial_number", stripQuotes(interfaces.S("serialNumber").String()))
 	d.Set("type", intftype)
-	d.Set("fabric_name", stripQuotes(interfaces.S("nvPairs", "FABRIC_NAME").String()))
+	// d.Set("fabric_name", stripQuotes(interfaces.S("nvPairs", "FABRIC_NAME").String()))
 	d.Set("name", (stripQuotes(interfaces.S("ifName").String())))
 	if state, err := strconv.ParseBool(stripQuotes(interfaces.S("nvPairs", "ADMIN_STATE").String())); err == nil {
 		d.Set("admin_state", state)
@@ -476,12 +476,13 @@ func resourceDCNMInterfaceImporter(d *schema.ResourceData, m interface{}) ([]*sc
 	var serialNum1 string
 	var serialNum2 string
 	importInfo := strings.Split(d.Id(), ":")
-	if len(importInfo) != 3 {
+	if len(importInfo) != 4 {
 		return nil, fmt.Errorf("not getting enough arguments for the import operation")
 	}
 	intfType := importInfo[0]
 	serialNum := importInfo[1]
 	name := importInfo[2]
+	fabricName := importInfo[3]
 	if intfType == "vpc" {
 		vpcSerialNums := strings.Split(serialNum, "~")
 		if len(vpcSerialNums) != 2 {
@@ -503,19 +504,19 @@ func resourceDCNMInterfaceImporter(d *schema.ResourceData, m interface{}) ([]*sc
 
 	setInterfaceAttributes(d, cont.Index(0), intfType)
 	d.SetId(name)
+	d.Set("fabric_name", fabricName)
 
-	fabName := d.Get("fabric_name").(string)
 	if intfType == "vpc" {
-		swName1, err := getSwitchName(dcnmClient, fabName, serialNum1)
+		swName1, err := getSwitchName(dcnmClient, fabricName, serialNum1)
 		if err == nil {
 			d.Set("switch_name_1", swName1)
 		}
-		swName2, err := getSwitchName(dcnmClient, fabName, serialNum2)
+		swName2, err := getSwitchName(dcnmClient, fabricName, serialNum2)
 		if err == nil {
 			d.Set("switch_name_2", swName2)
 		}
 	} else {
-		swName1, err := getSwitchName(dcnmClient, fabName, serialNum1)
+		swName1, err := getSwitchName(dcnmClient, fabricName, serialNum1)
 		if err == nil {
 			d.Set("switch_name_1", swName1)
 		}

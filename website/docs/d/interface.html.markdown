@@ -14,9 +14,10 @@ Data source for DCNM interface module
 ```hcl
 
 data "dcnm_interface" "check" {
-  serial_number = "9AYOFL6LTML"
+  serial_number = "${dcnm_interface.example.serial_number}"
   name          = "Ethernet1/1"
   type          = "ethernet"
+  fabric_name   = "fab2"
 }
 
 ```
@@ -27,6 +28,7 @@ data "dcnm_interface" "check" {
 * `serial_number` - (Required) Dn for the interface module.
 * `name` - (Required) name of the interface.
 * `type` - (Required) type of the interface. Allowed values are "loopback", "port-channel", "vpc", "sub-interface", "ethernet".
+* `fabric_name` - (Optional) fabric name under which interface is created. Required if `type` = `ethernet`.
 
 ## Common Attribute Reference ##
 
