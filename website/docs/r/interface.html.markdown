@@ -171,14 +171,14 @@ resource "dcnm_interface" "second" {
 
 * `bpdu_gaurd_flag` - (Optional) BPDU flag for the ethernet interface. Allowed values are "true", "false" and "no".
 * `port_fast_flag` - (Optional) port type fast flag for the ethernet interface.
-* `mtu` - (Optional) mtu for the ethernet interface. Allowed values are "jumbo" and "default".
+* `mtu` - (Optional) mtu for the ethernet interface. Allowed values are "jumbo" and "default". If `policy` is configured as "epl_routed_intf" or "int_routed_host_11_1", then allowed value range is from 576 to 9216.
 * `ethernet_speed` - (Optional) speed of the ethernet. Allowed values are "Auto", "100Mb", "1Gb", "10Gb", "25Gb",	"40Gb" and "100Gb".
 * `allowed_vlans` - (Optional) allowed vlans for the ethernet interface. Allowed values are "none", "all" or vlan ranges(1-200,500-2000,3000)
 * `configuration` - (Optional) configuration for the ethernet.
 * `description` - (Optional) description for the ethernet.
 * `ipv4` - (Optional) ipv4 address for the ethernet.
 * `ipv6` - (Optional) ipv6 address for the ethernet.
-* `ipv6_prefix` - (Optional) ipv6 prefic for the ethernet.
+* `ipv6_prefix` - (Optional) ipv6 prefix for the ethernet.
 * `ipv4_prefix` - (Optional) ipv4 prefix for the ethernet.
 * `access_vlans` - (Optional) access vlans for the ethernet interface.
 
