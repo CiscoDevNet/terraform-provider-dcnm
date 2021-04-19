@@ -14,9 +14,10 @@ Data source for DCNM interface module
 ```hcl
 
 data "dcnm_interface" "check" {
-  serial_number = "9AYOFL6LTML"
+  serial_number = "${dcnm_interface.example.serial_number}"
   name          = "Ethernet1/1"
   type          = "ethernet"
+  fabric_name   = "fab2"
 }
 
 ```
