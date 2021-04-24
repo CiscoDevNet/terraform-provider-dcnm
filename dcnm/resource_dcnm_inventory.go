@@ -323,25 +323,28 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 	deployedSerial := make([]string, 0, 1)
 	for _, ip := range discoveredIps {
 		var serialNum string
-		var configTimeout int
+		configTimeout := (d.Get("config_timeout").(int)) * 60
 		migrate := true
-		for i := 0; i < 4; i++ {
+
+		for configTimeout > 0 {
 			cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 			if err != nil {
 				log.Println("error at get call for switch in creation :", ip, err)
 				continue
 			}
 			serialNum = stripQuotes(cont.S("serialNumber").String())
-			configTimeout = d.Get("config_timeout").(int)
+
 			if stripQuotes(cont.S("mode").String()) != "Migration" {
 				time.Sleep(10 * time.Second)
+				configTimeout = configTimeout - 10
 				migrate = false
 				break
 			}
 			time.Sleep(5 * time.Second)
+			configTimeout = configTimeout - 5
 		}
 		if migrate {
-			log.Println("switch still in migration mode. Hence removing it!", ip)
+			log.Println("Timeout occurs before going into normal mode. Hence removing it!", ip)
 			delSwtiches = append(delSwtiches, serialNum)
 			delFlag = true
 			continue
@@ -547,25 +550,28 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 		deployedSerial := make([]string, 0, 1)
 		for _, ip := range discoveredIps {
 			var serialNum string
-			var configTimeout int
+			configTimeout := (d.Get("config_timeout").(int)) * 60
 			migrate := true
-			for i := 0; i < 3; i++ {
+
+			for configTimeout > 0 {
 				cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 				if err != nil {
 					log.Println("error at get call for switch in updation :", ip, err)
 					continue
 				}
 				serialNum = stripQuotes(cont.S("serialNumber").String())
-				configTimeout = d.Get("config_timeout").(int)
+
 				if stripQuotes(cont.S("mode").String()) != "Migration" {
 					time.Sleep(10 * time.Second)
+					configTimeout = configTimeout - 10
 					migrate = false
 					break
 				}
 				time.Sleep(5 * time.Second)
+				configTimeout = configTimeout - 5
 			}
 			if migrate {
-				log.Println("switch still in migration mode. Hence removing it!", ip)
+				log.Println("Timeout occurs before going into normal mode. Hence removing it!", ip)
 				delSwtiches = append(delSwtiches, serialNum)
 				delFlag = true
 				continue
@@ -819,7 +825,7 @@ func deployswitch(client *client.Client, fabric, serialNum string, configTime in
 		}
 
 		timeLeft = timeLeft / 2
-		time.Sleep(time.Duration(timeLeft) * time.Minute)
+		time.Sleep(time.Duration(timeLeft) * time.Second)
 	}
 	if !configDone {
 		return fmt.Errorf("Timeout occurs before completion of switch configuration")
