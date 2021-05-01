@@ -156,6 +156,22 @@ func resourceDCNMInventroy() *schema.Resource {
 	}
 }
 
+func roleMappingFunc(role string) string {
+	roleMapping := map[string]string{
+		"leaf":                       "leaf",
+		"spine":                      "spine",
+		"border":                     "border",
+		"border_spine":               "border spine",
+		"border_gateway":             "border gateway",
+		"border_gateway_spine":       "border gateway spine",
+		"super_spine":                "super spine",
+		"border_super_spine":         "border super spine",
+		"border_gateway_super_spine": "border gateway super spine",
+	}
+
+	return roleMapping[role]
+}
+
 func extractFabricID(dcnmClient *client.Client, fabricName string) (int, error) {
 	durl := fmt.Sprintf("/rest/control/fabrics/%s", fabricName)
 
@@ -391,7 +407,7 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 
 					durl := fmt.Sprintf("/rest/control/switches/roles")
 					sRole := models.SwitchRole{}
-					sRole.Role = sInfo["role"].(string)
+					sRole.Role = roleMappingFunc(sInfo["role"].(string))
 					sRole.SerialNumber = serialNum
 
 					_, err = dcnmClient.SaveForAttachment(durl, &sRole)
@@ -642,7 +658,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 
 					durl := fmt.Sprintf("/rest/control/switches/roles")
 					sRole := models.SwitchRole{}
-					sRole.Role = sInfo["role"].(string)
+					sRole.Role = roleMappingFunc(sInfo["role"].(string))
 					sRole.SerialNumber = serialNum
 
 					_, err = dcnmClient.SaveForAttachment(durl, &sRole)
@@ -687,10 +703,11 @@ func resourceDCNMInventroyRead(d *schema.ResourceData, m interface{}) error {
 			ips = append(ips, ip.(string))
 
 			role, err := getSwitchRole(dcnmClient, switchMap["serial_number"].(string))
-			if err != nil {
+			if err == nil {
+				switchMap["role"] = strings.ReplaceAll(strings.Trim(role, " "), " ", "_")
+			} else {
 				log.Println("error in read at fetching switch role :", ip, err)
 			}
-			switchMap["role"] = role
 
 			switchSerial = append(switchSerial, switchMap["serial_number"].(string))
 
