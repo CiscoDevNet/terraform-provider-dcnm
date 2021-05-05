@@ -442,6 +442,11 @@ func resourceDCNMInventroyCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("ips", ips)
+
+	if len(ips) == 0 {
+		return fmt.Errorf("none of the switches are discovered and deployed on the fabric, some internal issue in switches")
+	}
+
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Create method ", d.Id())
