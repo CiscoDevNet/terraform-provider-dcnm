@@ -3,6 +3,7 @@ package dcnm
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -131,7 +132,7 @@ func datasourceDCNMInventoryRead(d *schema.ResourceData, m interface{}) error {
 
 	role, err := getSwitchRole(dcnmClient, d.Get("serial_number").(string))
 	if err == nil {
-		d.Set("role", role)
+		d.Set("role", strings.ReplaceAll(strings.Trim(role, " "), " ", "_"))
 	}
 
 	log.Println("[DEBUG] End of Read method ", d.Id())
