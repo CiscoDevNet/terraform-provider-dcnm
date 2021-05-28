@@ -458,6 +458,7 @@ func setInterfaceAttributes(d *schema.ResourceData, cont *container.Container, i
 		d.Set("allowed_vlans", stripQuotes(interfaces.S("nvPairs", "ALLOWED_VLANS").String()))
 		d.Set("configuration", stripQuotes(interfaces.S("nvPairs", "CONF").String()))
 		d.Set("description", stripQuotes(interfaces.S("nvPairs", "DESC").String()))
+		d.Set("vrf", stripQuotes(interfaces.S("nvPairs", "INTF_VRF").String()))
 
 		d.Set("pc_interface", make([]interface{}, 0, 1))
 		d.Set("vpc_peer1_interface", make([]interface{}, 0, 1))
@@ -1148,6 +1149,11 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 	} else if intfType == "ethernet" {
 		intfConfig.SerialNumber = serialnum
 
+		if vrf, ok := d.GetOk("vrf"); ok {
+			nvPairMap["INTF_VRF"] = vrf.(string)
+		} else {
+			nvPairMap["INTF_VRF"] = ""
+		}
 		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
