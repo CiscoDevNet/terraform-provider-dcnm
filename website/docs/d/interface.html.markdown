@@ -96,6 +96,7 @@ data "dcnm_interface" "check" {
 
 ## Attribute Reference for ethernet Interface ##
 
+* `vrf` - vrf name for the ethernet interface.
 * `bpdu_gaurd_flag` - BPDU flag for the ethernet interface.
 * `port_fast_flag` - port type fast flag for the ethernet interface.
 * `mtu` - mtu for the ethernet interface. 

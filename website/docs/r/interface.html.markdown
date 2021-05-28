@@ -169,6 +169,7 @@ resource "dcnm_interface" "second" {
 
 ## Argument Reference for ethernet Interface ##
 
+* `vrf` - (Optional) vrf name for the ethernet interface.
 * `bpdu_gaurd_flag` - (Optional) BPDU flag for the ethernet interface. Allowed values are "true", "false" and "no".
 * `port_fast_flag` - (Optional) port type fast flag for the ethernet interface.
 * `mtu` - (Optional) mtu for the ethernet interface. Allowed values are "jumbo" and "default". If `policy` is configured as "epl_routed_intf" or "int_routed_host_11_1", then allowed value range is from 576 to 9216.
