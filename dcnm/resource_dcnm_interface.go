@@ -161,7 +161,7 @@ func resourceDCNMInterface() *schema.Resource {
 				}, false),
 			},
 
-			"bpdu_gaurd_flag": &schema.Schema{
+			"bpdu_guard_flag": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -385,7 +385,7 @@ func setInterfaceAttributes(d *schema.ResourceData, cont *container.Container, i
 			d.Set("vpc_peer2_interface", stringToList(stripQuotes(interfaces.S("nvPairs", "PEER2_MEMBER_INTERFACES").String())))
 		}
 		d.Set("mode", stripQuotes(interfaces.S("nvPairs", "PC_MODE").String()))
-		d.Set("bpdu_gaurd_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
+		d.Set("bpdu_guard_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
 		if ppf, err := strconv.ParseBool(stripQuotes(interfaces.S("nvPairs", "PORTTYPE_FAST_ENABLED").String())); err == nil {
 			d.Set("port_fast_flag", ppf)
 		}
@@ -411,7 +411,7 @@ func setInterfaceAttributes(d *schema.ResourceData, cont *container.Container, i
 			d.Set("pc_interface", stringToList(stripQuotes(interfaces.S("nvPairs", "MEMBER_INTERFACES").String())))
 		}
 		d.Set("mode", stripQuotes(interfaces.S("nvPairs", "PC_MODE").String()))
-		d.Set("bpdu_gaurd_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
+		d.Set("bpdu_guard_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
 		if ppf, err := strconv.ParseBool(stripQuotes(interfaces.S("nvPairs", "PORTTYPE_FAST_ENABLED").String())); err == nil {
 			d.Set("port_fast_flag", ppf)
 		}
@@ -444,7 +444,7 @@ func setInterfaceAttributes(d *schema.ResourceData, cont *container.Container, i
 
 	} else if intftype == "ethernet" {
 
-		d.Set("bpdu_gaurd_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
+		d.Set("bpdu_guard_flag", stripQuotes(interfaces.S("nvPairs", "BPDUGUARD_ENABLED").String()))
 		if ppf, err := strconv.ParseBool(stripQuotes(interfaces.S("nvPairs", "PORTTYPE_FAST_ENABLED").String())); err == nil {
 			d.Set("port_fast_flag", ppf)
 		}
@@ -659,7 +659,7 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 		} else {
 			nvPairMap["PC_MODE"] = ""
 		}
-		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
+		if bpduF, ok := d.GetOk("bpdu_guard_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
 			nvPairMap["BPDUGUARD_ENABLED"] = ""
@@ -729,7 +729,7 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 		} else {
 			nvPairMap["PC_MODE"] = ""
 		}
-		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
+		if bpduF, ok := d.GetOk("bpdu_guard_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
 			nvPairMap["BPDUGUARD_ENABLED"] = ""
@@ -995,7 +995,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 		} else {
 			nvPairMap["PC_MODE"] = ""
 		}
-		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
+		if bpduF, ok := d.GetOk("bpdu_guard_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
 			nvPairMap["BPDUGUARD_ENABLED"] = ""
@@ -1063,7 +1063,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 		} else {
 			nvPairMap["PC_MODE"] = ""
 		}
-		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
+		if bpduF, ok := d.GetOk("bpdu_guard_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
 			nvPairMap["BPDUGUARD_ENABLED"] = ""
@@ -1154,7 +1154,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 		} else {
 			nvPairMap["INTF_VRF"] = ""
 		}
-		if bpduF, ok := d.GetOk("bpdu_gaurd_flag"); ok {
+		if bpduF, ok := d.GetOk("bpdu_guard_flag"); ok {
 			nvPairMap["BPDUGUARD_ENABLED"] = bpduF.(string)
 		} else {
 			nvPairMap["BPDUGUARD_ENABLED"] = ""

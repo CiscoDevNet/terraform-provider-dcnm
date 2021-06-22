@@ -55,7 +55,7 @@ data "dcnm_interface" "check" {
 * `pc_interface` - list of port channel member interface for port-channel interface.
 * `access_vlans` - access vlans for the port-channel interface.
 * `mode` - mode for the port-channel interface.
-* `bpdu_gaurd_flag` - BPDU flag for the port-channel interface.
+* `bpdu_guard_flag` - BPDU flag for the port-channel interface.
 * `port_fast_flag` - port type fast flag for the port-channel interface.
 * `mtu` - mtu for the port-channel interface.
 * `allowed_vlans` - allowed vlans for the port-channel interface.
@@ -70,7 +70,7 @@ data "dcnm_interface" "check" {
 * `vpc_peer1_interface` - list of peer1 member interface for the vPC interface.
 * `vpc_peer2_interface` - list of peer2 member interface for the vPC interface.
 * `mode` - mode for the vPC interface.
-* `bpdu_gaurd_flag` - BPDU flag for the vPC interface.
+* `bpdu_guard_flag` - BPDU flag for the vPC interface.
 * `port_fast_flag` - port type fast flag for the vPC interface.
 * `mtu` - mtu for the vPC interface.
 * `vpc_peer1_allowed_vlans` - peer1 allowed vlans for the vPC interface.
@@ -97,7 +97,7 @@ data "dcnm_interface" "check" {
 ## Attribute Reference for ethernet Interface ##
 
 * `vrf` - vrf name for the ethernet interface.
-* `bpdu_gaurd_flag` - BPDU flag for the ethernet interface.
+* `bpdu_guard_flag` - BPDU flag for the ethernet interface.
 * `port_fast_flag` - port type fast flag for the ethernet interface.
 * `mtu` - mtu for the ethernet interface. 
 * `ethernet_speed` - speed of the ethernet.

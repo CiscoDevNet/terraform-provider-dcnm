@@ -145,7 +145,7 @@ func datasourceDCNMInterface() *schema.Resource {
 				Computed: true,
 			},
 
-			"bpdu_gaurd_flag": &schema.Schema{
+			"bpdu_guard_flag": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -22,7 +22,7 @@ resource "dcnm_interface" "second" {
   switch_name_1 = "leaf2"
 
   mode            = "active"
-  bpdu_gaurd_flag = "true"
+  bpdu_guard_flag = "true"
   mtu             = "jumbo"
   allowed_vlans   = "none"
   access_vlans    = "10"
@@ -66,7 +66,7 @@ resource "dcnm_interface" "second" {
   vpc_peer1_id            = "501"
   vpc_peer2_id            = "502"
   mode                    = "active"
-  bpdu_gaurd_flag         = "true"
+  bpdu_guard_flag         = "true"
   mtu                     = "jumbo"
   vpc_peer1_allowed_vlans = "none"
   vpc_peer2_allowed_vlans = "none"
@@ -128,7 +128,7 @@ resource "dcnm_interface" "second" {
 * `pc_interface` - (Optional) list of port channel member interface for port-channel interface.
 * `access_vlans` - (Optional) access vlans for the port-channel interface.
 * `mode` - (Optional) mode for the port-channel interface. Allowed values are "on", "active" and "passive".
-* `bpdu_gaurd_flag` - (Optional) BPDU flag for the port-channel interface. Allowed values are "true", "false" and "no".
+* `bpdu_guard_flag` - (Optional) BPDU flag for the port-channel interface. Allowed values are "true", "false" and "no".
 * `port_fast_flag` - (Optional) port type fast flag for the port-channel interface.
 * `mtu` - (Optional) mtu for the port-channel interface. Allowed values are "jumbo" and "default". 
 * `allowed_vlans` - (Optional) allowed vlans for the port-channel interface. Allowed values are "none", "all" or vlan ranges(1-200,500-2000,3000) 
@@ -143,7 +143,7 @@ resource "dcnm_interface" "second" {
 * `vpc_peer1_interface` - (Optional) list of peer1 member interface for the vPC interface.
 * `vpc_peer2_interface` - (Optional) list of peer2 member interface for the vPC interface.
 * `mode` - (Optional)  mode for the vPC interface. Allowed values are "on", "active" and "passive".
-* `bpdu_gaurd_flag` - (Optional) BPDU flag for the vPC interface. Allowed values are "true", "false" and "no".
+* `bpdu_guard_flag` - (Optional) BPDU flag for the vPC interface. Allowed values are "true", "false" and "no".
 * `port_fast_flag` - (Optional) port type fast flag for the vPC interface.
 * `mtu` - (Optional) mtu for the vPC interface. Allowed values are "jumbo" and "default".
 * `vpc_peer1_allowed_vlans` - (Optional) peer1 allowed vlans for the vPC interface. Allowed values are "none", "all" or vlan ranges(1-200,500-2000,3000) 
@@ -170,7 +170,7 @@ resource "dcnm_interface" "second" {
 ## Argument Reference for ethernet Interface ##
 
 * `vrf` - (Optional) vrf name for the ethernet interface.
-* `bpdu_gaurd_flag` - (Optional) BPDU flag for the ethernet interface. Allowed values are "true", "false" and "no".
+* `bpdu_guard_flag` - (Optional) BPDU flag for the ethernet interface. Allowed values are "true", "false" and "no".
 * `port_fast_flag` - (Optional) port type fast flag for the ethernet interface.
 * `mtu` - (Optional) mtu for the ethernet interface. Allowed values are "jumbo" and "default". If `policy` is configured as "epl_routed_intf" or "int_routed_host_11_1", then allowed value range is from 576 to 9216.
 * `ethernet_speed` - (Optional) speed of the ethernet. Allowed values are "Auto", "100Mb", "1Gb", "10Gb", "25Gb",	"40Gb" and "100Gb".
