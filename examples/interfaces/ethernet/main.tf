@@ -13,7 +13,7 @@ resource "dcnm_interface" "second" {
   fabric_name   = "fab2"
 
   ethernet_speed  = "Auto"
-  bpdu_gaurd_flag = "no"
+  bpdu_guard_flag = "no"
   allowed_vlans   = "none"
   mtu             = "jumbo"
   port_fast_flag  = true
