@@ -13,7 +13,7 @@ resource "dcnm_interface" "second" {
   switch_name_1 = "leaf2"
 
   mode            = "active"
-  bpdu_gaurd_flag = "true"
+  bpdu_guard_flag = "true"
   mtu             = "jumbo"
   allowed_vlans   = "none"
   access_vlans    = "10"

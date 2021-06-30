@@ -16,7 +16,7 @@ resource "dcnm_interface" "second" {
   vpc_peer1_id            = "501"
   vpc_peer2_id            = "502"
   mode                    = "active"
-  bpdu_gaurd_flag         = "true"
+  bpdu_guard_flag         = "true"
   mtu                     = "jumbo"
   vpc_peer1_allowed_vlans = "none"
   vpc_peer2_allowed_vlans = "none"
