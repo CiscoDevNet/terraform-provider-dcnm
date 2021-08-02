@@ -432,11 +432,19 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 		vrf.Id = segmentId.(string)
 	} else {
 		//request to get the next vrf segment id
-		cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/partitions/ids", vrf.Fabric))
-		if err != nil {
-			return err
+		if dcnmClient.GetPlatform() == "nd" {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("rest/top-down/fabrics/%s/vrfinfo", vrf.Fabric))
+			if err != nil {
+				return err
+			}
+			vrf.Id = cont.S("l3vni").String()
+		} else {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/partitions/ids", vrf.Fabric))
+			if err != nil {
+				return err
+			}
+			vrf.Id = cont.S("partitionSegmentId").String()
 		}
-		vrf.Id = cont.S("partitionSegmentId").String()
 	}
 
 	if srcTemp, ok := d.GetOk("service_template"); ok {

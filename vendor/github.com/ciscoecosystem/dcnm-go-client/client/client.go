@@ -18,6 +18,12 @@ const authPayload = `{
 	"expirationTime": %d
 }`
 
+const ndAuthPayload = `{
+	"userName": "%s",
+  	"userPasswd": "%s",
+  	"domain": "local"
+}`
+
 type Client struct {
 	baseURL    *url.URL
 	httpClient *http.Client
@@ -27,6 +33,8 @@ type Client struct {
 	insecure   bool
 	proxyUrl   string
 	expiry     int64
+	domain     string
+	platform   string
 }
 
 var clientImpl *Client
@@ -43,6 +51,16 @@ func ProxyUrl(pUrl string) Option {
 	return func(client *Client) {
 		client.proxyUrl = pUrl
 	}
+}
+
+func Platform(platform string) Option {
+	return func(client *Client) {
+		client.platform = platform
+	}
+}
+
+func (c *Client) GetPlatform() string {
+	return c.platform
 }
 
 func (c *Client) useInsecureHTTPClient(insecure bool) *http.Transport {
@@ -115,6 +133,11 @@ func GetClient(clientURL, username, password string, expiry int64, options ...Op
 }
 
 func (c *Client) MakeRequest(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
+
+	if c.platform == "nd" && authenticated {
+		path = fmt.Sprint("/appcenter/cisco/dcnm/v1/lan-fabric", path)
+	}
+
 	url, err := url.Parse(path)
 	if err != nil {
 		return nil, err
@@ -170,33 +193,67 @@ func (c *Client) makeRequestForCred(method, path string, body []byte, authentica
 
 func (c *Client) authenticate() error {
 	method := "POST"
-	path := "/rest/logon"
-	body, err := container.ParseJSON([]byte(fmt.Sprintf(authPayload, c.expiry)))
-	if err != nil {
-		return err
-	}
 
-	req, err := c.MakeRequest(method, path, body, false)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", getBasicAuth(c.username, c.password)))
+	if c.platform == "nd" {
+		path := "/login"
 
-	obj, resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == 500 {
-		return fmt.Errorf("Invalid username or password")
-	}
+		body, err := container.ParseJSON([]byte(fmt.Sprintf(ndAuthPayload, c.username, c.password)))
+		if err != nil {
+			return err
+		}
 
-	token := models.StripQuotes(obj.S("Dcnm-Token").String())
+		req, err := c.MakeRequest(method, path, body, false)
+		if err != nil {
+			return err
+		}
 
-	if c.authToken == nil {
-		c.authToken = &auth{}
+		obj, resp, err := c.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode == 401 {
+			return fmt.Errorf("Invalid username or password")
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		token := models.StripQuotes(obj.S("token").String())
+
+		if c.authToken == nil {
+			c.authToken = &auth{}
+		}
+		c.authToken.token = token
+		c.authToken.calculateExpiry(1200)
+
+	} else {
+		path := "/rest/logon"
+
+		body, err := container.ParseJSON([]byte(fmt.Sprintf(authPayload, c.expiry)))
+		if err != nil {
+			return err
+		}
+
+		req, err := c.MakeRequest(method, path, body, false)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Authorization", fmt.Sprintf("Basic %s", getBasicAuth(c.username, c.password)))
+
+		obj, resp, err := c.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode == 500 {
+			return fmt.Errorf("Invalid username or password")
+		}
+
+		token := models.StripQuotes(obj.S("Dcnm-Token").String())
+
+		if c.authToken == nil {
+			c.authToken = &auth{}
+		}
+		c.authToken.token = token
+		c.authToken.calculateExpiry(c.expiry)
 	}
-	c.authToken.token = token
-	c.authToken.calculateExpiry(c.expiry)
 	return nil
 }
 
