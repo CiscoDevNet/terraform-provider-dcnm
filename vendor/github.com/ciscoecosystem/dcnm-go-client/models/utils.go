@@ -23,3 +23,7 @@ func A(data map[string]interface{}, key string, value interface{}) {
 		data[key] = ""
 	}
 }
+
+func IsService(path string) bool {
+	return strings.Contains(path, "elastic-service") || strings.Contains(path, "elasticservice")
+}

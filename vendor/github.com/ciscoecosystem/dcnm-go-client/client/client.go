@@ -134,7 +134,7 @@ func GetClient(clientURL, username, password string, expiry int64, options ...Op
 
 func (c *Client) MakeRequest(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
 
-	if c.platform == "nd" && authenticated {
+	if c.platform == "nd" && authenticated && !models.IsService(path) {
 		path = fmt.Sprint("/appcenter/cisco/dcnm/v1/lan-fabric", path)
 	}
 

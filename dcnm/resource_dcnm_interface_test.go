@@ -61,10 +61,10 @@ func TestAccDCNMInterface_Update(t *testing.T) {
 func testAccCheckDCNMInterfaceConfig_basic(desc string) string {
 	return fmt.Sprintf(`
 	resource "dcnm_interface" "test" {
-		fabric_name = "fab2"
+		fabric_name = "fabric1"
 		name        = "loopback5"
 		type        = "loopback"
-		policy      = "int_loopback_11_1"
+		policy      = "int_loopback"
 	  
 		switch_name_1             = "leaf1"
 		ipv4                      = "1.2.3.4"
