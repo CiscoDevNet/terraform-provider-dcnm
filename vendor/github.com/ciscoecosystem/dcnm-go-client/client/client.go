@@ -154,15 +154,18 @@ func (c *Client) MakeRequest(method, path string, body *container.Container, aut
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	log.Println("HTTP request ", method, path, req)
-
+	if authenticated {
+		log.Println("HTTP request ", method, path, req)
+	}
 	if authenticated {
 		req, err = c.injectAuthenticationHeader(req, path)
 		if err != nil {
 			return req, err
 		}
 	}
-	log.Println("HTTP request after injection ", method, path, req)
+	if authenticated {
+		log.Println("HTTP request after injection ", method, path, req)
+	}
 	return req, nil
 }
 
