@@ -462,7 +462,7 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		segID = nid.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
-			cont, err := dcnmClient.GetSegID(fmt.Sprintf("rest/top-down/fabrics/%s/netinfo", fabricName))
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
 			if err != nil {
 				return err
 			}
