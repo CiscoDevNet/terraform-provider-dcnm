@@ -433,7 +433,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		//request to get the next vrf segment id
 		if dcnmClient.GetPlatform() == "nd" {
-			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/top-down/fabrics/%s/vrfinfo", vrf.Fabric))
+			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/vrfinfo", vrf.Fabric))
 			if err != nil {
 				return err
 			}
