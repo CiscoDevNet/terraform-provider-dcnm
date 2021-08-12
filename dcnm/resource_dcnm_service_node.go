@@ -3,6 +3,8 @@ package dcnm
 import (
 	"fmt"
 	"log"
+	"reflect"
+	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -49,7 +51,7 @@ func resourceDCNMServiceNode() *schema.Resource {
 				}, false),
 			},
 
-			"fabric_name": &schema.Schema{
+			"service_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,14 +65,17 @@ func resourceDCNMServiceNode() *schema.Resource {
 
 			"link_template_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Optional: true,
+				Default:  "service_link_trunk",
 			},
 
-			"attached_switch_sn": &schema.Schema{
-				Type:     schema.TypeString,
+			"switches": &schema.Schema{
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"attached_switch_interface_name": &schema.Schema{
@@ -79,7 +84,7 @@ func resourceDCNMServiceNode() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"attached_fabric_name": &schema.Schema{
+			"attached_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -215,23 +220,104 @@ func resourceDCNMServiceNode() *schema.Resource {
 }
 
 func resourceDCNMServiceNodeImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return nil,nil
+	log.Println("[DEBUG] Begining Read method ", d.Id())
+
+	dcnmClient := m.(*client.Client)
+	importInfo := strings.Split(d.Id(), ":")
+	if len(importInfo) != 2 {
+		return nil, fmt.Errorf("not getting enough arguments for the import operation")
+	}
+	fabricName := importInfo[0]
+	name := importInfo[1]
+
+	var durl string
+	if dcnmClient.GetPlatform() == "nd" {
+		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes", fabricName)
+	} else {
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName,name)
+	}
+
+	cont, err := dcnmClient.GetviaURL(durl)
+	if err != nil {
+		return nil,err
+	}
+
+	stateImport := setServiceNodeAttributes(d, cont)
+	log.Println("[DEBUG] End of Read method ", d.Id())
+	return []*schema.ResourceData{stateImport},nil
 }
+
+
+func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+
+	d.Set("name", stripQuotes(cont.S("name").String()))
+	d.Set("service_fabric", stripQuotes(cont.S("fabricName").String()))
+	d.Set("node_type", stripQuotes(cont.S("type").String()))
+	d.Set("form_factor", stripQuotes(cont.S("formFactor").String()))
+	d.Set("interface_name", stripQuotes(cont.S("interfaceName").String()))
+	d.Set("link_template_name", stripQuotes(cont.S("linkTemplateName").String()))
+
+	switchList := strings.Split(stripQuotes(cont.S("attachedSwitchSn").String()),",")
+	if switcheSn,ok := d.GetOk("switches"); ok {
+		tfSwitches := toStringList(switcheSn.(*schema.Set).List())
+		if !reflect.DeepEqual(tfSwitches,switchList) {
+			d.Set("switches", switchList)
+		} else {
+			d.Set("switches", tfSwitches)
+		}
+	} else {
+		d.Set("switches", switchList)
+	}
+
+	d.Set("attached_switch_interface_name", stripQuotes(cont.S("attachedSwitchinterfaceName").String()))
+	d.Set("attached_fabric", stripQuotes(cont.S("attachedFabricName").String()))
+	d.Set("form_factor", stripQuotes(cont.S("formFactor").String()))
+	d.Set("speed", stripQuotes(cont.S("nvPair","SPEED").String()))
+	d.Set("mtu", stripQuotes(cont.S("nvPair","MTU").String()))
+	d.Set("allowed_vlans", stripQuotes(cont.S("nvPair","ALLOWED_VLANS").String()))
+	d.Set("bpduguard_enabled", stripQuotes(cont.S("nvPair","BPDUGUARD_ENABLED").String()))
+	d.Set("porttype_fast_enabled", stripQuotes(cont.S("nvPair","PORTTYPE_FAST_ENABLED").String()))
+	d.Set("admin_state", stripQuotes(cont.S("nvPair","ADMIN_STATE").String()))
+	d.Set("source_if_name", stripQuotes(cont.S("nvPair","SOURCE_IF_NAME").String()))
+	d.Set("source_fabric_name", stripQuotes(cont.S("nvPair","SOURCE_FABRIC_NAME").String()))
+	d.Set("source_switch_name", stripQuotes(cont.S("nvPair","SOURCE_SWITCH_NAME").String()))
+	d.Set("link_uuid", stripQuotes(cont.S("nvPair","LINK_UUID").String()))
+	d.Set("priority", stripQuotes(cont.S("nvPair","PRIORITY").String()))
+	d.Set("dest_fabric_name", stripQuotes(cont.S("nvPair","DEST_FABRIC_NAME").String()))
+	d.Set("policy_id", stripQuotes(cont.S("nvPair","POLICY_ID").String()))
+	d.Set("dest_switch_name", stripQuotes(cont.S("nvPair","DEST_SWITCH_NAME").String()))
+	d.Set("is_metaswitch", stripQuotes(cont.S("nvPair","IS_METASWITCH").String()))
+	d.Set("dest_if_name", stripQuotes(cont.S("nvPair","DEST_IF_NAME").String()))
+	d.Set("dest_serial_number", stripQuotes(cont.S("nvPair","DEST_SERIAL_NUMBER").String()))
+	d.Set("source_serial_number", stripQuotes(cont.S("nvPair","SOURCE_SERIAL_NUMBER").String()))
+	d.Set("policy_description", stripQuotes(cont.S("nvPair","POLICY_DESC").String()))
+
+	d.SetId(stripQuotes(cont.S("name").String()))
+	return d
+}
+
 
 func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Create method ")
 
 	dcnmClient := m.(*client.Client)
 
+	attachedFabric := d.Get("attached_fabric").(string)
+	switches := toStringList(d.Get("switches").(*schema.Set).List())
+	if len(switches) > 2 {
+		return fmt.Errorf("Fabric: %s - Upto 2 switches only allowed", attachedFabric)
+	}
+	attachedSwitchSn := strings.Join(switches[:], ",")
+
 	serviceNode := models.ServiceNode{
 		Name:                        d.Get("name").(string),
 		Type:                        d.Get("node_type").(string),
-		FabricName:                  d.Get("fabric_name").(string),
-		InterfaceName:               d.Get("interfaceName").(string),
-		LinkTemplateName:            d.Get("linkTemplateName").(string),
-		AttachedSwitchSn:            d.Get("attachedSwitchSn").(string),
-		AttachedSwitchInterfaceName: d.Get("attachedSwitchinterfaceName").(string),
-		AttachedFabricName:          d.Get("attachedFabricName").(string),
+		FabricName:                  d.Get("service_fabric").(string),
+		InterfaceName:               d.Get("interface_name").(string),
+		LinkTemplateName:            d.Get("link_template_name").(string),
+		AttachedSwitchSn:            attachedSwitchSn,
+		AttachedSwitchInterfaceName: d.Get("attached_switch_interface_name").(string),
+		AttachedFabricName:          attachedFabric,
 	}
 
 	if formFactor, ok := d.GetOk("form_factor"); ok {
@@ -241,14 +327,10 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 
 	if speed, ok := d.GetOk("speed"); ok {
 		nvPairMap["SPEED"] = speed.(string)
-	} else {
-		nvPairMap["SPEED"] = ""
-	}
+	} 
 	if MTU, ok := d.GetOk("mtu"); ok {
 		nvPairMap["MTU"] = MTU.(string)
-	} else {
-		nvPairMap["MTU"] = ""
-	}
+	} 
 	if allowedVlans, ok := d.GetOk("allowed_vlans"); ok {
 		nvPairMap["ALLOWED_VLANS"] = allowedVlans.(string)
 	} else {
@@ -314,9 +396,9 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes", serviceNode.FabricName)
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric=%s", serviceNode.AttachedFabricName)
 	} else {
-		durl = fmt.Sprintf("/rest/fabrics/%s/service-node", serviceNode.FabricName)
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes", serviceNode.FabricName)
 	}
 
 	_, err := dcnmClient.Save(durl, &serviceNode)
@@ -325,11 +407,122 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 	}
 
 	d.SetId(serviceNode.Name)
+	log.Println("[DEBUG] End of Create ", d.Id())
 	return resourceDCNMServiceNodeRead(d, m)
 }
 
 func resourceDCNMServiceNodeUpdate(d *schema.ResourceData, m interface{}) error {
-	return nil
+	log.Println("[DEBUG] Begining Create method ")
+
+	dcnmClient := m.(*client.Client)
+
+	attachedFabric := d.Get("attached_fabric").(string)
+	switches := toStringList(d.Get("switches").(*schema.Set).List())
+	if len(switches) > 2 {
+		return fmt.Errorf("Fabric: %s - Upto 2 switches only allowed", attachedFabric)
+	}
+	attachedSwitchSn := strings.Join(switches[:], ",")
+
+	serviceNode := models.ServiceNode{
+		Name:                        d.Get("name").(string),
+		Type:                        d.Get("node_type").(string),
+		FabricName:                  d.Get("service_fabric").(string),
+		InterfaceName:               d.Get("interface_name").(string),
+		LinkTemplateName:            d.Get("link_template_name").(string),
+		AttachedSwitchSn:            attachedSwitchSn,
+		AttachedSwitchInterfaceName: d.Get("attached_switch_interface_name").(string),
+		AttachedFabricName:          attachedFabric,
+	}
+
+	if formFactor, ok := d.GetOk("form_factor"); ok {
+		serviceNode.FormFactor = formFactor.(string)
+	}
+	nvPairMap := make(map[string]interface{})
+
+	if speed, ok := d.GetOk("speed"); ok {
+		nvPairMap["SPEED"] = speed.(string)
+	} 
+	if MTU, ok := d.GetOk("mtu"); ok {
+		nvPairMap["MTU"] = MTU.(string)
+	} 
+	if allowedVlans, ok := d.GetOk("allowed_vlans"); ok {
+		nvPairMap["ALLOWED_VLANS"] = allowedVlans.(string)
+	} else {
+		nvPairMap["ALLOWED_VLANS"] = ""
+	}
+	if bpduguardEnabled, ok := d.GetOk("bpduguard_enabled"); ok {
+		nvPairMap["BPDUGUARD_ENABLED"] = bpduguardEnabled.(string)
+	} else {
+		nvPairMap["BPDUGUARD_ENABLED"] = ""
+	}
+	if porttypeFastEnabled, ok := d.GetOk("porttype_fast_enabled"); ok {
+		nvPairMap["PORTTYPE_FAST_ENABLED"] = porttypeFastEnabled.(string)
+	} else {
+		nvPairMap["PORTTYPE_FAST_ENABLED"] = ""
+	}
+	if adminState, ok := d.GetOk("admin_state"); ok {
+		nvPairMap["ADMIN_STATE"] = adminState.(string)
+	} else {
+		nvPairMap["ADMIN_STATE"] = ""
+	}
+	if sourceIfName, ok := d.GetOk("source_if_name"); ok {
+		nvPairMap["SOURCE_IF_NAME"] = sourceIfName.(string)
+	}
+	if sourceFabricName, ok := d.GetOk("source_fabric_name"); ok {
+		nvPairMap["SOURCE_FABRIC_NAME"] = sourceFabricName.(string)
+	}
+	if sourceSwitchName, ok := d.GetOk("source_switch_name"); ok {
+		nvPairMap["SOURCE_SWITCH_NAME"] = sourceSwitchName.(string)
+	}
+	if linkUUID, ok := d.GetOk("link_uuid"); ok {
+		nvPairMap["LINK_UUID"] = linkUUID.(string)
+	}
+	if prio, ok := d.GetOk("priority"); ok {
+		nvPairMap["PRIORITY"] = prio.(string)
+	}
+	if destFabricName, ok := d.GetOk("dest_fabric_name"); ok {
+		nvPairMap["DEST_FABRIC_NAME"] = destFabricName.(string)
+	}
+	if policyID, ok := d.GetOk("policy_id"); ok {
+		nvPairMap["POLICY_ID"] = policyID.(string)
+	}
+	if destSwitchName, ok := d.GetOk("dest_switch_name"); ok {
+		nvPairMap["DEST_SWITCH_NAME"] = destSwitchName.(string)
+	}
+	if isMetaswitch, ok := d.GetOk("is_metaswitch"); ok {
+		nvPairMap["IS_METASWITCH"] = isMetaswitch.(string)
+	}
+	if destIfName, ok := d.GetOk("dest_if_name"); ok {
+		nvPairMap["DEST_IF_NAME"] = destIfName.(string)
+	}
+	if destSerialNumber, ok := d.GetOk("dest_serial_number"); ok {
+		nvPairMap["DEST_SERIAL_NUMBER"] = destSerialNumber.(string)
+	}
+	if sourceSerialNumber, ok := d.GetOk("source_serial_number"); ok {
+		nvPairMap["SOURCE_SERIAL_NUMBER"] = sourceSerialNumber.(string)
+	}
+	if policyDesc, ok := d.GetOk("policy_description"); ok {
+		nvPairMap["POLICY_DESC"] = policyDesc.(string)
+	}
+	if nvPairMap != nil {
+		serviceNode.NVPairs = nvPairMap
+	}
+
+	var durl string
+	if dcnmClient.GetPlatform() == "nd" {
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/?attached-fabric=%s", serviceNode.AttachedFabricName)
+	} else {
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", serviceNode.FabricName,serviceNode.Name)
+	}
+
+	_, err := dcnmClient.Update(durl, &serviceNode)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(serviceNode.Name)
+	log.Println("[DEBUG] End of Update ", d.Id())
+	return resourceDCNMServiceNodeRead(d, m)
 }
 
 func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
@@ -337,18 +530,20 @@ func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
 
 	dcnmClient := m.(*client.Client)
 
-	fabricName := d.Get("fabric_name").(string)
+	name := d.Get("name").(string)
+	fabricName := d.Get("service_fabric").(string)
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
 		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes", fabricName)
 	} else {
-		durl = fmt.Sprintf("/rest/fabrics/%s/service-node", fabricName)
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName,name)
 	}
 
 	cont, err := dcnmClient.GetviaURL(durl)
 	if err != nil {
-		return err
+		d.SetId("")
+		return nil
 	}
 
 	setServiceNodeAttributes(d, cont)
@@ -357,28 +552,15 @@ func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceDCNMServiceNodeDelete(d *schema.ResourceData, m interface{}) error {
-	return nil
-}
+	log.Println("[DEBUG] Begining Delete method ", d.Id())
+	dcnmClient := m.(*client.Client)
+	serviceFabric := d.Get("service_fabric").(string)
 
-func getRemoteServiceNode(client *client.Client, fabricName, nodeName string) (*container.Container, error) {
-	durl := fmt.Sprintf("/rest/fabrics/%s/service-nodes/%s", fabricName, nodeName)
-	cont, err := client.GetviaURL(durl)
+	durl := fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", serviceFabric, d.Id())
+	_, err := dcnmClient.Delete(durl)
 	if err != nil {
-		return cont, err
+		return err
 	}
-	return cont, nil
-}
-
-func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-
-	d.Set("name", stripQuotes(cont.S("name").String()))
-	d.Set("fabricName", stripQuotes(cont.S("fabricName").String()))
-	d.Set("form_factor", stripQuotes(cont.S("formFactor").String()))
-	d.Set("interfaceName", stripQuotes(cont.S("interfaceName").String()))
-	d.Set("linkTemplateName", stripQuotes(cont.S("linkTemplateName").String()))
-	d.Set("attachedSwitchSn", stripQuotes(cont.S("attachedSwitchSn").String()))
-	d.Set("attachedSwitchinterfaceName", stripQuotes(cont.S("attachedSwitchinterfaceName").String()))
-	d.Set("attachedFabricName", stripQuotes(cont.S("attachedFabricName").String()))
-
-	return d
+	log.Println("[DEBUG] End of Delete method ", d.Id())
+	return nil
 }

@@ -16,6 +16,18 @@ func stripQuotes(word string) string {
 	return word
 }
 
+
+func toStringList(configured []interface{}) []string {
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			vs = append(vs, val)
+		}
+	}
+	return vs
+}
+
 func cleanJsonString(data string) (*container.Container, error) {
 	data = strings.ReplaceAll(data, "\\", "")
 
