@@ -70,6 +70,7 @@ func Provider() *schema.Provider {
 			"dcnm_network":   resourceDCNMNetwork(),
 			"dcnm_interface": resourceDCNMInterface(),
 			"dcnm_rest":      resourceDCNMRest(),
+			"dcnm_policy":    resourceDCNMPolicy(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -77,6 +78,7 @@ func Provider() *schema.Provider {
 			"dcnm_inventory": datasourceDCNMInventory(),
 			"dcnm_network":   datasourceDCNMNetwork(),
 			"dcnm_interface": datasourceDCNMInterface(),
+			"dcnm_policy":    datasourceDCNMPolicy(),
 		},
 
 		ConfigureFunc: configClient,
