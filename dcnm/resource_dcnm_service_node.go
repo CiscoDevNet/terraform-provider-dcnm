@@ -155,6 +155,17 @@ func resourceDCNMServiceNodeImporter(d *schema.ResourceData, m interface{}) ([]*
 	fabricName := importInfo[0]
 	name := importInfo[1]
 
+	cont, err := getServiceNodeAttributes(dcnmClient,fabricName, name)
+	if err != nil {
+		return nil, err
+	}
+
+	stateImport := setServiceNodeAttributes(d, cont)
+	log.Println("[DEBUG] End of Read method ", d.Id())
+	return []*schema.ResourceData{stateImport}, nil
+}
+
+func getServiceNodeAttributes(dcnmClient *client.Client,fabricName, name string) (*container.Container, error) {
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
 		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, name)
@@ -166,12 +177,8 @@ func resourceDCNMServiceNodeImporter(d *schema.ResourceData, m interface{}) ([]*
 	if err != nil {
 		return nil, err
 	}
-
-	stateImport := setServiceNodeAttributes(d, cont)
-	log.Println("[DEBUG] End of Read method ", d.Id())
-	return []*schema.ResourceData{stateImport}, nil
+	return cont,nil
 }
-
 func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
 
 	d.Set("name", stripQuotes(cont.S("name").String()))
@@ -362,14 +369,7 @@ func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	fabricName := d.Get("service_fabric").(string)
 
-	var durl string
-	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, name)
-	} else {
-		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, name)
-	}
-
-	cont, err := dcnmClient.GetviaURL(durl)
+	cont, err := getServiceNodeAttributes(fabricName, name)
 	if err != nil {
 		d.SetId("")
 		return nil
