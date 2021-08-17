@@ -50,6 +50,7 @@ func resourceDCNMServiceNode() *schema.Resource {
 					"Physical",
 					"Virtual",
 				}, false),
+				Default: "Virtual",
 			},
 
 			"service_fabric": &schema.Schema{

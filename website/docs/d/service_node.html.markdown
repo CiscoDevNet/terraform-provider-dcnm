@@ -18,45 +18,40 @@ data "dcnm_service_node" "example" {
   service_fabric = "ISN"
 }
 
-
 ```
 
 
 ## Argument Reference ##
 
-* `name` - (Required) name of Object Service Node.
-* `fabric_name` - (Required) External Service fabric name.
+* `name` - (Required) Name of Object Service Node.
+* `service_fabric` - (Required) Name of external fabric where the service node is located. 
 
 
 ## Attribute Reference
+* `id` - Attribute id is set to the name of the Service Node.
+* `admin_state` - Admin state for the Service Node.
+* `allowed_vlans` - Allowed vlan names of the Service.
+* `attached_fabric` - Name of attached easy fabric to which service node is attached.
+* `attached_switch_interface_name` - Switch interfaces where the service node will be attached.
+* `bpdu_guard_flag` - BPDU flag for the service node.
+* `dest_fabric_name` - Destination fabric name of the service node.
+* `dest_if_name` - Destination interface name of the service node.
+* `dest_serial_number` - Destination serial number of the service node.
+* `dest_switch_name` - Destination switch name of the service node.
+* `form_factor` - Form factor of the service node.
+* `interface_name` - Name of the service interface.
+* `is_metaswitch` - Meta-switch flag of the service node.
+* `link_template_name` - Link template name of the service node.
+* `mtu` - MTU of the service node.
+* `node_type` - Name of the service node type.
+* `policy_description` - Description of the attached policy.
+* `policy_id` - ID of the attached policy.
+* `porttype_fast_enabled` - Port-type-fast flag of the service node.
+* `priority` - Priority of the service node.
 
-* `id` - attribute id set to the name of the Service Node.
-* `vlan` - vlan Id for the VRF.
-* `vlan_name` - vlan name for the VRF.
-* `description` - description for the VRF.
-* `intf_description` - intf desscription for the VRF.
-* `tag` - tag for the VRF.
-* `max_bgp_path` - maximum BGP path value for the VRF.
-* `max_ibgp_path` - maximum iBGP path value for the VRF.
-* `trm_enable` - trm enable flag for the VRF. Allowed values are "true" and "false".
-* `rp_external_flag` - rp external flag for the VRF. Allowed values are "true" and "false".
-* `rp_address` - rp address for the VRF.
-* `loopback_id` - loopback ip address for the VRF.
-* `mutlicast_group` - multicast group address for the VRF.
-* `mutlicast_address` - multicast address for the VRF.
-* `ipv6_link_local_flag` - ipv6 link local enable flag for the VRF. Allowed values are "true" and "false".
-* `trm_bgw_msite_flag` - trm bgw multisite enable flag for the VRF. Allowed values are "true" and "false".
-* `advertise_host_route` - advertise host route enable flag for the VRF. Allowed values are "true" and "false".
-* `advertise_default_route` - advertise default route enable flag for the VRF. Allowed values are "true" and "false".
-* `static_default_route` - configure static default route enable flag for the VRF. Allowed values are "true" and "false".
-* `template` - template name for the VRF. Values allowed "Default_VRF_Universal". Default is "Default_VRF_Universal".
-* `mtu` - mtu value for the VRF. Ranginf from 68 to 9216.
-* `extension_template` - extension Template name for the VRF. Values allowed are "Default_VRF_Extension_Universal". Default is "Default_VRF_Extension_Universal".
-* `service_template` - service template name for the VRF.
-* `source` - source for the VRF.
-* `deploy` - deploy flag, used to deploy the VRF. Default value is "true".
-
-* `attachments` - attachment Block, have information regarding the switches which should be attached or detached to/from VRF.
-* `attachments.serial_number` - serial number of the switch.
-* `attachments.vlan_id` - vlan ID for the switch associated with VRF.
-* `attachments.attach` - attach flag for switch. Default value is "true".
+* `source_fabric_name` - Source fabric name of the service node.
+* `source_if_name` - Source interface name of the service node.
+* `source_serial_number` - Source serial number of the service node.
+* `source_switch_name` - Source switch name of the service node.
+* `speed` - bandwidth of the service node.
+* `switches` - Serial Numbers of the switch where service node will be added.
