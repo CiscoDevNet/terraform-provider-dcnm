@@ -65,20 +65,22 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"dcnm_vrf":       resourceDCNMVRF(),
-			"dcnm_inventory": resourceDCNMInventroy(),
-			"dcnm_network":   resourceDCNMNetwork(),
-			"dcnm_interface": resourceDCNMInterface(),
-			"dcnm_rest":      resourceDCNMRest(),
-			"dcnm_policy":    resourceDCNMPolicy(),
+			"dcnm_vrf":          resourceDCNMVRF(),
+			"dcnm_inventory":    resourceDCNMInventroy(),
+			"dcnm_network":      resourceDCNMNetwork(),
+			"dcnm_interface":    resourceDCNMInterface(),
+			"dcnm_rest":         resourceDCNMRest(),
+			"dcnm_policy":       resourceDCNMPolicy(),
+			"dcnm_service_node": resourceDCNMServiceNode(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"dcnm_vrf":       datasourceDCNMVRF(),
-			"dcnm_inventory": datasourceDCNMInventory(),
-			"dcnm_network":   datasourceDCNMNetwork(),
-			"dcnm_interface": datasourceDCNMInterface(),
-			"dcnm_policy":    datasourceDCNMPolicy(),
+			"dcnm_vrf":          datasourceDCNMVRF(),
+			"dcnm_inventory":    datasourceDCNMInventory(),
+			"dcnm_network":      datasourceDCNMNetwork(),
+			"dcnm_interface":    datasourceDCNMInterface(),
+			"dcnm_policy":       datasourceDCNMPolicy(),
+			"dcnm_service_node": datasourceDCNMServiceNode(),
 		},
 
 		ConfigureFunc: configClient,
