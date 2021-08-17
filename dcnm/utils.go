@@ -16,7 +16,6 @@ func stripQuotes(word string) string {
 	return word
 }
 
-
 func toStringList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
 	for _, v := range configured {

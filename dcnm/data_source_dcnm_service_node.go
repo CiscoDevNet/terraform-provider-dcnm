@@ -1,6 +1,16 @@
-func resourceDCNMServiceNode() *schema.Resource {
+package dcnm
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/ciscoecosystem/dcnm-go-client/client"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func datasourceDCNMServiceNode() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceDCNMServiceNodeRead,
+		Read: dataSourceDCNMServiceNodeRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -38,9 +48,10 @@ func resourceDCNMServiceNode() *schema.Resource {
 			},
 
 			"switches": &schema.Schema{
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Set:      schema.HashString,
 			},
 
 			"attached_switch_interface_name": &schema.Schema{
@@ -73,7 +84,7 @@ func resourceDCNMServiceNode() *schema.Resource {
 				Computed: true,
 			},
 
-			"bpdu_guard_enabled": &schema.Schema{
+			"bpdu_guard_flag": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -104,12 +115,6 @@ func resourceDCNMServiceNode() *schema.Resource {
 			},
 
 			"source_switch_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"link_uuid": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -168,18 +173,6 @@ func resourceDCNMServiceNode() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
-			"force_deletion": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"retain_switch": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -194,9 +187,9 @@ func dataSourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error 
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes", fabricName)
+		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, name)
 	} else {
-		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName,name)
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, name)
 	}
 
 	cont, err := dcnmClient.GetviaURL(durl)
@@ -205,6 +198,20 @@ func dataSourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	setServiceNodeAttributes(d, cont)
+	d.Set("source_if_name", stripQuotes(cont.S("nvPairs", "SOURCE_IF_NAME").String()))
+	d.Set("source_fabric_name", stripQuotes(cont.S("nvPairs", "SOURCE_FABRIC_NAME").String()))
+	d.Set("source_switch_name", stripQuotes(cont.S("nvPairs", "SOURCE_SWITCH_NAME").String()))
+	d.Set("priority", stripQuotes(cont.S("nvPairs", "PRIORITY").String()))
+	d.Set("dest_fabric_name", stripQuotes(cont.S("nvPairs", "DEST_FABRIC_NAME").String()))
+	d.Set("policy_id", stripQuotes(cont.S("nvPairs", "POLICY_ID").String()))
+	d.Set("dest_switch_name", stripQuotes(cont.S("nvPairs", "DEST_SWITCH_NAME").String()))
+	d.Set("is_metaswitch", stripQuotes(cont.S("nvPairs", "IS_METASWITCH").String()))
+	d.Set("dest_if_name", stripQuotes(cont.S("nvPairs", "DEST_IF_NAME").String()))
+	d.Set("dest_serial_number", stripQuotes(cont.S("nvPairs", "DEST_SERIAL_NUMBER").String()))
+	d.Set("source_serial_number", stripQuotes(cont.S("nvPairs", "SOURCE_SERIAL_NUMBER").String()))
+	d.Set("policy_description", stripQuotes(cont.S("nvPairs", "POLICY_DESC").String()))
+
+	d.SetId(stripQuotes(cont.S("name").String()))
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
 }
