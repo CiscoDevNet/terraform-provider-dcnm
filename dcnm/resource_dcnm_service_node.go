@@ -45,7 +45,6 @@ func resourceDCNMServiceNode() *schema.Resource {
 			"form_factor": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"Physical",
 					"Virtual",
