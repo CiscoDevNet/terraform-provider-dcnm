@@ -26,6 +26,9 @@ func resourceDCNMPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: schema.SchemaValidateFunc(IsEmpty()),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"serial_number": &schema.Schema{
 				Type:     schema.TypeString,
@@ -75,6 +78,7 @@ func resourceDCNMPolicy() *schema.Resource {
 		},
 	}
 }
+
 func IsEmpty() schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (s []string, es []error) {
 		v, ok := i.(string)
@@ -209,7 +213,13 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 	strByte = []byte(strJson)
 	var nvPair map[string]interface{}
 	json.Unmarshal(strByte, &nvPair)
-	d.Set("template_props", nvPair)
+	props := d.Get("template_props").(map[string]interface{})
+	map2 := make(map[string]interface{})
+	for k, _ := range props {
+		map2[k] = nvPair[k]
+
+	}
+	d.Set("template_props", map2)
 
 	return d
 }
@@ -221,12 +231,8 @@ func resourceDCNMPolicyRead(d *schema.ResourceData, m interface{}) error {
 	dn := d.Id()
 	var policyId string
 
-	if Id, ok := d.GetOk("policy_id"); ok {
-		policyId = Id.(string)
+	policyId = "POLICY-" + dn
 
-	} else {
-		policyId = "POLICY-" + dn
-	}
 	cont, err := getAllPolicy(dcnmClient, policyId)
 
 	if err != nil {
@@ -237,7 +243,7 @@ func resourceDCNMPolicyRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	setPolicyAttributes(d, cont)
-	d.SetId(dn)
+	d.SetId(stripQuotes(cont.S("id").String()))
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
 
@@ -300,7 +306,7 @@ func resourceDCNMPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
-	d.SetId(d.Id())
+	d.SetId(stripQuotes(cont.S("id").String()))
 	return resourceDCNMPolicyRead(d, m)
 
 }
