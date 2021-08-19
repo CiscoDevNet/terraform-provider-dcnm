@@ -355,7 +355,8 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
 
-	d.SetId(stripQuotes(cont.S("peeringName").String()))
+	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s",
+		FabricName, ServiceNodeName, stripQuotes(cont.S("peeringName").String())))
 	return resourceRoutePeeringRead(d, m)
 }
 func getRoutePeeringDeploymentStatus(dcnmClient *client.Client, AttachedFabricName, extFabric, node, name string) (bool, error) {
@@ -510,7 +511,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
-	d.SetId(stripQuotes(cont.S("peeringName").String()))
+	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s", FabricName, ServiceNodeName, name))
 	log.Println("[DEBUG] End of Update Route Peering", d.Id())
 	return resourceRoutePeeringRead(d, m)
 }
@@ -602,12 +603,13 @@ func getRoutePeering(client *client.Client, AttachedFabricName, extFabric, node,
 	return cont, err
 }
 func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-	var name string
+	var name, FabricName, ServiceNodeName string
 	if cont.Exists("peeringName") {
 		name = stripQuotes(cont.S("peeringName").String())
 		d.Set("name", stripQuotes(cont.S("peeringName").String()))
 	}
 	if cont.Exists("fabricName") {
+		FabricName = stripQuotes(cont.S("fabricName").String())
 		d.Set("fabric_name", stripQuotes(cont.S("fabricName").String()))
 	}
 	if cont.Exists("attachedFabricName") {
@@ -626,6 +628,7 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		d.Set("reverse_next_hop_ip", stripQuotes(cont.S("reverseNextHopIp").String()))
 	}
 	if cont.Exists("serviceNodeName") {
+		ServiceNodeName = stripQuotes(cont.S("serviceNodeName").String())
 		d.Set("service_node_name", stripQuotes(cont.S("serviceNodeName").String()))
 	}
 	if cont.Exists("serviceNodeType") {
@@ -674,7 +677,7 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		}
 		d.Set("routes", routeList)
 	}
-	d.SetId(name)
+	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s", FabricName, ServiceNodeName, name))
 	return d
 }
 func resourceRoutePeeringRead(d *schema.ResourceData, m interface{}) error {
