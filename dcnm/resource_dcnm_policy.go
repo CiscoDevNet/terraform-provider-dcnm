@@ -156,6 +156,9 @@ func resourceDCNMPolicyCreate(d *schema.ResourceData, m interface{}) error {
 
 		cont, err := dcnmClient.Save("/rest/control/policies/bulk-create", &policy)
 		if err != nil {
+			if cont != nil {
+				return fmt.Errorf(cont.String())
+			}
 			return err
 		}
 		// Get the id from resource
@@ -201,7 +204,12 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 	d.Set("template_name", stripQuotes(cont.S("templateName").String()))
 	d.Set("template_content_type", stripQuotes(cont.S("templateContentType").String()))
 	d.Set("priority", stripQuotes(cont.S("priority").String()))
-	// d.Set("template_props", stripQuotes(cont.S("nvPairs")))
+	var strByte []byte
+	strJson := stripQuotes(cont.S("nvPairs").String())
+	strByte = []byte(strJson)
+	var nvPair map[string]interface{}
+	json.Unmarshal(strByte, &nvPair)
+	d.Set("template_props", nvPair)
 
 	return d
 }
@@ -223,6 +231,9 @@ func resourceDCNMPolicyRead(d *schema.ResourceData, m interface{}) error {
 
 	if err != nil {
 		// d.SetId("")
+		if cont != nil {
+			return fmt.Errorf(cont.String())
+		}
 		return err
 	}
 	setPolicyAttributes(d, cont)
@@ -271,8 +282,11 @@ func resourceDCNMPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	policy.Id = d.Id()
 	dUrl := fmt.Sprintf("/rest/control/policies/%s", policy.PolicyId)
-	_, err := dcnmClient.Update(dUrl, &policy)
+	cont, err := dcnmClient.Update(dUrl, &policy)
 	if err != nil {
+		if cont != nil {
+			return fmt.Errorf(cont.String())
+		}
 		return err
 	}
 	// Deploy the policy
@@ -296,8 +310,11 @@ func resourceDCNMPolicyDelete(d *schema.ResourceData, m interface{}) error {
 
 	policyId := d.Get("policy_id").(string)
 	durl := fmt.Sprintf("/rest/control/policies/%s", policyId)
-	_, err := dcnmClient.Delete(durl)
+	cont, err := dcnmClient.Delete(durl)
 	if err != nil {
+		if cont != nil {
+			return fmt.Errorf(cont.String())
+		}
 		return err
 	}
 
