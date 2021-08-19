@@ -32,6 +32,7 @@ Authentication with user-id and password.
       # cisco-dcnm url
       url      = "https://my-cisco-dcnm.com"
       insecure = true
+      platform = "dcnm"
     }
  
  ```
@@ -67,3 +68,4 @@ Following arguments are supported with Cisco DCNM terraform provider.
  * `password` - (Required) Password of the user mentioned in username argument. It is required when you want to use token-based authentication.
  * `url` - (Required) URL for CISCO DCNM.
  * `insecure` - (Optional) This determines whether to use insecure HTTP connection or not. Default value is `true`.
+ * `platform` - (Optional) DCNM Platform information(Nexus-Dashboard/DCNM). Allowed values are "nd" and "dcnm". Default value is "dcnm".

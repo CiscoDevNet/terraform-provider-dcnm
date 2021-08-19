@@ -43,7 +43,21 @@ func (c *Client) Save(endpoint string, obj models.Model) (*container.Container, 
 	}
 	return cont, checkforerrors(cont, resp)
 }
+func (c *Client) SaveDeploy(endpoint string, policyIds string) (*container.Container, error) {
+	contList := container.New()
+	contList.Array()
+	contList.ArrayAppend(policyIds)
+	req, err := c.MakeRequest("POST", endpoint, contList, true)
+	if err != nil {
+		return nil, err
+	}
 
+	cont, resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return cont, checkforerrors(cont, resp)
+}
 func (c *Client) SaveForAttachment(endpoint string, obj models.Model) (*container.Container, error) {
 	contList := container.New()
 	contList.Array()

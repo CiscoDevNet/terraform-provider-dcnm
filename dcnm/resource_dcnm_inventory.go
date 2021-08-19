@@ -521,6 +521,9 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 			body := []byte(fmt.Sprintf("switchIds=%s&userName=%s&password=%s&v3protocol=%s", switchDbID, inv.Username, inv.Password, strconv.Itoa(auth)))
 
 			durl := fmt.Sprintf("/fm/fmrest/lanConfig/saveSwitchCredentials")
+			if dcnmClient.GetPlatform() == "nd" {
+				durl = fmt.Sprintf("rest/lanConfig/saveSwitchCredentials")
+			}
 			cont, err = dcnmClient.UpdateCred(durl, body)
 			if err != nil {
 				log.Println("error at updation of switch :", ip, err)
