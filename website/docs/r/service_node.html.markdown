@@ -43,7 +43,7 @@ resource "dcnm_service_node" "example" {
 - `attached_fabric` - (Required) Name of attached easy fabric to which service node is attached.
 - `attached_switch_interface_name` - (Required) Switch interfaces where the service node will be attached.
 - `interface_name` - (Required) Name of the service interface.
-- `link_template_name` - (Required) Link template name of the service node.
+- `link_template_name` - (Optional) Link template name of the service node.
 - `switches` - (Required) List of serial Numbers of the switch where service node will be added.
 - `admin_state` - (Optional) Admin state for the Service Node. Allowed values are true and false. Default value is true.
 - `allowed_vlans` - (Optional) Allowed vlan names of the Service. Default value is "none".
