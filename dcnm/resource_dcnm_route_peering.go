@@ -14,21 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var URLS = map[string]map[string]string{
-	"DCNMUrl": {
-		"Create": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings",
-		"Common": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/%s",
-		"Deploy": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
-		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
-	},
-	"NDUrl": {
-		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
-		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
-		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
-		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
-	},
-}
-
 func resourceRoutePeering() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRoutePeeringCreate,
@@ -177,6 +162,21 @@ func resourceRoutePeering() *schema.Resource {
 			},
 		},
 	}
+}
+
+var URLS = map[string]map[string]string{
+	"DCNMUrl": {
+		"Create": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings",
+		"Common": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/%s",
+		"Deploy": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
+		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
+	},
+	"NDUrl": {
+		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
+		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
+		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
+		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
+	},
 }
 
 func resourceRoutePeeringImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -515,6 +515,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] End of Update Route Peering", d.Id())
 	return resourceRoutePeeringRead(d, m)
 }
+
 func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining of Delete Route", d.Id())
 	dcnmClient := m.(*client.Client)
@@ -592,6 +593,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	return nil
 }
+
 func getRoutePeering(client *client.Client, AttachedFabricName, extFabric, node, name string) (*container.Container, error) {
 	var dURL string
 	if client.GetPlatform() == "nd" {
@@ -600,7 +602,7 @@ func getRoutePeering(client *client.Client, AttachedFabricName, extFabric, node,
 		dURL = fmt.Sprintf(URLS["DCNMUrl"]["Common"], extFabric, node, AttachedFabricName, name)
 	}
 	cont, err := client.GetviaURL(dURL)
-	return cont, err
+	return cont, getErrorFromContainer(cont, err)
 }
 func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
 	var name, FabricName, ServiceNodeName string
