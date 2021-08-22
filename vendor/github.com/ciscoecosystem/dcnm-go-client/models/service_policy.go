@@ -20,6 +20,10 @@ type ServicePolicy struct {
 	NvPairs            interface{} `json:",omitempty"`
 }
 
+type ServicePolicyDeploy struct {
+	PolicyNames []string `json:"policyNames,omitempty"`
+}
+
 func (servicepolicy *ServicePolicy) ToMap() (map[string]interface{}, error) {
 	servicepolicyAttributeMap := make(map[string]interface{})
 
@@ -45,4 +49,10 @@ func (servicepolicy *ServicePolicy) ToMap() (map[string]interface{}, error) {
 	}
 
 	return servicepolicyAttributeMap, nil
+}
+
+func (deploy *ServicePolicyDeploy) ToMap() (map[string]interface{}, error) {
+	rDeploy := make(map[string]interface{})
+	A(rDeploy, "policyNames", deploy.PolicyNames)
+	return rDeploy, nil
 }

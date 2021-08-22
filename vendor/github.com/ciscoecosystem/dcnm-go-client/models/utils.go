@@ -1,6 +1,10 @@
 package models
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/ciscoecosystem/dcnm-go-client/container"
+)
 
 func StripQuotes(word string) string {
 	if strings.HasPrefix(word, "\"") && strings.HasSuffix(word, "\"") {
@@ -26,4 +30,8 @@ func A(data map[string]interface{}, key string, value interface{}) {
 
 func IsService(path string) bool {
 	return strings.Contains(path, "elastic-service") || strings.Contains(path, "elasticservice")
+}
+
+func G(cont *container.Container, key string) string {
+	return StripQuotes(cont.S(key).String())
 }

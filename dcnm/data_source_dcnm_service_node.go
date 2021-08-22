@@ -182,14 +182,15 @@ func dataSourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error 
 
 	dcnmClient := m.(*client.Client)
 
-	name := d.Get("name").(string)
+	serviceNodeName := d.Get("name").(string)
 	fabricName := d.Get("service_fabric").(string)
+	attachedFabricName := d.Get("attached_fabric").(string)
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, name)
+		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	} else {
-		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, name)
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	}
 
 	cont, err := dcnmClient.GetviaURL(durl)
@@ -211,7 +212,7 @@ func dataSourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error 
 	d.Set("source_serial_number", stripQuotes(cont.S("nvPairs", "SOURCE_SERIAL_NUMBER").String()))
 	d.Set("policy_description", stripQuotes(cont.S("nvPairs", "POLICY_DESC").String()))
 
-	d.SetId(stripQuotes(cont.S("name").String()))
+	d.SetId(fmt.Sprintf("%s/%s/%s", fabricName, attachedFabricName, serviceNodeName))
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
 }

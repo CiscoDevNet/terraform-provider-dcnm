@@ -155,7 +155,7 @@ func resourceDCNMServiceNodeImporter(d *schema.ResourceData, m interface{}) ([]*
 	fabricName := importInfo[0]
 	name := importInfo[1]
 
-	cont, err := getServiceNodeAttributes(dcnmClient,fabricName, name)
+	cont, err := getServiceNodeAttributes(dcnmClient, fabricName, name)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func resourceDCNMServiceNodeImporter(d *schema.ResourceData, m interface{}) ([]*
 	return []*schema.ResourceData{stateImport}, nil
 }
 
-func getServiceNodeAttributes(dcnmClient *client.Client,fabricName, name string) (*container.Container, error) {
+func getServiceNodeAttributes(dcnmClient *client.Client, fabricName, name string) (*container.Container, error) {
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
 		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, name)
@@ -177,12 +177,14 @@ func getServiceNodeAttributes(dcnmClient *client.Client,fabricName, name string)
 	if err != nil {
 		return nil, err
 	}
-	return cont,nil
+	return cont, nil
 }
 func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-
-	d.Set("name", stripQuotes(cont.S("name").String()))
-	d.Set("service_fabric", stripQuotes(cont.S("fabricName").String()))
+	serviceNodeName := stripQuotes(cont.S("name").String())
+	fabricName := stripQuotes(cont.S("fabricName").String())
+	attachedFabricName := stripQuotes(cont.S("attachedFabricName").String())
+	d.Set("name", serviceNodeName)
+	d.Set("service_fabric", fabricName)
 	d.Set("node_type", stripQuotes(cont.S("type").String()))
 	d.Set("form_factor", stripQuotes(cont.S("formFactor").String()))
 	d.Set("interface_name", stripQuotes(cont.S("interfaceName").String()))
@@ -201,7 +203,7 @@ func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container)
 	}
 
 	d.Set("attached_switch_interface_name", stripQuotes(cont.S("attachedSwitchInterfaceName").String()))
-	d.Set("attached_fabric", stripQuotes(cont.S("attachedFabricName").String()))
+	d.Set("attached_fabric", attachedFabricName)
 	d.Set("form_factor", stripQuotes(cont.S("formFactor").String()))
 	d.Set("speed", stripQuotes(cont.S("nvPairs", "SPEED").String()))
 	d.Set("mtu", stripQuotes(cont.S("nvPairs", "MTU").String()))
@@ -210,7 +212,7 @@ func setServiceNodeAttributes(d *schema.ResourceData, cont *container.Container)
 	d.Set("porttype_fast_enabled", stripQuotes(cont.S("nvPairs", "PORTTYPE_FAST_ENABLED").String()))
 	d.Set("admin_state", stripQuotes(cont.S("nvPairs", "ADMIN_STATE").String()))
 
-	d.SetId(stripQuotes(cont.S("name").String()))
+	d.SetId(fmt.Sprintf("%s/%s/%s", fabricName, attachedFabricName, serviceNodeName))
 	return d
 }
 
@@ -220,6 +222,8 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 	dcnmClient := m.(*client.Client)
 
 	attachedFabric := d.Get("attached_fabric").(string)
+	fabricName := d.Get("service_fabric").(string)
+	serviceNodeName := d.Get("name").(string)
 	switches := toStringList(d.Get("switches").(*schema.Set).List())
 	if len(switches) > 2 {
 		return fmt.Errorf("Fabric: %s - Upto 2 switches only allowed", attachedFabric)
@@ -227,9 +231,9 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 	attachedSwitchSn := strings.Join(switches[:], ",")
 
 	serviceNode := models.ServiceNode{
-		Name:                        d.Get("name").(string),
+		Name:                        serviceNodeName,
 		Type:                        d.Get("node_type").(string),
-		FabricName:                  d.Get("service_fabric").(string),
+		FabricName:                  fabricName,
 		InterfaceName:               d.Get("interface_name").(string),
 		LinkTemplateName:            d.Get("link_template_name").(string),
 		AttachedSwitchSn:            attachedSwitchSn,
@@ -283,7 +287,7 @@ func resourceDCNMServiceNodeCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.SetId(serviceNode.Name)
+	d.SetId(fmt.Sprintf("%s/%s/%s", fabricName, attachedFabric, serviceNodeName))
 	log.Println("[DEBUG] End of Create ", d.Id())
 	return resourceDCNMServiceNodeRead(d, m)
 }
@@ -294,6 +298,8 @@ func resourceDCNMServiceNodeUpdate(d *schema.ResourceData, m interface{}) error 
 	dcnmClient := m.(*client.Client)
 
 	attachedFabric := d.Get("attached_fabric").(string)
+	fabricName := d.Get("service_fabric").(string)
+	serviceNodeName := d.Get("name").(string)
 	switches := toStringList(d.Get("switches").(*schema.Set).List())
 	if len(switches) > 2 {
 		return fmt.Errorf("Fabric: %s - Upto 2 switches only allowed", attachedFabric)
@@ -356,7 +362,7 @@ func resourceDCNMServiceNodeUpdate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	d.SetId(serviceNode.Name)
+	d.SetId(fmt.Sprintf("%s/%s/%s", fabricName, attachedFabric, serviceNodeName))
 	log.Println("[DEBUG] End of Update ", d.Id())
 	return resourceDCNMServiceNodeRead(d, m)
 }
@@ -369,7 +375,7 @@ func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	fabricName := d.Get("service_fabric").(string)
 
-	cont, err := getServiceNodeAttributes(fabricName, name)
+	cont, err := getServiceNodeAttributes(dcnmClient, fabricName, name)
 	if err != nil {
 		d.SetId("")
 		return nil
@@ -383,13 +389,15 @@ func resourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error {
 func resourceDCNMServiceNodeDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
-	serviceFabric := d.Get("service_fabric").(string)
+	idList := strings.Split(d.Id(), "/")
+	fabricName := idList[0]
+	serviceNodeName := idList[2]
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", serviceFabric, d.Id())
+		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	} else {
-		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", serviceFabric, d.Id())
+		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	}
 	_, err := dcnmClient.Delete(durl)
 	if err != nil {

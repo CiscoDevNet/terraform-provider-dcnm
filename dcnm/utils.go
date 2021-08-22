@@ -1,6 +1,7 @@
 package dcnm
 
 import (
+	"fmt"
 	"hash/crc32"
 	"reflect"
 	"sort"
@@ -25,6 +26,13 @@ func toStringList(configured []interface{}) []string {
 		}
 	}
 	return vs
+}
+
+func getErrorFromContainer(cont *container.Container, err error) error {
+	if contErr := stripQuotes(cont.S("error", "detail").String()); cont !=nil && contErr != "null" {
+		return fmt.Errorf(contErr)
+	}
+	return err
 }
 
 func cleanJsonString(data string) (*container.Container, error) {

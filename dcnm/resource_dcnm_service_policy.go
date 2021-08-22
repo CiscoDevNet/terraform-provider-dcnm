@@ -3,6 +3,9 @@ package dcnm
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -23,109 +26,96 @@ func resourceDCNMServicePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy_name": &schema.Schema{
+			"policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"fabric_name": &schema.Schema{
+			"fabric_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"attached_fabric_name": &schema.Schema{
+			"attached_fabric_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"dest_network": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"dest_vrf_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"next_hop_ip": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"peering_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"policy_template_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "service_pbr",
 			},
 
-			"dest_network": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"dest_vrf_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"next_hop_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"peering_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"policy_template_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default: "service_pbr",
-			},
-
-			"reverse_enabled": &schema.Schema{
+			"reverse_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			"reverse_next_hop_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"service_node_name": &schema.Schema{
+			"service_node_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"service_node_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"source_network": &schema.Schema{
+			"source_network": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"source_vrf_name": &schema.Schema{
+			"source_vrf_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"protocol": &schema.Schema{
+			"protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "ip",
 			},
 
-			"src_port": &schema.Schema{
+			"src_port": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "any",
 			},
 
-			"dest_port": &schema.Schema{
+			"dest_port": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "any",
 			},
 
-			"route_map_action": &schema.Schema{
+			"route_map_action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -135,7 +125,7 @@ func resourceDCNMServicePolicy() *schema.Resource {
 				Default: "permit",
 			},
 
-			"next_hop_action": &schema.Schema{
+			"next_hop_action": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -146,78 +136,134 @@ func resourceDCNMServicePolicy() *schema.Resource {
 				Default: "none",
 			},
 
-			"fwd_direction": &schema.Schema{
-				Type:     schema.TypeString,
+			"fwd_direction": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Default: true,
+				Default:  true,
+			},
+			"deploy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"deploy_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  300,
 			},
 		},
 	}
 }
 
-func setServicePolicyAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+var servicePolicyURLs = map[string]map[string]string{
+	"dcnm": {
+		"Create": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies",
+		"Common": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies/%s/%s",
+		"Deploy": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies/%s/deployments",
+		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies/%s/attachments",
+	},
+	"nd": {
+		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies",
+		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/%s",
+		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/deployments",
+		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/attachments",
+	},
+}
 
+func getServicePolicy(client *client.Client, attachedFabricName, fabricName, serviceNodeName, name string) (*container.Container, error) {
+	dURL := fmt.Sprintf(servicePolicyURLs[client.GetPlatform()]["Common"], fabricName, serviceNodeName, attachedFabricName, name)
+	cont, err := client.GetviaURL(dURL)
+	return cont, getErrorFromContainer(cont, err)
+}
+
+func setServicePolicyAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
 	policyName := stripQuotes(cont.S("policyName").String())
 	fabricName := stripQuotes(cont.S("fabricName").String())
 	attachedFabricName := stripQuotes(cont.S("attachedFabricName").String())
 	serviceNodeName := stripQuotes(cont.S("serviceNodeName").String())
+
 	d.Set("policy_name", policyName)
 	d.Set("fabric_name", fabricName)
 	d.Set("attached_fabric_name", attachedFabricName)
 	d.Set("dest_network", stripQuotes(cont.S("destinationNetwork").String()))
 	d.Set("dest_vrf_name", stripQuotes(cont.S("destinationVrfName").String()))
-	d.Set("enabled", stripQuotes(cont.S("enabled").String()))
 	d.Set("next_hop_ip", stripQuotes(cont.S("nextHopIp").String()))
 	d.Set("peering_name", stripQuotes(cont.S("peeringName").String()))
 	d.Set("policy_template_name", stripQuotes(cont.S("policyTemplateName").String()))
-	d.Set("reverse_enabled", stripQuotes(cont.S("reverseEnabled").String()))
-	d.Set("reverse_next_hop_ip", stripQuotes(cont.S("reverseNextHopIp").String()))
-	d.Set("service_node_name",serviceNodeName)
-	d.Set("service_node_type", stripQuotes(cont.S("serviceNodeType").String()))
+	d.Set("service_node_name", serviceNodeName)
 	d.Set("source_network", stripQuotes(cont.S("sourceNetwork").String()))
 	d.Set("source_vrf_name", stripQuotes(cont.S("sourceVrfName").String()))
 	d.Set("status", stripQuotes(cont.S("status").String()))
-	d.Set("protocol", stripQuotes(cont.S("nvPair", "PROTOCOL").String()))
-	d.Set("src_port", stripQuotes(cont.S("nvPair", "SRC_PORT").String()))
-	d.Set("dest_port", stripQuotes(cont.S("nvPair", "DEST_PORT").String()))
-	d.Set("route_map_action", stripQuotes(cont.S("nvPair", "ROUTE_MAP_ACTION").String()))
-	d.Set("next_hop_action", stripQuotes(cont.S("nvPair", "NEXT_HOP_ACTION").String()))
-	d.Set("reverse_next_hop_ip", stripQuotes(cont.S("nvPair", "REVERSE_NEXT_HOP_IP").String()))
-	d.Set("fwd_direction", stripQuotes(cont.S("nvPair", "FWD_DIRECTION").String()))
-
-	d.SetId(fmt.Sprintf("%s/service-nodes/%s/policies/%s",fabricName,serviceNodeName,policyName))
+	d.Set("protocol", stripQuotes(cont.S("nvPairs", "PROTOCOL").String()))
+	d.Set("src_port", stripQuotes(cont.S("nvPairs", "SRC_PORT").String()))
+	d.Set("dest_port", stripQuotes(cont.S("nvPairs", "DEST_PORT").String()))
+	d.Set("next_hop_action", stripQuotes(cont.S("nvPairs", "NEXT_HOP_ACTION").String()))
+	if reverseEnabled, err := strconv.ParseBool(stripQuotes(cont.S("reverseEnabled").String())); err == nil {
+		d.Set("reverse_enabled", reverseEnabled)
+	}
+	if attach, err := strconv.ParseBool(stripQuotes(cont.S("enabled").String())); err == nil {
+		d.Set("deploy", attach)
+	}
+	if fwdPassword, err := strconv.ParseBool(stripQuotes(cont.S("nvPairs", "FWD_DIRECTION").String())); err == nil {
+		d.Set("fwd_direction", fwdPassword)
+	}
+	d.SetId(fmt.Sprintf("%s/%s/%s/%s", fabricName, serviceNodeName, attachedFabricName, policyName))
 	return d
 }
 
 func resourceDCNMServicePolicyImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	return nil, nil
+	log.Println("[DEBUG] Begining Read method ", d.Id())
+
+	dcnmClient := m.(*client.Client)
+	importInfo := strings.Split(d.Id(), ":")
+	if len(importInfo) != 2 {
+		return nil, fmt.Errorf("not getting enough arguments for the import operation")
+	}
+	attachedFabricName := importInfo[0]
+	fabricName := importInfo[1]
+	serviceNodeName := importInfo[2]
+	policyName := importInfo[3]
+
+	cont, err := getServicePolicy(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)
+	if err != nil {
+		return nil, err
+	}
+	stateImport := setServicePolicyAttributes(d, cont)
+	log.Println("[DEBUG] End of Read method ", d.Id())
+	return []*schema.ResourceData{stateImport}, nil
 }
 
 func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Create method ")
 	dcnmClient := m.(*client.Client)
-	
+
 	policyName := d.Get("policy_name").(string)
 	fabricName := d.Get("fabric_name").(string)
 	attachedFabricName := d.Get("attached_fabric_name").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
+	peeringName := d.Get("peering_name").(string)
+
+	peeringCont, err := getRoutePeering(dcnmClient, attachedFabricName, fabricName, serviceNodeName, peeringName)
+	if err != nil {
+		return err
+	}
 
 	servicePolicy := models.ServicePolicy{
-		PolicyName:             policyName,
-		FabricName:             fabricName,
-		AttachedFabricName:     attachedFabricName,
-		DestinationNetwork:     d.Get("dest_network").(string),
-		DestinationVrfName:     d.Get("dest_vrf_name").(string),
-		NextHopIp:              d.Get("next_hop_ip").(string),
-		PeeringName:            d.Get("peering_name").(string),
-		PolicyTemplateName:     d.Get("policy_template_name").(string),
-		ReverseEnabled:         d.Get("reverse_enabled").(string),
-		ReverseNextHopIp:       d.Get("reverse_next_hop_ip").(string),
-		ServiceNodeName:        serviceNodeName,
-		ServiceNodeType:        d.Get("service_node_type").(string),
-		SourceNetwork:          d.Get("source_network").(string),
-		SourceNetworkName:      d.Get("source_network_name").(string),
-		SourceVRFName:          d.Get("source_vrf_name").(string),
+		PolicyName:         policyName,
+		FabricName:         fabricName,
+		AttachedFabricName: attachedFabricName,
+		DestinationNetwork: d.Get("dest_network").(string),
+		Enabled:            d.Get("deploy").(bool),
+		DestinationVrfName: d.Get("dest_vrf_name").(string),
+		NextHopIp:          d.Get("next_hop_ip").(string),
+		PeeringName:        peeringName,
+		PolicyTemplateName: d.Get("policy_template_name").(string),
+		ReverseEnabled:     d.Get("reverse_enabled").(bool),
+		ReverseNextHopIp:   stripQuotes(peeringCont.S("reverseNextHopIp").String()),
+		ServiceNodeName:    serviceNodeName,
+		ServiceNodeType:    stripQuotes(peeringCont.S("serviceNodeType").String()),
+		SourceNetwork:      d.Get("source_network").(string),
+		SourceVrfName:      d.Get("source_vrf_name").(string),
 	}
 
 	if attach, ok := d.GetOk("attach"); ok {
@@ -228,171 +274,214 @@ func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) erro
 
 	if protocol, ok := d.GetOk("protocol"); ok {
 		nvPairMap["PROTOCOL"] = protocol.(string)
-	} 
+	}
 
 	if srcPort, ok := d.GetOk("src_port"); ok {
 		nvPairMap["SRC_PORT"] = srcPort.(string)
-	} 
+	}
 
 	if destPort, ok := d.GetOk("dest_port"); ok {
 		nvPairMap["DEST_PORT"] = destPort.(string)
-	} 
+	}
 
 	if routeMapAction, ok := d.GetOk("route_map_action"); ok {
 		nvPairMap["ROUTE_MAP_ACTION"] = routeMapAction.(string)
-	} 
+	}
 
 	if nextHopAction, ok := d.GetOk("next_hop_action"); ok {
 		nvPairMap["NEXT_HOP_ACTION"] = nextHopAction.(string)
 	}
 
+	if fwdDirection, ok := d.GetOk("fwd_direction"); ok {
+		nvPairMap["FWD_DIRECTION"] = fwdDirection.(bool)
+	}
+
 	nvPairMap["REVERSE"] = servicePolicy.ReverseEnabled
 	nvPairMap["REVERSE_NEXT_HOP_IP"] = servicePolicy.ReverseNextHopIp
-
-	if fwdDirection, ok := d.GetOk("fwd_direction"); ok {
-		nvPairMap["FWD_DIRECTION"] = fwdDirection.(string)
-	}
+	nvPairMap["NEXT_HOP_IP"] = servicePolicy.NextHopIp
 
 	if nvPairMap != nil {
-		servicePolicy.NVPairs = nvPairMap
+		servicePolicy.NvPairs = nvPairMap
 	}
 
-	var durl string
-	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes")
-	} else {
-		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies", servicePolicy.FabricName, servicePolicy.ServiceNodeName)
-	}
+	durl := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Create"], fabricName, serviceNodeName)
 
-	_, err := dcnmClient.Save(durl, &servicePolicy)
+	cont, err := dcnmClient.Save(durl, &servicePolicy)
 	if err != nil {
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 
-	d.SetId(servicePolicy.PolicyName)
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
+		deployModel := models.ServicePolicyDeploy{
+			PolicyNames: []string{policyName},
+		}
+		log.Println("[DEBUG] Begining of Deploy Method.")
+
+		//attach policy
+		dURL := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Attach"], fabricName, serviceNodeName, attachedFabricName)
+		cont, err := dcnmClient.Save(dURL, &deployModel)
+		if err != nil {
+			d.Set("deploy", false)
+			return getErrorFromContainer(cont, err)
+		}
+
+		//deploy policy
+		dURL = fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Deploy"], fabricName, serviceNodeName, attachedFabricName)
+
+		cont, err = dcnmClient.Save(dURL, &deployModel)
+		if err != nil {
+			d.Set("deploy", false)
+			return getErrorFromContainer(cont, err)
+		}
+		deployFlag := false
+		deployTimeout := d.Get("deploy_timeout").(int)
+		for j := 0; j < (deployTimeout / 5); j++ {
+			deployStatus, err := getServicePolicyDeploymentStatus(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)
+			if err != nil {
+				return err
+			}
+			deployFlag = (deployStatus == "Success" || deployStatus == "In-Sync")
+			if !deployFlag {
+				time.Sleep(5 * time.Second)
+			} else {
+				deployFlag = true
+				break
+			}
+		}
+		if !deployFlag {
+			return fmt.Errorf("Service Policy record is created but not deployed yet. deployment timeout occured")
+		}
+		log.Println("[DEBUG] End of Deploy Method.")
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s/%s/%s", fabricName, serviceNodeName, attachedFabricName, policyName))
 	log.Println("[DEBUG] End of Create ", d.Id())
 	return resourceDCNMServicePolicyRead(d, m)
 }
 
 func resourceDCNMServicePolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Update method ")
-
 	dcnmClient := m.(*client.Client)
 
+	policyName := d.Get("policy_name").(string)
+	fabricName := d.Get("fabric_name").(string)
 	attachedFabricName := d.Get("attached_fabric_name").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
+	peeringName := d.Get("peering_name").(string)
+
+	peeringCont, err := getRoutePeering(dcnmClient, attachedFabricName, fabricName, serviceNodeName, peeringName)
+	if err != nil {
+		return err
+	}
 
 	servicePolicy := models.ServicePolicy{
-		PolicyName:             d.Get("policy_name").(string),
-		FabricName:             d.Get("fabric_name").(string),
-		AttachedFabricName:     attachedFabricName,
-		DestinationNetwork:     d.Get("dest_network").(string),
-		DestinationNetworkName: d.Get("dest_network_name").(string),
-		DestinationVRFName:     d.Get("dest_vrf_name").(string),
-		NextHopIP:              d.Get("next_hop_ip").(string),
-		PeeringName:            d.Get("peering_name").(string),
-		PolicyTemplateName:     d.Get("policy_template_name").(string),
-		ReverseEnabled:         d.Get("reverse_enabled").(string),
-		ReverseNextHopIP:       d.Get("reverse_next_hop_ip").(string),
-		ServiceNodeName:        serviceNodeName,
-		ServiceNodeType:        d.Get("service_node_type").(string),
-		SourceNetwork:          d.Get("source_network").(string),
-		SourceNetworkName:      d.Get("source_network_name").(string),
-		SourceVRFName:          d.Get("source_vrf_name").(string),
+		PolicyName:         policyName,
+		FabricName:         fabricName,
+		AttachedFabricName: attachedFabricName,
+		DestinationNetwork: d.Get("dest_network").(string),
+		Enabled:            d.Get("deploy").(bool),
+		DestinationVrfName: d.Get("dest_vrf_name").(string),
+		NextHopIp:          d.Get("next_hop_ip").(string),
+		PeeringName:        peeringName,
+		PolicyTemplateName: d.Get("policy_template_name").(string),
+		ReverseEnabled:     d.Get("reverse_enabled").(bool),
+		ReverseNextHopIp:   stripQuotes(peeringCont.S("reverseNextHopIp").String()),
+		ServiceNodeName:    serviceNodeName,
+		ServiceNodeType:    stripQuotes(peeringCont.S("serviceNodeType").String()),
+		SourceNetwork:      d.Get("source_network").(string),
+		SourceVrfName:      d.Get("source_vrf_name").(string),
 	}
 
-	if enabled, ok := d.GetOk("enabled"); ok {
-		servicePolicy.Enabled = enabled.(string)
-	}
-
-	if lastUpdate, ok := d.GetOk("last_update"); ok {
-		servicePolicy.LastUpdate = lastUpdate.(string)
-	}
-
-	if routeMapName, ok := d.GetOk("route_map_name"); ok {
-		servicePolicy.RouteMapName = routeMapName.(string)
-	}
-
-	if status, ok := d.GetOk("status"); ok {
-		servicePolicy.Status = status.(string)
-	}
-
-	if statusDetails, ok := d.GetOk("status_details"); ok {
-		servicePolicy.StatusDetails = statusDetails.(string)
-	}
-
-	if attachDetails, ok := d.GetOk("attach_details"); ok {
-		servicePolicy.AttachDetails = attachDetails.(string)
-	}
-
-	if destinationInterfaces, ok := d.GetOk("dest_interfaces"); ok {
-		servicePolicy.DestinationInterfaces = destinationInterfaces.(string)
-	}
-
-	if sourceInterfaces, ok := d.GetOk("source_interfaces"); ok {
-		servicePolicy.SourceInterfaces = sourceInterfaces.(string)
+	if attach, ok := d.GetOk("attach"); ok {
+		servicePolicy.Enabled = attach.(bool)
 	}
 
 	nvPairMap := make(map[string]interface{})
 
 	if protocol, ok := d.GetOk("protocol"); ok {
 		nvPairMap["PROTOCOL"] = protocol.(string)
-	} else {
-		nvPairMap["PROTOCOL"] = ""
 	}
 
 	if srcPort, ok := d.GetOk("src_port"); ok {
 		nvPairMap["SRC_PORT"] = srcPort.(string)
-	} else {
-		nvPairMap["SRC_PORT"] = ""
 	}
 
 	if destPort, ok := d.GetOk("dest_port"); ok {
 		nvPairMap["DEST_PORT"] = destPort.(string)
-	} else {
-		nvPairMap["DEST_PORT"] = ""
 	}
 
 	if routeMapAction, ok := d.GetOk("route_map_action"); ok {
 		nvPairMap["ROUTE_MAP_ACTION"] = routeMapAction.(string)
-	} else {
-		nvPairMap["ROUTE_MAP_ACTION"] = ""
 	}
 
 	if nextHopAction, ok := d.GetOk("next_hop_action"); ok {
 		nvPairMap["NEXT_HOP_ACTION"] = nextHopAction.(string)
-	} else {
-		nvPairMap["NEXT_HOP_ACTION"] = ""
 	}
 
-	if reverse, ok := d.GetOk("reverse"); ok {
-		nvPairMap["REVERSE"] = reverse.(string)
-	}
-	if reverseNextHopIP, ok := d.GetOk("reverse_next_hop_ip"); ok {
-		nvPairMap["REVERSE_NEXT_HOP_IP"] = reverseNextHopIP.(string)
-	}
 	if fwdDirection, ok := d.GetOk("fwd_direction"); ok {
-		nvPairMap["FWD_DIRECTION"] = fwdDirection.(string)
+		nvPairMap["FWD_DIRECTION"] = fwdDirection.(bool)
 	}
+
+	nvPairMap["REVERSE"] = servicePolicy.ReverseEnabled
+	nvPairMap["REVERSE_NEXT_HOP_IP"] = servicePolicy.ReverseNextHopIp
+	nvPairMap["NEXT_HOP_IP"] = servicePolicy.NextHopIp
 
 	if nvPairMap != nil {
-		servicePolicy.NVPairs = nvPairMap
+		servicePolicy.NvPairs = nvPairMap
 	}
 
-	var durl string
-	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("												")
-	} else {
-		durl = fmt.Sprintf("/fabrics​/%s/service-nodes​/%s/policies/%s/%s", servicePolicy.FabricName, servicePolicy.ServiceNodeName, servicePolicy.AttachedFabricName, servicePolicy.PolicyName)
-	}
+	dURL := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Common"], fabricName, serviceNodeName, attachedFabricName, policyName)
 
-	_, err := dcnmClient.Update(durl, &servicePolicy)
+	cont, err := dcnmClient.Update(dURL, &servicePolicy)
 	if err != nil {
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 
-	d.SetId(servicePolicy.PolicyName)
-	log.Println("[DEBUG] End of Create ", d.Id())
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
+		deployModel := models.ServicePolicyDeploy{
+			PolicyNames: []string{policyName},
+		}
+		log.Println("[DEBUG] Begining of Deploy Method.")
+
+		//attach policy
+		dURL := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Attach"], fabricName, serviceNodeName, attachedFabricName)
+		cont, err := dcnmClient.Save(dURL, &deployModel)
+		if err != nil {
+			d.Set("deploy", false)
+			return getErrorFromContainer(cont, err)
+		}
+
+		//deploy policy
+		dURL = fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Deploy"], fabricName, serviceNodeName, attachedFabricName)
+
+		cont, err = dcnmClient.Save(dURL, &deployModel)
+		if err != nil {
+			d.Set("deploy", false)
+			return getErrorFromContainer(cont, err)
+		}
+		deployFlag := false
+		deployTimeout := d.Get("deploy_timeout").(int)
+		for j := 0; j < (deployTimeout / 5); j++ {
+			deployStatus, err := getServicePolicyDeploymentStatus(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)
+			if err != nil {
+				return err
+			}
+			deployFlag = (deployStatus == "Success" || deployStatus == "In-Sync")
+			if !deployFlag {
+				time.Sleep(5 * time.Second)
+			} else {
+				deployFlag = true
+				break
+			}
+		}
+		if !deployFlag {
+			return fmt.Errorf("Service Policy record is created but not deployed yet. deployment timeout occured")
+		}
+		log.Println("[DEBUG] End of Deploy Method.")
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s/%s/%s", fabricName, serviceNodeName, attachedFabricName, policyName))
+	log.Println("[DEBUG] End of Update ", d.Id())
 	return resourceDCNMServicePolicyRead(d, m)
 }
 
@@ -400,23 +489,17 @@ func resourceDCNMServicePolicyRead(d *schema.ResourceData, m interface{}) error 
 	log.Println("[DEBUG] Begining Read method ", d.Id())
 
 	dcnmClient := m.(*client.Client)
+	policyId := strings.Split(d.Id(), "/")
+	fabricName := policyId[0]
+	serviceNodeName := policyId[1]
+	attachedFabricName := policyId[2]
+	policyName := policyId[3]
 
-	nodeName := d.Get("service_node_name").(string)
-	fabricName := d.Get("fabric_name").(string)
-
-	var durl string
-	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("																")
-	} else {
-		durl = fmt.Sprintf("/fabrics​/%s/service-nodes​/%s/policies/", fabricName, nodeName)
-	}
-
-	cont, err := dcnmClient.GetviaURL(durl)
+	cont, err := getServicePolicy(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)
 	if err != nil {
 		d.SetId("")
 		return nil
 	}
-
 	setServicePolicyAttributes(d, cont)
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
@@ -425,14 +508,44 @@ func resourceDCNMServicePolicyRead(d *schema.ResourceData, m interface{}) error 
 func resourceDCNMServicePolicyDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
-	nodeName := d.Get("service_node_name").(string)
-	fabricName := d.Get("fabric_name").(string)
 
-	durl := fmt.Sprintf("/fabrics​/%s/service-nodes​/%s/policies/", fabricName, nodeName)
-	_, err := dcnmClient.Delete(durl)
+	policyName := d.Get("policy_name").(string)
+	fabricName := d.Get("fabric_name").(string)
+	attachedFabricName := d.Get("attached_fabric_name").(string)
+	serviceNodeName := d.Get("service_node_name").(string)
+
+	dURL := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Attach"]+"?policy-names=%s", fabricName, serviceNodeName, attachedFabricName, policyName)
+	cont, err := dcnmClient.Delete(dURL)
 	if err != nil {
-		return err
+		return getErrorFromContainer(cont, err)
+	}
+	attachFlag := false
+	deployTimeout := d.Get("deploy_timeout").(int)
+	for j := 0; j < (deployTimeout / 2); j++ {
+		cont, err := getServicePolicy(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)
+		if err != nil {
+			return getErrorFromContainer(cont, err)
+		}
+		attachFlag = stripQuotes(cont.S("enabled").String()) == "false"
+		if !attachFlag {
+			time.Sleep(2 * time.Second)
+		} else {
+			attachFlag = true
+			break
+		}
+	}
+	dURL = fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Common"], fabricName, serviceNodeName, attachedFabricName, policyName)
+	cont, err = dcnmClient.Delete(dURL)
+	if err != nil {
+		return getErrorFromContainer(cont, err)
 	}
 	log.Println("[DEBUG] End of Delete method ", d.Id())
 	return nil
+}
+
+func getServicePolicyDeploymentStatus(dcnmClient *client.Client, attachedFabricName, extFabric, node, name string) (string, error) {
+	cont, err := getServicePolicy(dcnmClient, attachedFabricName, extFabric, node, name)
+	err = getErrorFromContainer(cont, err)
+	status := stripQuotes(cont.S("status").String())
+	return status, err
 }
