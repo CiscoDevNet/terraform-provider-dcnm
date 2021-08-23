@@ -69,6 +69,7 @@ func resourceRoutePeering() *schema.Resource {
 			"next_hop_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  nil,
 			},
 			"option": &schema.Schema{
 				Type:     schema.TypeString,
@@ -83,6 +84,7 @@ func resourceRoutePeering() *schema.Resource {
 			"reverse_next_hop_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  nil,
 			},
 			"service_networks": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -92,12 +94,10 @@ func resourceRoutePeering() *schema.Resource {
 						"network_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"network_type": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"InsideNetworkFW",
 								"OutsideNetworkFW",
@@ -109,22 +109,18 @@ func resourceRoutePeering() *schema.Resource {
 						"template_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"vlan_id": &schema.Schema{
 							Type:     schema.TypeInt,
 							Required: true,
-							ForceNew: true,
 						},
 						"vrf_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"gateway_ip_address": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -164,6 +160,7 @@ func resourceRoutePeering() *schema.Resource {
 						},
 					},
 				},
+				Default: nil,
 			},
 			"deploy": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -313,6 +310,9 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
+			if cont != nil {
+				return fmt.Errorf(cont.String())
+			}
 			return err
 		}
 
@@ -367,6 +367,7 @@ func getRoutePeeringDeploymentStatus(dcnmClient *client.Client, AttachedFabricNa
 	}
 	return true, err
 }
+
 func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining of Update Route Peering", d.Id())
 
@@ -386,17 +387,14 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	ServiceNodeName := d.Get("service_node_name").(string)
 	ServiceNodeType := d.Get("service_node_type").(string)
 	Networks := d.Get("service_networks").(*schema.Set).List()
-
 	rp.AttachedFabricName = AttachedFabricName
 	rp.DeploymentMode = DeploymentMode
 	rp.FabricName = FabricName
 	rp.NextHopIP = NextHopIp
 	rp.Name = name
 	rp.Option = Option
-
 	rp.ServiceNodeName = ServiceNodeName
 	rp.ServiceNodeType = ServiceNodeType
-
 	snObjs := make([]*models.ServiceNetwork, 0, 1)
 
 	// Process the service network list
@@ -470,6 +468,9 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
+			if cont != nil {
+				return fmt.Errorf(cont.String())
+			}
 			return err
 		}
 
