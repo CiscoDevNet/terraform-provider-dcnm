@@ -515,10 +515,6 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] End of Update Route Peering", d.Id())
 	return resourceRoutePeeringRead(d, m)
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> db763473054f908c57443ce62a6d805006066f33
 func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining of Delete Route", d.Id())
 	dcnmClient := m.(*client.Client)
