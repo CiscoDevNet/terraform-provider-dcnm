@@ -189,10 +189,7 @@ func resourceRoutePeeringImporter(d *schema.ResourceData, m interface{}) ([]*sch
 	name := importInfo[0]
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 	if err != nil {
-		if cont != nil {
-			return nil, fmt.Errorf(cont.String())
-		}
-		return nil, err
+		return nil, getErrorFromContainer(cont, err)
 	}
 	stateImport := setPeeringAttributes(d, cont)
 	flag, err := getRoutePeeringDeploymentStatus(dcnmClient, AttachedFabricName, extFabric, node, name)
@@ -288,10 +285,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	cont, err := dcnmClient.Save(dURL, rpModel)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 
 	// Deploy the route peering
@@ -310,10 +304,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		// deploy
@@ -328,10 +319,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
 			d.Set("deploy", false)
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		deployTFlag := false
@@ -447,10 +435,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	cont, err := dcnmClient.Update(dURL, rpModel)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		deployModel := models.RoutePeeringDeploy{}
@@ -467,10 +452,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		// deploy
@@ -485,10 +467,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
 			d.Set("deploy", false)
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		deployTFlag := false
@@ -534,10 +513,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 		cont, err := dcnmClient.Delete(dURL)
 
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 		deployModel := models.RoutePeeringDeploy{}
 		peeringNameList := make([]string, 0, 1)
@@ -552,10 +528,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 		deployTFlag := false
 		deployTimeout := d.Get("deploy_timeout").(int)
@@ -690,10 +663,7 @@ func resourceRoutePeeringRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 	setPeeringAttributes(d, cont)
 	log.Println("[DEBUG] End of Read method ", d.Id())
