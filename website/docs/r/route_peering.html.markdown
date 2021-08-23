@@ -185,7 +185,7 @@ resource "dcnm_route_peering" "adc3"{
 * `fabric_name` - (Required) Name of the target fabric for route peering operations.
 * `next_hop_ip` - (Optional) Nexthop IPV4 information.NOTE: This object is applicable only when 'deploy_mode' is 'IntraTenantFW'
 * `option` - (Required) Specifies the type of peering.Allowed values are "StaticPeering","EBGPDynamicPeering","None".
-* `service_networks` - (Optional) List of network under which peering will be created.
+* `service_networks` - (Required) List of network under which peering will be created.
 * `network_name` - (Required) Network name.
 * `network_type` - (Required) Type of network.Allowed values are "InsideNetworkFW","OutsideNetworkFW","ArmOneADC","ArmTwoADC"."ArmOneVNF",
 * `reverse_next_hop_ip`- (Optional)  Reverse Nexthop IPV4 information, e.g., 192.169.1.100
