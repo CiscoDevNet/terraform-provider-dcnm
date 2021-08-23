@@ -17,8 +17,8 @@ resource "dcnm_service_policy" "example" {
   policy_name              = "SP-2"  
   fabric_name              = "external"
   attached_fabric_name     = "main_fabric_2"
-  destination_network      = "dev_network_two"
-  destination_vrf_name     = "dev_vrf_one"
+  dest_network             = "dev_network_two"
+  dest_vrf_name            = "dev_vrf_one"
   next_hop_ip              = "10.10.10.2"
   peering_name             = "RP-1"
   service_node_name        = "SN-1"
@@ -34,8 +34,8 @@ resource "dcnm_service_policy" "example" {
 * `policy_name` - (Required) Name of Object Service Policy.
 * `fabric_name` - (Required) Fabric name under which Service Policy should be created.
 * `attached_fabric_name` - (Required) Attached Fabric name of the Service Policy. 
-* `destination_network` - (Required) Destination network of the Service Policy.
-* `destination_vrf_name` - (Required) Destination VRF name of the Service Policy.
+* `dest_network` - (Required) Destination network of the Service Policy.
+* `dest_vrf_name` - (Required) Destination VRF name of the Service Policy.
 * `next_hop_ip` - (Required) Next hop IP of the Service Policy.
 * `peering_name` - (Required) Peering name of the Service Policy. 
 * `policy_template_name` - (Optional) Policy template name of the Service Policy. Default value is "service_pbr".
