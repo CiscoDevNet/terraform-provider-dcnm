@@ -29,7 +29,7 @@ func toStringList(configured []interface{}) []string {
 }
 
 func getErrorFromContainer(cont *container.Container, err error) error {
-	if contErr := stripQuotes(cont.S("error", "detail").String()); cont !=nil && contErr != "null" {
+	if contErr := stripQuotes(cont.S("error", "detail").String()); cont != nil && contErr != "null" {
 		return fmt.Errorf(contErr)
 	}
 	return err

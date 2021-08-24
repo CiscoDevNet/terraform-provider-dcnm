@@ -11,6 +11,14 @@ type VRFInstance struct {
 	LoopbackIpv6 string `json:"loopbackIpV6Address,omitempty"`
 }
 
+type VRFDot1qID struct {
+	ScopeType    string `json:"scopeType,omitempty"`
+	UsageType    string `json:"usageType,omitempty"`
+	AllocatedTo  string `json:"allocatedTo,omitempty"`
+	SerialNumber string `json:"serialNumber,omitempty"`
+	IfName       string `json:"ifName,omitempty"`
+}
+
 type VRFDeploy struct {
 	Name string `json:",omitempty"`
 }
@@ -46,4 +54,16 @@ func (vrfDeploy *VRFDeploy) ToMap() (map[string]interface{}, error) {
 	A(vrfDeployMap, "vrfNames", vrfDeploy.Name)
 
 	return vrfDeployMap, nil
+}
+
+func (vrfDot1qID *VRFDot1qID) ToMap() (map[string]interface{}, error) {
+	vrfDot1qIDMap := make(map[string]interface{})
+
+	A(vrfDot1qIDMap, "scopeType", vrfDot1qID.ScopeType)
+	A(vrfDot1qIDMap, "allocatedTo", vrfDot1qID.AllocatedTo)
+	A(vrfDot1qIDMap, "ifName", vrfDot1qID.IfName)
+	A(vrfDot1qIDMap, "serialNumber", vrfDot1qID.SerialNumber)
+	A(vrfDot1qIDMap, "usageType", vrfDot1qID.UsageType)
+
+	return vrfDot1qIDMap, nil
 }
