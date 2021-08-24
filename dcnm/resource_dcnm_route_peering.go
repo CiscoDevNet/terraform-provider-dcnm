@@ -14,6 +14,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+var URLS = map[string]map[string]string{
+	"DCNMUrl": {
+		"Create": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings",
+		"Common": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/%s",
+		"Deploy": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
+		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
+	},
+	"NDUrl": {
+		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
+		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
+		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
+		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
+	},
+}
+
 func resourceRoutePeering() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRoutePeeringCreate,
@@ -54,6 +69,7 @@ func resourceRoutePeering() *schema.Resource {
 			"next_hop_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  nil,
 			},
 			"option": &schema.Schema{
 				Type:     schema.TypeString,
@@ -68,6 +84,7 @@ func resourceRoutePeering() *schema.Resource {
 			"reverse_next_hop_ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  nil,
 			},
 			"service_networks": &schema.Schema{
 				Type:     schema.TypeSet,
@@ -77,12 +94,10 @@ func resourceRoutePeering() *schema.Resource {
 						"network_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"network_type": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"InsideNetworkFW",
 								"OutsideNetworkFW",
@@ -94,22 +109,18 @@ func resourceRoutePeering() *schema.Resource {
 						"template_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"vlan_id": &schema.Schema{
 							Type:     schema.TypeInt,
 							Required: true,
-							ForceNew: true,
 						},
 						"vrf_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"gateway_ip_address": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -149,6 +160,7 @@ func resourceRoutePeering() *schema.Resource {
 						},
 					},
 				},
+				Default: nil,
 			},
 			"deploy": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -164,21 +176,6 @@ func resourceRoutePeering() *schema.Resource {
 	}
 }
 
-var URLS = map[string]map[string]string{
-	"DCNMUrl": {
-		"Create": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings",
-		"Common": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/%s",
-		"Deploy": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
-		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
-	},
-	"NDUrl": {
-		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
-		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
-		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
-		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
-	},
-}
-
 func resourceRoutePeeringImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	log.Println("[DEBUG] Begining Importer method", d.Id())
 	dcnmClient := m.(*client.Client)
@@ -192,10 +189,7 @@ func resourceRoutePeeringImporter(d *schema.ResourceData, m interface{}) ([]*sch
 	name := importInfo[0]
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 	if err != nil {
-		if cont != nil {
-			return nil, fmt.Errorf(cont.String())
-		}
-		return nil, err
+		return nil, getErrorFromContainer(cont, err)
 	}
 	stateImport := setPeeringAttributes(d, cont)
 	flag, err := getRoutePeeringDeploymentStatus(dcnmClient, AttachedFabricName, extFabric, node, name)
@@ -291,10 +285,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	cont, err := dcnmClient.Save(dURL, rpModel)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 
 	// Deploy the route peering
@@ -313,7 +304,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		// deploy
@@ -328,10 +319,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
 			d.Set("deploy", false)
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		deployTFlag := false
@@ -386,17 +374,14 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	ServiceNodeName := d.Get("service_node_name").(string)
 	ServiceNodeType := d.Get("service_node_type").(string)
 	Networks := d.Get("service_networks").(*schema.Set).List()
-
 	rp.AttachedFabricName = AttachedFabricName
 	rp.DeploymentMode = DeploymentMode
 	rp.FabricName = FabricName
 	rp.NextHopIP = NextHopIp
 	rp.Name = name
 	rp.Option = Option
-
 	rp.ServiceNodeName = ServiceNodeName
 	rp.ServiceNodeType = ServiceNodeType
-
 	snObjs := make([]*models.ServiceNetwork, 0, 1)
 
 	// Process the service network list
@@ -450,10 +435,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	cont, err := dcnmClient.Update(dURL, rpModel)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		deployModel := models.RoutePeeringDeploy{}
@@ -470,7 +452,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		// deploy
@@ -485,10 +467,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
 			d.Set("deploy", false)
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 
 		deployTFlag := false
@@ -515,7 +494,6 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] End of Update Route Peering", d.Id())
 	return resourceRoutePeeringRead(d, m)
 }
-
 func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining of Delete Route", d.Id())
 	dcnmClient := m.(*client.Client)
@@ -535,10 +513,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 		cont, err := dcnmClient.Delete(dURL)
 
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 		deployModel := models.RoutePeeringDeploy{}
 		peeringNameList := make([]string, 0, 1)
@@ -553,10 +528,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 
 		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			if cont != nil {
-				return fmt.Errorf(cont.String())
-			}
-			return err
+			return getErrorFromContainer(cont, err)
 		}
 		deployTFlag := false
 		deployTimeout := d.Get("deploy_timeout").(int)
@@ -593,7 +565,6 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	return nil
 }
-
 func getRoutePeering(client *client.Client, AttachedFabricName, extFabric, node, name string) (*container.Container, error) {
 	var dURL string
 	if client.GetPlatform() == "nd" {
@@ -602,7 +573,7 @@ func getRoutePeering(client *client.Client, AttachedFabricName, extFabric, node,
 		dURL = fmt.Sprintf(URLS["DCNMUrl"]["Common"], extFabric, node, AttachedFabricName, name)
 	}
 	cont, err := client.GetviaURL(dURL)
-	return cont, getErrorFromContainer(cont, err)
+	return cont, err
 }
 func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
 	var name, FabricName, ServiceNodeName string
@@ -692,10 +663,7 @@ func resourceRoutePeeringRead(d *schema.ResourceData, m interface{}) error {
 	name := d.Get("name").(string)
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 	if err != nil {
-		if cont != nil {
-			return fmt.Errorf(cont.String())
-		}
-		return err
+		return getErrorFromContainer(cont, err)
 	}
 	setPeeringAttributes(d, cont)
 	log.Println("[DEBUG] End of Read method ", d.Id())
