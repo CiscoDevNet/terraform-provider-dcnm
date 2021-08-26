@@ -285,7 +285,11 @@ func resourceDCNMVRF() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"dotq_id": {
+									"dest_fabric": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"dot1q_id": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -300,22 +304,12 @@ func resourceDCNMVRF() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"neighbor_asn": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
 									"ipv6_mask": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
 									"ipv6_neighbor": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"auto_vrf_lite_flag": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -659,7 +653,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						}
 						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
 
-						if vrfLite["dot1q_id"] != nil {
+						if vrfLite["dot1q_id"] != "" {
 							vrfLiteMap["DOT1Q_ID"] = vrfLite["dot1q_id"]
 						} else {
 							durl := "/rest/resource-manager/reserve-id"
@@ -1140,13 +1134,34 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 
 				liteGet := make([]interface{}, 0, 1)
 				for _, val := range lites {
-					liteMap := val.(map[string]interface{})
-					peerVrfName := liteMap["peer_vrf_name"].(string)
-		
-					
-					liteGet = append(liteGet, liteMap)
+					vrfLiteMap := val.(map[string]interface{})
+
+					durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/switches?vrf-names=%s&serial-numbers=%s", fabricName, dn, attachMap["serial_number"].(string))
+					cont, err := dcnmClient.GetviaURL(durl)
+					if err != nil {
+						return err
+					}
+					extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+					extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+					var extensionValues map[string]interface{}
+
+					extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+					err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
+					if err != nil {
+						return err
+					}
+
+					//vrfLiteMap["peer_vrf_name"] = extensionValues["PEER_VRF_NAME"].(string)
+					vrfLiteMap["dot1q_id"] = extensionValues["DOT1Q_ID"].(string)
+					vrfLiteMap["neighbor_ip"] = extensionValues["NEIGHBOR_IP"].(string)
+					vrfLiteMap["neighbor_asn"] = extensionValues["NEIGHBOR_ASN"].(string)
+					vrfLiteMap["ipv6_mask"] = extensionValues["IPV6_MASK"].(string)
+					vrfLiteMap["ipv6_neighbor"] = extensionValues["IPV6_NEIGHBOR"].(string)
+					vrfLiteMap["auto_vrf_lite_flag"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
+
+					liteGet = append(liteGet, vrfLiteMap)
 				}
-		
+
 				d.Set("attachments", attachGet)
 			}
 
