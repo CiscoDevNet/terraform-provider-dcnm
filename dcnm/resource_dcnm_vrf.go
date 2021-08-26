@@ -285,10 +285,6 @@ func resourceDCNMVRF() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"dest_fabric": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"dot1q_id": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -304,12 +300,22 @@ func resourceDCNMVRF() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"neighbor_asn": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 									"ipv6_mask": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
 									"ipv6_neighbor": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"auto_vrf_lite_flag": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -651,8 +657,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						if err != nil {
 							return err
 						}
-						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
-
+						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"
 						if vrfLite["dot1q_id"] != "" {
 							vrfLiteMap["DOT1Q_ID"] = vrfLite["dot1q_id"]
 						} else {
@@ -1161,7 +1166,6 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 
 					liteGet = append(liteGet, vrfLiteMap)
 				}
-
 				d.Set("attachments", attachGet)
 			}
 
