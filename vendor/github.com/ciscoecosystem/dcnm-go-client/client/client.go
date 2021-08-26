@@ -183,11 +183,23 @@ func (c *Client) makeRequestForText(method, path string, body string, authentica
 	}
 	reqURL := c.baseURL.ResolveReference(url)
 
+func (c *Client) MakeRequestforText(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
+
+	if c.platform == "nd" && authenticated && !models.IsService(path) {
+		path = fmt.Sprint("/appcenter/cisco/dcnm/api/v1/lan-fabric", path)
+	}
+
+	url, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	reqURL := c.baseURL.ResolveReference(url)
+
 	var req *http.Request
-	if body == "" {
+	if body == nil {
 		req, err = http.NewRequest(method, reqURL.String(), nil)
 	} else {
-		req, err = http.NewRequest(method, reqURL.String(), strings.NewReader(body))
+		req, err = http.NewRequest(method, reqURL.String(), bytes.NewBuffer(body.Bytes()))
 	}
 	if err != nil {
 		return nil, err
@@ -211,10 +223,6 @@ func (c *Client) makeRequestForCred(method, path string, body []byte, authentica
 	url, err := url.Parse(path)
 	if err != nil {
 		return nil, err
-	}
-	reqURL := c.baseURL.ResolveReference(url)
-
-	var req *http.Request
 	req, err = http.NewRequest(method, reqURL.String(), bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
