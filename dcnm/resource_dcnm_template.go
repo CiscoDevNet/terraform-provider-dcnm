@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
@@ -54,16 +53,11 @@ var TemplateURLS = map[string]map[string]string{
 
 func CompareDiffs(old, new string, d *schema.ResourceData) bool {
 	var old1 string
-	if runtime.GOOS == "windows" {
-		old1 = strings.Replace(old, "\\r\\n", "\n", -1)
-	} else {
-		old1 = strings.Replace(old, "\\n", "\n", -1)
-	}
-
 	re, err := regexp.Compile("((##template properties)(.*?)(##))")
 	if err != nil {
 		return false
 	}
+	old1 = strings.Replace(old, "\\r\\n", "\n", -1)
 	old1 = strings.Replace(old1, "\\\"", "\"", -1)
 	old2 := re.FindString(old1)
 	old1 = strings.Replace(old1, old2, "", -1)
