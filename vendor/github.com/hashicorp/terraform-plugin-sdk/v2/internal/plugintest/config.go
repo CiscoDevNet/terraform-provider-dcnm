@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/hashicorp/terraform-exec/tfinstall"
 )
@@ -24,7 +23,7 @@ type Config struct {
 // DiscoverConfig uses environment variables and other means to automatically
 // discover a reasonable test helper configuration.
 func DiscoverConfig(sourceDir string) (*Config, error) {
-	tfVersion := strings.TrimPrefix(os.Getenv("TF_ACC_TERRAFORM_VERSION"), "v")
+	tfVersion := os.Getenv("TF_ACC_TERRAFORM_VERSION")
 	tfPath := os.Getenv("TF_ACC_TERRAFORM_PATH")
 
 	tempDir := os.Getenv("TF_ACC_TEMP_DIR")

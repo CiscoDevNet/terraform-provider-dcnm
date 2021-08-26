@@ -79,6 +79,8 @@ github.com/ciscoecosystem/dcnm-go-client v0.1.9 h1:IKyjRg9Wqnz0WK1E63aW3mYhzFpQI
 github.com/ciscoecosystem/dcnm-go-client v0.1.9/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
 github.com/ciscoecosystem/dcnm-go-client v0.1.10 h1:fn0yQvplRo/jh8NGUcyDeIMW0VH46tTY9Ja8hQDqRSs=
 github.com/ciscoecosystem/dcnm-go-client v0.1.10/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
+github.com/ciscoecosystem/dcnm-go-client v0.1.12 h1:Eh78GDcOxqCsC0l9rrQPOfmDnjTD59B6uri+JyKBDyg=
+github.com/ciscoecosystem/dcnm-go-client v0.1.12/go.mod h1:phw1JcChpnYgPjtyaael7FYGzZCHV8i6D9N4vDcEGo8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
