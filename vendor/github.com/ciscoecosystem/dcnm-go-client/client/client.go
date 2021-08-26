@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/container"
 	"github.com/ciscoecosystem/dcnm-go-client/models"
@@ -134,7 +135,7 @@ func GetClient(clientURL, username, password string, expiry int64, options ...Op
 
 func (c *Client) MakeRequest(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
 
-	if c.platform == "nd" && authenticated && !models.IsService(path) {
+	if c.platform == "nd" && authenticated && !models.IsService(path) && !models.IsTemplate(path) {
 		path = fmt.Sprint("/appcenter/cisco/dcnm/api/v1/lan-fabric", path)
 	}
 
@@ -143,6 +144,8 @@ func (c *Client) MakeRequest(method, path string, body *container.Container, aut
 		return nil, err
 	}
 	reqURL := c.baseURL.ResolveReference(url)
+	log.Println("req", reqURL)
+	log.Println("req", reqURL.String())
 
 	var req *http.Request
 	if body == nil {
@@ -168,11 +171,10 @@ func (c *Client) MakeRequest(method, path string, body *container.Container, aut
 	}
 	return req, nil
 }
-
-func (c *Client) MakeRequestforText(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
+func (c *Client) makeRequestForText(method, path string, body string, authenticated bool) (*http.Request, error) {
 
 	if c.platform == "nd" && authenticated && !models.IsService(path) {
-		path = fmt.Sprint("/appcenter/cisco/dcnm/api/v1/lan-fabric", path)
+		path = fmt.Sprint("/appcenter/cisco/dcnm/api/v1", path)
 	}
 
 	url, err := url.Parse(path)
@@ -182,10 +184,10 @@ func (c *Client) MakeRequestforText(method, path string, body *container.Contain
 	reqURL := c.baseURL.ResolveReference(url)
 
 	var req *http.Request
-	if body == nil {
+	if body == "" {
 		req, err = http.NewRequest(method, reqURL.String(), nil)
 	} else {
-		req, err = http.NewRequest(method, reqURL.String(), bytes.NewBuffer(body.Bytes()))
+		req, err = http.NewRequest(method, reqURL.String(), strings.NewReader(body))
 	}
 	if err != nil {
 		return nil, err
@@ -205,7 +207,6 @@ func (c *Client) MakeRequestforText(method, path string, body *container.Contain
 	}
 	return req, nil
 }
-
 func (c *Client) makeRequestForCred(method, path string, body []byte, authenticated bool) (*http.Request, error) {
 	url, err := url.Parse(path)
 	if err != nil {

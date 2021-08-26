@@ -74,6 +74,7 @@ func Provider() *schema.Provider {
 			"dcnm_service_node":   resourceDCNMServiceNode(),
 			"dcnm_route_peering":  resourceRoutePeering(),
 			"dcnm_service_policy": resourceDCNMServicePolicy(),
+			"dcnm_template":       resourceDCNMTemplate(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -85,6 +86,7 @@ func Provider() *schema.Provider {
 			"dcnm_service_node":   datasourceDCNMServiceNode(),
 			"dcnm_route_peering":  datasourceDCNMRoutePeering(),
 			"dcnm_service_policy": datasourceDCNMServicePolicy(),
+			"dcnm_template":       datasourceDCNMTemplate(),
 		},
 		ConfigureFunc: configClient,
 	}
