@@ -585,7 +585,6 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(vrf.Name)
 
 	//VRF attachment
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
@@ -650,8 +649,12 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
 						ifName := stripQuotes(extensionProtValues.S("interfaceName").String())
 						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
-						var extensionValues map[string]interface{}
 
+						if len(extensionValueString) == 0 {
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serial_number"].(string))
+						}
+
+						var extensionValues map[string]interface{}
 						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
 						err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
 						if err != nil {
@@ -954,15 +957,22 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 						if err != nil {
 							return err
 						}
-						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues")
+						// if len(extensionProtValues) < 0 {
+						// 	return fmt.Errorf("")
+						// }
 						ifName := stripQuotes(extensionProtValues.S("interfaceName").String())
 						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+
 						var extensionValues map[string]interface{}
 
 						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
 						err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
 						if err != nil {
 							return err
+						}
+						if len(extensionValues) == 0 {
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serial_number"].(string))
 						}
 						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
 
@@ -1153,6 +1163,11 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 					extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
 					err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
 					if err != nil {
+						return err
+					}
+
+					if len(extensionValues) == 0 {
+						d.SetId("")
 						return err
 					}
 
