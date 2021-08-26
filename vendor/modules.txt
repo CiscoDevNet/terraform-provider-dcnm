@@ -52,7 +52,7 @@ github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
-# github.com/ciscoecosystem/dcnm-go-client v0.1.9 => ../../ciscoecosystem/dcnm-go-client
+# github.com/ciscoecosystem/dcnm-go-client v0.1.10
 ## explicit
 github.com/ciscoecosystem/dcnm-go-client/client
 github.com/ciscoecosystem/dcnm-go-client/container
@@ -374,4 +374,3 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/pluginpb
-# github.com/ciscoecosystem/dcnm-go-client => ../../ciscoecosystem/dcnm-go-client

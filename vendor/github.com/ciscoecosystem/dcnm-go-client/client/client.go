@@ -169,6 +169,43 @@ func (c *Client) MakeRequest(method, path string, body *container.Container, aut
 	return req, nil
 }
 
+func (c *Client) MakeRequestforText(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
+
+	if c.platform == "nd" && authenticated && !models.IsService(path) {
+		path = fmt.Sprint("/appcenter/cisco/dcnm/api/v1/lan-fabric", path)
+	}
+
+	url, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	reqURL := c.baseURL.ResolveReference(url)
+
+	var req *http.Request
+	if body == nil {
+		req, err = http.NewRequest(method, reqURL.String(), nil)
+	} else {
+		req, err = http.NewRequest(method, reqURL.String(), bytes.NewBuffer(body.Bytes()))
+	}
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "text/plain")
+	if authenticated {
+		log.Println("HTTP request ", method, path, req)
+	}
+	if authenticated {
+		req, err = c.injectAuthenticationHeader(req, path)
+		if err != nil {
+			return req, err
+		}
+	}
+	if authenticated {
+		log.Println("HTTP request after injection ", method, path, req)
+	}
+	return req, nil
+}
+
 func (c *Client) makeRequestForCred(method, path string, body []byte, authenticated bool) (*http.Request, error) {
 	url, err := url.Parse(path)
 	if err != nil {

@@ -657,7 +657,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						if err != nil {
 							return err
 						}
-						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"
+						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
 						if vrfLite["dot1q_id"] != "" {
 							vrfLiteMap["DOT1Q_ID"] = vrfLite["dot1q_id"]
 						} else {
