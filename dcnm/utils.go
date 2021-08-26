@@ -3,6 +3,7 @@ package dcnm
 import (
 	"fmt"
 	"hash/crc32"
+	"io/ioutil"
 	"reflect"
 	"sort"
 	"strings"
@@ -122,4 +123,12 @@ func setDifference(a, b []string) (diff []string) {
 		}
 	}
 	return
+}
+func readFile(filename string) (string, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return "", err
+	}
+	return string(data), nil
 }

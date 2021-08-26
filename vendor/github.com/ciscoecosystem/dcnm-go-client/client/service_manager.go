@@ -58,6 +58,19 @@ func (c *Client) SaveDeploy(endpoint string, policyIds string) (*container.Conta
 	}
 	return cont, checkforerrors(cont, resp)
 }
+func (c *Client) ValidateTemplateContent(endpoint string, content string) (*container.Container, error) {
+	req, err := c.makeRequestForText("POST", endpoint, content, true)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "text/plain")
+	cont, resp, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return cont, checkforerrors(cont, resp)
+
+}
 func (c *Client) SaveForAttachment(endpoint string, obj models.Model) (*container.Container, error) {
 	contList := container.New()
 	contList.Array()
