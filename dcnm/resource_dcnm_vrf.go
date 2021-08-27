@@ -278,7 +278,6 @@ func resourceDCNMVRF() *schema.Resource {
 						"vrf_lite": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"peer_vrf_name": {
@@ -651,7 +650,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
 
 						if len(extensionValueString) == 0 {
-							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serial_number"].(string))
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serialNumber"].(string))
 						}
 
 						var extensionValues map[string]interface{}
@@ -736,6 +735,8 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						return err
 					}
 					attachMap["extensionValues"] = string(vrfLiteStr)
+				} else {
+					attachMap["extensionValues"] = ""
 				}
 
 				attachList = append(attachList, attachMap)
@@ -972,7 +973,7 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 							return err
 						}
 						if len(extensionValues) == 0 {
-							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serial_number"].(string))
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serialNumber"].(string))
 						}
 						vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
 
@@ -1051,6 +1052,8 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 						return err
 					}
 					attachMap["extensionValues"] = string(vrfLiteStr)
+				} else {
+					attachMap["extensionValues"] = ""
 				}
 
 				attachList = append(attachList, attachMap)
