@@ -643,6 +643,15 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		routeList := make([]interface{}, 0, 1)
 		route := stripQuotes(cont.S("routes").String())
 		var rinfo []map[string]interface{}
+		var nvPairMap map[string]interface{}
+		if r, ok := d.GetOk("routes"); ok {
+
+			routes := r.(*schema.Set).List()
+			for _, val := range routes {
+				rInfo := val.(map[string]interface{})
+				nvPairMap = rInfo["route_parmas"].(map[string]interface{})
+			}
+		}
 		_ = json.Unmarshal([]byte(route), &rinfo)
 		for i := 0; i < len(rinfo); i++ {
 			rMap := make(map[string]interface{})
@@ -653,7 +662,13 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 				rMap["vrf_name"] = rinfo[i]["vrfName"].(string)
 			}
 			if rinfo[i]["nvPairs"] != nil {
-				rMap["route_parmas"] = rinfo[i]["nvPairs"].(map[string]interface{})
+				localNVPair := nvPairMap
+				map2 := make(map[string]interface{})
+				for k, _ := range localNVPair {
+					map2[k] = localNVPair[k]
+
+				}
+				rMap["route_parmas"] = map2
 			}
 			routeList = append(routeList, rMap)
 
