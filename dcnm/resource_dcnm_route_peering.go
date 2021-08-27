@@ -287,7 +287,8 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return getErrorFromContainer(cont, err)
 	}
-
+	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s",
+		FabricName, ServiceNodeName, stripQuotes(cont.S("peeringName").String())))
 	// Deploy the route peering
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		deployModel := models.RoutePeeringDeploy{}
@@ -302,9 +303,14 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 			dURL = fmt.Sprintf(URLS["DCNMUrl"]["Attach"], FabricName, ServiceNodeName, AttachedFabricName)
 		}
 
-		_, err = dcnmClient.Save(dURL, &deployModel)
+		cont, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			return getErrorFromContainer(cont, err)
+			if cont != nil {
+				if contErr := stripQuotes(cont.S("error", "detail").String()); cont != nil && contErr != "null" {
+					return fmt.Errorf(contErr)
+				}
+			}
+			return err
 		}
 
 		// deploy
@@ -343,8 +349,6 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
 
-	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s",
-		FabricName, ServiceNodeName, stripQuotes(cont.S("peeringName").String())))
 	return resourceRoutePeeringRead(d, m)
 }
 func getRoutePeeringDeploymentStatus(dcnmClient *client.Client, AttachedFabricName, extFabric, node, name string) (bool, error) {
@@ -437,6 +441,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return getErrorFromContainer(cont, err)
 	}
+	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s", FabricName, ServiceNodeName, name))
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		deployModel := models.RoutePeeringDeploy{}
 		peeringNameList := make([]string, 0, 1)
@@ -452,7 +457,12 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 
 		_, err = dcnmClient.Save(dURL, &deployModel)
 		if err != nil {
-			return getErrorFromContainer(cont, err)
+			if cont != nil {
+				if contErr := stripQuotes(cont.S("error", "detail").String()); cont != nil && contErr != "null" {
+					return fmt.Errorf(contErr)
+				}
+			}
+			return err
 		}
 
 		// deploy
@@ -490,7 +500,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
-	d.SetId(fmt.Sprintf("/fabrics/%s/service-nodes/%s/peerings/%s", FabricName, ServiceNodeName, name))
+
 	log.Println("[DEBUG] End of Update Route Peering", d.Id())
 	return resourceRoutePeeringRead(d, m)
 }
