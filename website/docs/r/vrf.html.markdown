@@ -44,7 +44,7 @@ resource "dcnm_vrf" "first" {
     loopback_id   = 70
     loopback_ipv4 = "1.2.3.4"
     vrf_lite {
-      auto_vrf_lite_flag = false,
+      auto_vrf_lite_flag = false
       dot1q_id = 2
       ip_mask = ""
       ipv6_mask = ""
