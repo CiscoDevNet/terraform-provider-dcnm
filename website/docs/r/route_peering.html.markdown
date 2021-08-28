@@ -195,7 +195,7 @@ resource "dcnm_route_peering" "adc3"{
 * `service_networks.gateway_ip_address` - (Required) IPV4 gateway information including the mask e.g. 192.168.1.1/24.
 * `routes` - (Optional) Routing configuration.
 * `routes.template_name` - (Optional) Template name for routing.
-* `routes.route_parmas` - (Optional) NVPair map for routing.
+* `routes.route_parmas` - (Optional) NVPair map for routing. The value for predefined route parameters depens upon deployment mode.
 * `routes.vrf_name` - (Optional) VRF name for routing.
 * `deploy` - (Optional) A flag specifying if a route peering is to be deployed on the switches. Default value is "true".
 * `deploy_timeout` - (Optional) Timeout seconds for deployment. Default value is 300s.
