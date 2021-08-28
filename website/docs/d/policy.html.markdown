@@ -36,4 +36,3 @@ data "dcnm_policy" "example" {
 * `description`- Description of the policy. The description may include the details regarding the policy.Default value is "".
 * `entity_name`- Name of the entity.i.e."SWITCH".
 * `entity_type`- Type of the entity.i.e."SWITCH".
-* `deploy` - A flag specifying if a policy is to be deployed on the switches.Allowed values are "true" or "false." Default value is "true".
