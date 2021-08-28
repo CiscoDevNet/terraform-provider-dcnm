@@ -20,7 +20,7 @@ resource "dcnm_route_peering" first{
     deployment_mode = "IntraTenantFW"
     fabric_name = "testService"
     next_hop_ip = "192.168.1.11"
-    option = "None"
+    option = "None"  # Always have "None" peering option
     service_networks {
         network_name = "net1"
         network_type = "InsideNetworkFW"
