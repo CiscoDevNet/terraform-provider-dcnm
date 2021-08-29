@@ -157,6 +157,7 @@ func resourceRoutePeering() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							Default:  nil,
 						},
 					},
 				},
@@ -260,7 +261,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		for _, val := range routes {
 			rInfo := val.(map[string]interface{})
 			rModel := models.RouteConfig{}
-			if rInfo["route_parmas"] != nil {
+			if rInfo["route_parmas"].(map[string]interface{}) != nil {
 				nvPairMap := rInfo["route_parmas"].(map[string]interface{})
 				rModel.NVPairs = nvPairMap
 			}
@@ -556,7 +557,7 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		if !deployTFlag {
-			return fmt.Errorf("Route Peering  is created but not deployed yet. deployment timeout occured")
+			return fmt.Errorf("Deployment timeout occured")
 		}
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
@@ -643,18 +644,11 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		routeList := make([]interface{}, 0, 1)
 		route := stripQuotes(cont.S("routes").String())
 		var rinfo []map[string]interface{}
-		var nvPairMap map[string]interface{}
-		if r, ok := d.GetOk("routes"); ok {
-
-			routes := r.(*schema.Set).List()
-			for _, val := range routes {
-				rInfo := val.(map[string]interface{})
-				nvPairMap = rInfo["route_parmas"].(map[string]interface{})
-			}
-		}
 		_ = json.Unmarshal([]byte(route), &rinfo)
+
 		for i := 0; i < len(rinfo); i++ {
 			rMap := make(map[string]interface{})
+			localRoutes := d.Get("routes").(*schema.Set).List()
 			if rinfo[i]["templateName"] != nil {
 				rMap["template_name"] = rinfo[i]["templateName"].(string)
 			}
@@ -662,16 +656,18 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 				rMap["vrf_name"] = rinfo[i]["vrfName"].(string)
 			}
 			if rinfo[i]["nvPairs"] != nil {
-				localNVPair := nvPairMap
+				serverNVPair := rinfo[i]["nvPairs"].(map[string]interface{})
+				localNVPair := localRoutes[i].(map[string]interface{})
+				localNVPairParams := localNVPair["route_parmas"].(map[string]interface{})
 				map2 := make(map[string]interface{})
-				for k, _ := range localNVPair {
-					map2[k] = localNVPair[k]
+				for k, _ := range localNVPairParams {
+					map2[k] = serverNVPair[k]
 
 				}
 				rMap["route_parmas"] = map2
+
 			}
 			routeList = append(routeList, rMap)
-
 		}
 		d.Set("routes", routeList)
 	}
