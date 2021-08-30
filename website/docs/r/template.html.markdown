@@ -19,41 +19,41 @@ resource "dcnm_template" "example" {
 }
 
 resource "dcnm_template" "example1" {
-    name = "test"
+      name = "test"
     content = <<EOF
-                ##template properties
-                name=test;
-                description = "test";
-                ##
-                ##template variables
-                #    Copyright (c) 2019 by Cisco Systems, Inc.
-                #    All rights reserved.
+##template properties
+name=test;
+description = "Created template resource from terraform";
+##
+##template variables
+#    Copyright (c) 2019 by Cisco Systems, Inc.
+#    All rights reserved.
 
-                @(DisplayName="BGP AS #", Description="BGP Autonomous System Number")
-                string BGP_AS;
+@(DisplayName="BGP AS #", Description="BGP Autonomous System Number")
+string BGP_AS;
 
-                @(DisplayName="VRF Name", IsVrfName=true)
-                string VRF_NAME;
+@(DisplayName="VRF Name", IsVrfName=true)
+string VRF_NAME;
 
-                @(DisplayName="Roudte map namSe", Description="Redistribute static route map")
-                string REDIST_ROUTE_MAP {
-                    defaultValue = FABRIC-RMAP-REDIST-SUBNET;
-                };
+@(DisplayName="Roudte map namSe", Description="Redistribute static route map")
+string REDIST_ROUTE_MAP {
+    defaultValue = FABRIC-RMAP-REDIST-SUBNET;
+};
 
-                ##
-                ##template content
+##
+##template content
 
-                router bgp $$BGP_AS$$
-                vrf $$VRF_NAME$$
-                    address-family ipv4 unicast
-                    redistribute static route-map $$REDIST_ROUTE_MAP$$
-                    address-family ipv6 unicast
-                    redistribute static route-map $$REDIST_ROUTE_MAP$$
+router bgp $$BGP_AS$$
+vrf $$VRF_NAME$$
+    address-family ipv4 unicast
+    redistribute static route-map $$REDIST_ROUTE_MAP$$
+    address-family ipv6 unicast
+    redistribute static route-map $$REDIST_ROUTE_MAP$$
 
 
 
-                ##
-                EOF
+##
+EOF
 }
 
 

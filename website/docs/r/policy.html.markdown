@@ -39,7 +39,6 @@ resource "dcnm_policy" "second" {
 * `description`- (Optional) Description of the policy. The description may include the details regarding the policy.Default value is "".
 * `entity_name`- (Optional) Name of the entity.i.e."SWITCH".
 * `entity_type`- (Optional) Type of the entity.i.e."SWITCH".
-* `deploy` - (Optional) A flag specifying if a policy is to be deployed on the switches.Allowed values are "true" or "false." Default value is "true".
 
 
 ## Attribute Reference

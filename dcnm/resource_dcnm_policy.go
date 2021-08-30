@@ -213,13 +213,19 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 	strByte = []byte(strJson)
 	var nvPair map[string]interface{}
 	json.Unmarshal(strByte, &nvPair)
-	props := d.Get("template_props").(map[string]interface{})
+	props, ok := d.GetOk("template_props")
+
 	map2 := make(map[string]interface{})
-	for k, _ := range props {
+	for k, _ := range props.(map[string]interface{}) {
 		map2[k] = nvPair[k]
 
 	}
-	d.Set("template_props", map2)
+	if !ok {
+		d.Set("template_props", nvPair)
+	} else {
+
+		d.Set("template_props", map2)
+	}
 
 	return d
 }

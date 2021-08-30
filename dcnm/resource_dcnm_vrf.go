@@ -341,7 +341,10 @@ func getRemoteVRF(client *client.Client, fabricName, vrfName string) (*container
 }
 
 func setVRFAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-	d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	if cont.Exists("fabric") {
+
+		d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	}
 	d.Set("name", stripQuotes(cont.S("vrfName").String()))
 	d.Set("template", stripQuotes(cont.S("vrfTemplate").String()))
 	d.Set("extension_template", stripQuotes(cont.S("vrfExtensionTemplate").String()))
