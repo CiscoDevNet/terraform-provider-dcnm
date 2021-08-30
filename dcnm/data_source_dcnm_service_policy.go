@@ -119,6 +119,11 @@ func datasourceDCNMServicePolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"route_map_action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 
 			"fwd_direction": &schema.Schema{
 				Type:     schema.TypeBool,

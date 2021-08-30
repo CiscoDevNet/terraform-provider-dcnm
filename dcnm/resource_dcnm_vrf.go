@@ -588,6 +588,8 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	d.SetId(vrf.Name)
+
 	//VRF attachment
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		if _, ok := d.GetOk("attachments"); ok {
@@ -791,7 +793,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("VRF record is created but not deployed yet. Either make deploy=false or provide attachments")
 		}
 	}
-
+	d.SetId(vrf.Name)
 	log.Println("[DEBUG] End of Create method ", d.Id())
 	return resourceDCNMVRFRead(d, m)
 }
@@ -1109,7 +1111,7 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("VRF record is not deployed yet. Either make deploy=false or provide attachments")
 		}
 	}
-
+	d.SetId(vrf.Name)
 	log.Println("[DEBUG] End of Update method ", d.Id())
 	return resourceDCNMVRFRead(d, m)
 }
@@ -1174,7 +1176,7 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 
 					if len(extensionValues) == 0 {
 						d.SetId("")
-						return err
+						return nil
 					}
 
 					//vrfLiteMap["peer_vrf_name"] = extensionValues["PEER_VRF_NAME"].(string)

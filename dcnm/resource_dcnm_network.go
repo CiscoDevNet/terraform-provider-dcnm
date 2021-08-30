@@ -560,6 +560,8 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if tag, ok := d.GetOk("tag"); ok {
 		networkProfile.Tag = tag.(string)
+	} else {
+		networkProfile.Tag = "12345"
 	}
 	if trm, ok := d.GetOk("trm_enable_flag"); ok {
 		networkProfile.TRMEnable = trm.(bool)

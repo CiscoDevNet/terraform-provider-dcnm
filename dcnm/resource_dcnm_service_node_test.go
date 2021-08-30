@@ -142,18 +142,14 @@ func testAccCheckDCNMServiceNodeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDCNMServiceNodeAttributes(desc string, network *models.Network, profile *models.NetworkProfileConfig) resource.TestCheckFunc {
+func testAccCheckDCNMServiceNodeAttributes(desc string, serviceNode *models.ServiceNode) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if "import" != serviceNode.Name {
 			return fmt.Errorf("Bad Network Name %s", serviceNode.Name)
 		}
 
-		if "fab2" != serviceNode.Fabric {
-			return fmt.Errorf("Bad Network fabric name %s", serviceNode.Fabric)
-		}
-
-		if "MyVRF" != serviceNode.VRF {
-			return fmt.Errorf("Bad Network VRF name %s", serviceNode.VRF)
+		if "fab2" != serviceNode.AttachedFabricName {
+			return fmt.Errorf("Bad Network fabric name %s", serviceNode.AttachedFabricName)
 		}
 
 		if 2301 != profile.Vlan {
