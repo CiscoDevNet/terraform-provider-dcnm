@@ -43,7 +43,6 @@ data "dcnm_service_policy" "example" {
 * `protocol` - Protocol of the Service Policy.
 * `src_port` - Source port of the Service Policy. 
 * `dest_port` - Destination Port of the Service Policy.
-* `route_map_action` - Route map action of the Service Policy.
 * `next_hop_action` - Next hop Action of the Service Policy.
 * `fwd_direction` - Forward Direction of the Service Policy.
 * `deploy` - Deploy of the Service Policy.
