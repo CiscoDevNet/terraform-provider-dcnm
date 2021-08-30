@@ -47,4 +47,3 @@ data "dcnm_service_policy" "example" {
 * `next_hop_action` - Next hop Action of the Service Policy.
 * `fwd_direction` - Forward Direction of the Service Policy.
 * `deploy` - Deploy of the Service Policy.
-* `deploy_timeout` - Deploy timeout  of the Service Policy.
