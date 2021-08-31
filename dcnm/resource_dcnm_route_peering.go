@@ -515,51 +515,58 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	var dURL string
 	//  Detach the route peering
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
-
-		if dcnmClient.GetPlatform() == "nd" {
-			dURL = fmt.Sprintf(URLS["NDUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
-		} else {
-			dURL = fmt.Sprintf(URLS["DCNMUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
-		}
-		cont, err := dcnmClient.Delete(dURL)
-
+		cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 		if err != nil {
 			return getErrorFromContainer(cont, err)
 		}
-		deployModel := models.RoutePeeringDeploy{}
-		peeringNameList := make([]string, 0, 1)
-		peeringNameList = append(peeringNameList, name)
-		deployModel.PeeringNames = peeringNameList
-		if dcnmClient.GetPlatform() == "nd" {
-			dURL = fmt.Sprintf(URLS["NDUrl"]["Deploy"], extFabric, node, AttachedFabricName)
-		} else {
-
-			dURL = fmt.Sprintf(URLS["DCNMUrl"]["Deploy"], extFabric, node, AttachedFabricName)
-		}
-
-		cont, err = dcnmClient.Save(dURL, &deployModel)
-		if err != nil {
-			return getErrorFromContainer(cont, err)
-		}
-		deployTFlag := false
-		deployTimeout := d.Get("deploy_timeout").(int)
-		for j := 0; j < (deployTimeout / 5); j++ {
-			cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
-			status := stripQuotes(cont.S("status").String())
-			if status == "NA" || status == "N/A" {
-				deployTFlag = true
-				break
+		status := stripQuotes(cont.S("status").String())
+		log.Println("stttt", status)
+		if status != "NA" && status != "N/A" && status != "" {
+			if dcnmClient.GetPlatform() == "nd" {
+				dURL = fmt.Sprintf(URLS["NDUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
 			} else {
-				time.Sleep(5 * time.Second)
+				dURL = fmt.Sprintf(URLS["DCNMUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
 			}
+			cont, err := dcnmClient.Delete(dURL)
+
 			if err != nil {
-				return err
+				return getErrorFromContainer(cont, err)
 			}
+			deployModel := models.RoutePeeringDeploy{}
+			peeringNameList := make([]string, 0, 1)
+			peeringNameList = append(peeringNameList, name)
+			deployModel.PeeringNames = peeringNameList
+			if dcnmClient.GetPlatform() == "nd" {
+				dURL = fmt.Sprintf(URLS["NDUrl"]["Deploy"], extFabric, node, AttachedFabricName)
+			} else {
+
+				dURL = fmt.Sprintf(URLS["DCNMUrl"]["Deploy"], extFabric, node, AttachedFabricName)
+			}
+
+			cont, err = dcnmClient.Save(dURL, &deployModel)
+			if err != nil {
+				return getErrorFromContainer(cont, err)
+			}
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
+				cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
+				status := stripQuotes(cont.S("status").String())
+				if status == "NA" || status == "N/A" || status == "" {
+					deployTFlag = true
+					break
+				} else {
+					time.Sleep(5 * time.Second)
+				}
+				if err != nil {
+					return err
+				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("Deployment timeout occured")
+			}
+			log.Println("[DEBUG] End of Deploy Method.")
 		}
-		if !deployTFlag {
-			return fmt.Errorf("Deployment timeout occured")
-		}
-		log.Println("[DEBUG] End of Deploy Method.")
 	}
 	if dcnmClient.GetPlatform() == "nd" {
 		dURL = fmt.Sprintf(URLS["NDUrl"]["Common"], extFabric, node, AttachedFabricName, name)
