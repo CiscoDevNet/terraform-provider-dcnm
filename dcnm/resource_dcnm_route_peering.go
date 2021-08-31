@@ -520,7 +520,6 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 			return getErrorFromContainer(cont, err)
 		}
 		status := stripQuotes(cont.S("status").String())
-		log.Println("stttt", status)
 		if status != "NA" && status != "N/A" && status != "" {
 			if dcnmClient.GetPlatform() == "nd" {
 				dURL = fmt.Sprintf(URLS["NDUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
