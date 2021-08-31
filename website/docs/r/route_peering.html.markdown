@@ -90,7 +90,7 @@ Route Peering when deployment mode is "OneArmADC" and service node "ADC":
 resource "dcnm_route_peering" first{
     name = "tfsnadc"
     attached_fabric_name = "Test_fabric_1"
-    deployment_mode = "OneArmADC"
+    deployment_mode = "OneArmADC" # Should not have "None" peering option
     fabric_name = "testService"
     option = "EBGPDynamicPeering"
     service_networks {
@@ -120,7 +120,7 @@ resource "dcnm_route_peering" "adc3"{
     attached_fabric_name = "Test_fabric_1"
     deployment_mode = "TwoArmADC"
     fabric_name = "testService"
-    option = "StaticPeering"
+    option = "StaticPeering" # Should not have "None" peering option
     service_networks {
         network_name = "netadc"
         network_type = "ArmOneADC"
@@ -154,7 +154,7 @@ Route Peering when deployment mode is "OneArmVNF" and service node "VNF":
 resource "dcnm_route_peering" "adc3"{
    name = "tf"
     attached_fabric_name = "Test_fabric_1"
-    deployment_mode = "OneArmVNF"
+    deployment_mode = "OneArmVNF" # Should not have "None" peering option
     fabric_name = "testService"
     option = "StaticPeering"
     service_networks {
