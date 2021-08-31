@@ -628,11 +628,20 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 	_ = json.Unmarshal([]byte(network), &netinfo)
 
 	for i := 0; i < len(netinfo); i++ {
+		Networks := d.Get("service_networks").(*schema.Set).List()
 		netMap := make(map[string]interface{})
 		netMap["network_name"] = netinfo[i]["networkName"].(string)
 		netMap["network_type"] = netinfo[i]["networkType"].(string)
 		netMap["template_name"] = netinfo[i]["templateName"].(string)
-		netMap["vlan_id"] = netinfo[i]["vlanId"].(float64)
+		if netinfo[i]["vlanId"].(float64) != 0 {
+			netMap["vlan_id"] = netinfo[i]["vlanId"].(float64)
+		} else {
+			if len(Networks) != 0 {
+				localNet := Networks[i].(map[string]interface{})
+				log.Println("vvvv", localNet["vlan_id"])
+				netMap["vlan_id"] = localNet["vlan_id"].(int)
+			}
+		}
 		netMap["vrf_name"] = netinfo[i]["vrfName"].(string)
 		nvPairs := netinfo[i]["nvPairs"].(map[string]interface{})
 		netMap["gateway_ip_address"] = nvPairs["gatewayIpAddress"].(string)
@@ -657,12 +666,16 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			}
 			if rinfo[i]["nvPairs"] != nil {
 				serverNVPair := rinfo[i]["nvPairs"].(map[string]interface{})
-				localNVPair := localRoutes[i].(map[string]interface{})
-				localNVPairParams := localNVPair["route_parmas"].(map[string]interface{})
 				map2 := make(map[string]interface{})
-				for k, _ := range localNVPairParams {
-					map2[k] = serverNVPair[k]
+				if len(localRoutes) != 0 {
+					localNVPair := localRoutes[i].(map[string]interface{})
+					localNVPairParams := localNVPair["route_parmas"].(map[string]interface{})
+					for k, _ := range localNVPairParams {
+						map2[k] = serverNVPair[k]
 
+					}
+				} else {
+					map2 = serverNVPair
 				}
 				rMap["route_parmas"] = map2
 
