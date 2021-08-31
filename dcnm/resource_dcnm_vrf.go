@@ -696,34 +696,37 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 
 						if vrfLite["neighbor_ip"] != "" {
 							vrfLiteMap["NEIGHBOR_IP"] = vrfLite["neighbor_ip"].(string)
-						} else {
+						} else if extensionValues["NEIGHBOR_IP"] != nil {
 							vrfLiteMap["NEIGHBOR_IP"] = extensionValues["NEIGHBOR_IP"].(string)
 						}
 
 						if vrfLite["neighbor_ip"] != "" {
 							vrfLiteMap["NEIGHBOR_ASN"] = vrfLite["neighbor_asn"].(string)
-						} else {
+						} else if extensionValues["NEIGHBOR_ASN"] != nil {
 							vrfLiteMap["NEIGHBOR_ASN"] = extensionValues["NEIGHBOR_ASN"].(string)
 						}
 
 						if vrfLite["ipv6_mask"] != "" {
 							vrfLiteMap["IPV6_MASK"] = vrfLite["ipv6_mask"].(string)
-						} else {
+						} else if extensionValues["IPV6_MASK"] != nil {
 							vrfLiteMap["IPV6_MASK"] = extensionValues["IPV6_MASK"].(string)
 						}
 
 						if vrfLite["ipv6_neighbor"] != "" {
 							vrfLiteMap["IPV6_NEIGHBOR"] = vrfLite["ipv6_neighbor"].(string)
-						} else {
+						} else if extensionValues["IPV6_NEIGHBOR"] != nil {
 							vrfLiteMap["IPV6_NEIGHBOR"] = extensionValues["IPV6_NEIGHBOR"].(string)
 						}
 
 						if vrfLite["auto_vrf_lite_flag"] != "" {
 							vrfLiteMap["AUTO_VRF_LITE_FLAG"] = vrfLite["auto_vrf_lite_flag"].(string)
-						} else {
+						} else if extensionValues["AUTO_VRF_LITE_FLAG"] != nil {
 							vrfLiteMap["AUTO_VRF_LITE_FLAG"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
 						}
-						vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+
+						if extensionValues["IF_NAME"] != nil {
+							vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+						}
 
 						vrfLiteList = append(vrfLiteList, vrfLiteMap)
 					}
@@ -1013,34 +1016,37 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 
 						if vrfLite["neighbor_ip"] != "" {
 							vrfLiteMap["NEIGHBOR_IP"] = vrfLite["neighbor_ip"].(string)
-						} else {
+						} else if extensionValues["NEIGHBOR_IP"] != nil {
 							vrfLiteMap["NEIGHBOR_IP"] = extensionValues["NEIGHBOR_IP"].(string)
 						}
 
 						if vrfLite["neighbor_ip"] != "" {
 							vrfLiteMap["NEIGHBOR_ASN"] = vrfLite["neighbor_asn"].(string)
-						} else {
+						} else if extensionValues["NEIGHBOR_ASN"] != nil {
 							vrfLiteMap["NEIGHBOR_ASN"] = extensionValues["NEIGHBOR_ASN"].(string)
 						}
 
 						if vrfLite["ipv6_mask"] != "" {
 							vrfLiteMap["IPV6_MASK"] = vrfLite["ipv6_mask"].(string)
-						} else {
+						} else if extensionValues["IPV6_MASK"] != nil {
 							vrfLiteMap["IPV6_MASK"] = extensionValues["IPV6_MASK"].(string)
 						}
 
 						if vrfLite["ipv6_neighbor"] != "" {
 							vrfLiteMap["IPV6_NEIGHBOR"] = vrfLite["ipv6_neighbor"].(string)
-						} else {
+						} else if extensionValues["IPV6_NEIGHBOR"] != nil {
 							vrfLiteMap["IPV6_NEIGHBOR"] = extensionValues["IPV6_NEIGHBOR"].(string)
 						}
 
 						if vrfLite["auto_vrf_lite_flag"] != "" {
 							vrfLiteMap["AUTO_VRF_LITE_FLAG"] = vrfLite["auto_vrf_lite_flag"].(string)
-						} else {
+						} else if extensionValues["AUTO_VRF_LITE_FLAG"] != nil {
 							vrfLiteMap["AUTO_VRF_LITE_FLAG"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
 						}
-						vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+
+						if extensionValues["IF_NAME"] != nil {
+							vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+						}
 
 						vrfLiteList = append(vrfLiteList, vrfLiteMap)
 					}
