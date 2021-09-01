@@ -1262,7 +1262,7 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 
 			deployFlag := false
 			deployTimeout := d.Get("deploy_timeout").(int)
-			for j := 0; j < (deployTimeout / 5); j++ {
+			for j := 0; j < int(deployTimeout/5); j++ {
 				deployStatus, err := getVRFDeploymentStatus(dcnmClient, fabricName, dn)
 				if err != nil {
 					return err
