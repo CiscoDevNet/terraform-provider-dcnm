@@ -644,7 +644,6 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		} else {
 			if len(Networks) != 0 {
 				localNet := Networks[i].(map[string]interface{})
-				log.Println("vvvv", localNet["vlan_id"])
 				netMap["vlan_id"] = localNet["vlan_id"].(int)
 			}
 		}
