@@ -9,6 +9,7 @@ description: |-
 # dcnm_service_policy
 
 Manages DCNM Service Policy
+**NOTE:** Service Policy can be created in only those route peering which has two distinct service networks.
 
 ## Example Usage
 
@@ -51,8 +52,6 @@ resource "dcnm_service_policy" "example" {
 - `fwd_direction` - (Optional) Forward Direction of the Service Policy. Default value is true.
 - `deploy` - (Optional) Deploy of the Service Policy. Default value is false.
 - `deploy_timeout` - (Optional) Deploy timeout of the Service Policy. Default value is 300.
-
-**NOTE:** Service Policy can be created in only those route peering which has two distinct service networks.
 
 ## Attribute Reference
 
