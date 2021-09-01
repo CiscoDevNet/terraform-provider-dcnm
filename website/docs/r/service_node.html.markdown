@@ -6,7 +6,7 @@ description: |-
   Manages DCNM Service Node
 ---
 
-# dcnm_vrf
+# dcnm_service_node
 
 Manages DCNM Service Node
 

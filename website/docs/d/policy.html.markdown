@@ -36,3 +36,4 @@ data "dcnm_policy" "example" {
 * `description`- Description of the policy. The description may include the details regarding the policy.Default value is "".
 * `entity_name`- Name of the entity.i.e."SWITCH".
 * `entity_type`- Type of the entity.i.e."SWITCH".
+* `template_content_type` - (Optional) Content type of the specified template.

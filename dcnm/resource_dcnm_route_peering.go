@@ -515,51 +515,57 @@ func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	var dURL string
 	//  Detach the route peering
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
-
-		if dcnmClient.GetPlatform() == "nd" {
-			dURL = fmt.Sprintf(URLS["NDUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
-		} else {
-			dURL = fmt.Sprintf(URLS["DCNMUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
-		}
-		cont, err := dcnmClient.Delete(dURL)
-
+		cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
 		if err != nil {
 			return getErrorFromContainer(cont, err)
 		}
-		deployModel := models.RoutePeeringDeploy{}
-		peeringNameList := make([]string, 0, 1)
-		peeringNameList = append(peeringNameList, name)
-		deployModel.PeeringNames = peeringNameList
-		if dcnmClient.GetPlatform() == "nd" {
-			dURL = fmt.Sprintf(URLS["NDUrl"]["Deploy"], extFabric, node, AttachedFabricName)
-		} else {
-
-			dURL = fmt.Sprintf(URLS["DCNMUrl"]["Deploy"], extFabric, node, AttachedFabricName)
-		}
-
-		cont, err = dcnmClient.Save(dURL, &deployModel)
-		if err != nil {
-			return getErrorFromContainer(cont, err)
-		}
-		deployTFlag := false
-		deployTimeout := d.Get("deploy_timeout").(int)
-		for j := 0; j < (deployTimeout / 5); j++ {
-			cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
-			status := stripQuotes(cont.S("status").String())
-			if status == "NA" || status == "N/A" {
-				deployTFlag = true
-				break
+		status := stripQuotes(cont.S("status").String())
+		if status != "NA" && status != "N/A" && status != "" {
+			if dcnmClient.GetPlatform() == "nd" {
+				dURL = fmt.Sprintf(URLS["NDUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
 			} else {
-				time.Sleep(5 * time.Second)
+				dURL = fmt.Sprintf(URLS["DCNMUrl"]["Attach"]+"?peering-names=%s", extFabric, node, AttachedFabricName, name)
 			}
+			cont, err := dcnmClient.Delete(dURL)
+
 			if err != nil {
-				return err
+				return getErrorFromContainer(cont, err)
 			}
+			deployModel := models.RoutePeeringDeploy{}
+			peeringNameList := make([]string, 0, 1)
+			peeringNameList = append(peeringNameList, name)
+			deployModel.PeeringNames = peeringNameList
+			if dcnmClient.GetPlatform() == "nd" {
+				dURL = fmt.Sprintf(URLS["NDUrl"]["Deploy"], extFabric, node, AttachedFabricName)
+			} else {
+
+				dURL = fmt.Sprintf(URLS["DCNMUrl"]["Deploy"], extFabric, node, AttachedFabricName)
+			}
+
+			cont, err = dcnmClient.Save(dURL, &deployModel)
+			if err != nil {
+				return getErrorFromContainer(cont, err)
+			}
+			deployTFlag := false
+			deployTimeout := d.Get("deploy_timeout").(int)
+			for j := 0; j < (deployTimeout / 5); j++ {
+				cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)
+				status := stripQuotes(cont.S("status").String())
+				if status == "NA" || status == "N/A" || status == "" {
+					deployTFlag = true
+					break
+				} else {
+					time.Sleep(5 * time.Second)
+				}
+				if err != nil {
+					return err
+				}
+			}
+			if !deployTFlag {
+				return fmt.Errorf("Deployment timeout occured")
+			}
+			log.Println("[DEBUG] End of Deploy Method.")
 		}
-		if !deployTFlag {
-			return fmt.Errorf("Deployment timeout occured")
-		}
-		log.Println("[DEBUG] End of Deploy Method.")
 	}
 	if dcnmClient.GetPlatform() == "nd" {
 		dURL = fmt.Sprintf(URLS["NDUrl"]["Common"], extFabric, node, AttachedFabricName, name)
@@ -628,11 +634,19 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 	_ = json.Unmarshal([]byte(network), &netinfo)
 
 	for i := 0; i < len(netinfo); i++ {
+		Networks := d.Get("service_networks").(*schema.Set).List()
 		netMap := make(map[string]interface{})
 		netMap["network_name"] = netinfo[i]["networkName"].(string)
 		netMap["network_type"] = netinfo[i]["networkType"].(string)
 		netMap["template_name"] = netinfo[i]["templateName"].(string)
-		netMap["vlan_id"] = netinfo[i]["vlanId"].(float64)
+		if netinfo[i]["vlanId"].(float64) != 0 {
+			netMap["vlan_id"] = netinfo[i]["vlanId"].(float64)
+		} else {
+			if len(Networks) != 0 {
+				localNet := Networks[i].(map[string]interface{})
+				netMap["vlan_id"] = localNet["vlan_id"].(int)
+			}
+		}
 		netMap["vrf_name"] = netinfo[i]["vrfName"].(string)
 		nvPairs := netinfo[i]["nvPairs"].(map[string]interface{})
 		netMap["gateway_ip_address"] = nvPairs["gatewayIpAddress"].(string)
@@ -657,12 +671,16 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			}
 			if rinfo[i]["nvPairs"] != nil {
 				serverNVPair := rinfo[i]["nvPairs"].(map[string]interface{})
-				localNVPair := localRoutes[i].(map[string]interface{})
-				localNVPairParams := localNVPair["route_parmas"].(map[string]interface{})
 				map2 := make(map[string]interface{})
-				for k, _ := range localNVPairParams {
-					map2[k] = serverNVPair[k]
+				if len(localRoutes) != 0 {
+					localNVPair := localRoutes[i].(map[string]interface{})
+					localNVPairParams := localNVPair["route_parmas"].(map[string]interface{})
+					for k, _ := range localNVPairParams {
+						map2[k] = serverNVPair[k]
 
+					}
+				} else {
+					map2 = serverNVPair
 				}
 				rMap["route_parmas"] = map2
 
