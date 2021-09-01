@@ -9,6 +9,7 @@ description: |-
 # dcnm_service_policy
 
 Manages DCNM Service Policy
+
 **NOTE:** Service Policy can be created in only those route peering which has two distinct service networks.
 
 ## Example Usage
