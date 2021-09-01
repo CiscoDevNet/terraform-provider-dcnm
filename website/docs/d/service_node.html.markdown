@@ -6,7 +6,7 @@ description: |-
   Data source for DCNM Service Node
 ---
 
-# dcnm_vrf #
+# dcnm_service_node #
 Data source for DCNM Service Node
 
 ## Example Usage ##
