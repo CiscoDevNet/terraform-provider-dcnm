@@ -59,12 +59,3 @@ data "dcnm_vrf" "check" {
 * `attachments.serial_number` - Serial number of the switch.
 * `attachments.vlan_id` - Vlan ID for the switch associated with VRF.
 * `attachments.attach` - Attach flag for switch.
-- `attachments.vrf_lite` - Vrf lite for the switch attachment.
-- `attachments.vrf_lite.peer_vrf_name` - Name of vrf lite  for the switch attachment.
-- `attachments.vrf_lite.dotq_id` - Dotq id of  vrf lite for the switch attachment.
-- `attachments.vrf_lite.ip_mask` - Ip mask of vrf lite for the switch attachment.
-- `attachments.vrf_lite.neighbor_ip` - Neighbor ip of vrf lite for the switch attachment.
-- `attachments.vrf_lite.neighbor_asn` - Neighbor asn of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_mask` - Ipv6 mask of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_neighbor` - Ipv6 neighbor of vrf lite for the switch attachment.
-- `attachments.vrf_lite.auto_vrf_lite_flag` - Auto vrf lite flag of vrf lite for the switch attachment.
