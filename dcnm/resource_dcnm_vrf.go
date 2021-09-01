@@ -275,6 +275,58 @@ func resourceDCNMVRF() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"vrf_lite": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"peer_vrf_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"dot1q_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ip_mask": {
+										Type:     schema.TypeString,
+										Optional: true,
+										// Computed: true,
+									},
+									"neighbor_ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+
+										// Computed: true,
+									},
+									"neighbor_asn": {
+										Type:     schema.TypeString,
+										Optional: true,
+
+										// Computed: true,
+									},
+									"ipv6_mask": {
+										Type:     schema.TypeString,
+										Optional: true,
+
+										// Computed: true,
+									},
+									"ipv6_neighbor": {
+										Type:     schema.TypeString,
+										Optional: true,
+
+										// Computed: true,
+									},
+									"auto_vrf_lite_flag": {
+										Type:     schema.TypeString,
+										Optional: true,
+
+										// Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -294,7 +346,10 @@ func getRemoteVRF(client *client.Client, fabricName, vrfName string) (*container
 }
 
 func setVRFAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-	d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	if cont.Exists("fabric") {
+
+		d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	}
 	d.Set("name", stripQuotes(cont.S("vrfName").String()))
 	d.Set("template", stripQuotes(cont.S("vrfTemplate").String()))
 	d.Set("extension_template", stripQuotes(cont.S("vrfExtensionTemplate").String()))
@@ -432,11 +487,19 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 		vrf.Id = segmentId.(string)
 	} else {
 		//request to get the next vrf segment id
-		cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/partitions/ids", vrf.Fabric))
-		if err != nil {
-			return err
+		if dcnmClient.GetPlatform() == "nd" {
+			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/vrfinfo", vrf.Fabric))
+			if err != nil {
+				return err
+			}
+			vrf.Id = cont.S("l3vni").String()
+		} else {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/partitions/ids", vrf.Fabric))
+			if err != nil {
+				return err
+			}
+			vrf.Id = cont.S("partitionSegmentId").String()
 		}
-		vrf.Id = cont.S("partitionSegmentId").String()
 	}
 
 	if srcTemp, ok := d.GetOk("service_template"); ok {
@@ -529,6 +592,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	d.SetId(vrf.Name)
 
 	//VRF attachment
@@ -577,6 +641,111 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 						return err
 					}
 					attachMap["instanceValues"] = string(instStr)
+				}
+
+				if attachment["vrf_lite"] != nil {
+					vrfLiteList := make([]map[string]interface{}, 0, 1)
+					for _, val := range attachment["vrf_lite"].(*schema.Set).List() {
+						log.Println("vrf_lite enter")
+						vrfLite := val.(map[string]interface{})
+						vrfLiteMap := make(map[string]interface{})
+
+						durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/switches?vrf-names=%s&serial-numbers=%s", vrf.Fabric, vrf.Name, attachMap["serialNumber"].(string))
+						cont, err := dcnmClient.GetviaURL(durl)
+						if err != nil {
+							return err
+						}
+						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+						ifName := stripQuotes(extensionProtValues.S("interfaceName").String())
+						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+
+						var extensionValues map[string]interface{}
+						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+						err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
+						if err != nil {
+							return err
+						}
+
+						if len(extensionValues) != 0 {
+							vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
+							if vrfLite["dot1q_id"] != "" {
+								vrfLiteMap["DOT1Q_ID"] = vrfLite["dot1q_id"]
+							} else {
+								durl := "/rest/resource-manager/reserve-id"
+								dot1q := models.VRFDot1qID{
+									ScopeType:    "DeviceInterface",
+									UsageType:    "TOP_DOWN_L3_DOT1Q",
+									AllocatedTo:  vrf.Name,
+									SerialNumber: attachMap["serialNumber"].(string),
+									IfName:       ifName,
+								}
+								cont, err := dcnmClient.Save(durl, &dot1q)
+								if err != nil {
+									return err
+								}
+								vrfLiteMap["DOT1Q_ID"] = stripQuotes(cont.String())
+							}
+
+							if vrfLite["ip_mask"] != "" {
+								vrfLiteMap["IP_MASK"] = vrfLite["ip_mask"].(string)
+							} else if extensionValues["IP_MASK"] != nil {
+								vrfLiteMap["IP_MASK"] = extensionValues["IP_MASK"].(string)
+							}
+
+							if vrfLite["neighbor_ip"] != "" {
+								vrfLiteMap["NEIGHBOR_IP"] = vrfLite["neighbor_ip"].(string)
+							} else if extensionValues["NEIGHBOR_IP"] != nil {
+								vrfLiteMap["NEIGHBOR_IP"] = extensionValues["NEIGHBOR_IP"].(string)
+							}
+
+							if vrfLite["neighbor_ip"] != "" {
+								vrfLiteMap["NEIGHBOR_ASN"] = vrfLite["neighbor_asn"].(string)
+							} else if extensionValues["NEIGHBOR_ASN"] != nil {
+								vrfLiteMap["NEIGHBOR_ASN"] = extensionValues["NEIGHBOR_ASN"].(string)
+							}
+
+							if vrfLite["ipv6_mask"] != "" {
+								vrfLiteMap["IPV6_MASK"] = vrfLite["ipv6_mask"].(string)
+							} else if extensionValues["IPV6_MASK"] != nil {
+								vrfLiteMap["IPV6_MASK"] = extensionValues["IPV6_MASK"].(string)
+							}
+
+							if vrfLite["ipv6_neighbor"] != "" {
+								vrfLiteMap["IPV6_NEIGHBOR"] = vrfLite["ipv6_neighbor"].(string)
+							} else if extensionValues["IPV6_NEIGHBOR"] != nil {
+								vrfLiteMap["IPV6_NEIGHBOR"] = extensionValues["IPV6_NEIGHBOR"].(string)
+							}
+
+							if vrfLite["auto_vrf_lite_flag"] != "" {
+								vrfLiteMap["AUTO_VRF_LITE_FLAG"] = vrfLite["auto_vrf_lite_flag"].(string)
+							} else if extensionValues["AUTO_VRF_LITE_FLAG"] != nil {
+								vrfLiteMap["AUTO_VRF_LITE_FLAG"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
+							}
+
+							if extensionValues["IF_NAME"] != nil {
+								vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+							}
+						} else {
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serialNumber"].(string))
+						}
+
+						vrfLiteList = append(vrfLiteList, vrfLiteMap)
+					}
+					contMap := make(map[string]interface{})
+					vrfLiteStr, err := json.Marshal(map[string]interface{}{
+						"VRF_LITE_CONN": vrfLiteList,
+					})
+					if err != nil {
+						return err
+					}
+					contMap["VRF_LITE_CONN"] = string(vrfLiteStr)
+					vrfLiteStr, err = json.Marshal(contMap)
+					if err != nil {
+						return err
+					}
+					attachMap["extensionValues"] = string(vrfLiteStr)
+				} else {
+					attachMap["extensionValues"] = ""
 				}
 
 				attachList = append(attachList, attachMap)
@@ -628,7 +797,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("VRF record is created but not deployed yet. Either make deploy=false or provide attachments")
 		}
 	}
-
+	d.SetId(vrf.Name)
 	log.Println("[DEBUG] End of Create method ", d.Id())
 	return resourceDCNMVRFRead(d, m)
 }
@@ -786,6 +955,111 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 					attachMap["instanceValues"] = string(instStr)
 				}
 
+				if attachment["vrf_lite"] != nil {
+					vrfLiteList := make([]map[string]interface{}, 0, 1)
+					for _, val := range attachment["vrf_lite"].(*schema.Set).List() {
+						log.Println("vrf_lite enter")
+						vrfLite := val.(map[string]interface{})
+						vrfLiteMap := make(map[string]interface{})
+
+						durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/switches?vrf-names=%s&serial-numbers=%s", vrf.Fabric, vrf.Name, attachMap["serialNumber"].(string))
+						cont, err := dcnmClient.GetviaURL(durl)
+						if err != nil {
+							return err
+						}
+						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+						ifName := stripQuotes(extensionProtValues.S("interfaceName").String())
+						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+
+						var extensionValues map[string]interface{}
+						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+						err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
+						if err != nil {
+							return err
+						}
+
+						if len(extensionValues) != 0 {
+							vrfLiteMap["PEER_VRF_NAME"] = vrfLite["peer_vrf_name"]
+							if vrfLite["dot1q_id"] != "" {
+								vrfLiteMap["DOT1Q_ID"] = vrfLite["dot1q_id"]
+							} else {
+								durl := "/rest/resource-manager/reserve-id"
+								dot1q := models.VRFDot1qID{
+									ScopeType:    "DeviceInterface",
+									UsageType:    "TOP_DOWN_L3_DOT1Q",
+									AllocatedTo:  vrf.Name,
+									SerialNumber: attachMap["serialNumber"].(string),
+									IfName:       ifName,
+								}
+								cont, err := dcnmClient.Save(durl, &dot1q)
+								if err != nil {
+									return err
+								}
+								vrfLiteMap["DOT1Q_ID"] = stripQuotes(cont.String())
+							}
+
+							if vrfLite["ip_mask"] != "" {
+								vrfLiteMap["IP_MASK"] = vrfLite["ip_mask"].(string)
+							} else if extensionValues["IP_MASK"] != nil {
+								vrfLiteMap["IP_MASK"] = extensionValues["IP_MASK"].(string)
+							}
+
+							if vrfLite["neighbor_ip"] != "" {
+								vrfLiteMap["NEIGHBOR_IP"] = vrfLite["neighbor_ip"].(string)
+							} else if extensionValues["NEIGHBOR_IP"] != nil {
+								vrfLiteMap["NEIGHBOR_IP"] = extensionValues["NEIGHBOR_IP"].(string)
+							}
+
+							if vrfLite["neighbor_ip"] != "" {
+								vrfLiteMap["NEIGHBOR_ASN"] = vrfLite["neighbor_asn"].(string)
+							} else if extensionValues["NEIGHBOR_ASN"] != nil {
+								vrfLiteMap["NEIGHBOR_ASN"] = extensionValues["NEIGHBOR_ASN"].(string)
+							}
+
+							if vrfLite["ipv6_mask"] != "" {
+								vrfLiteMap["IPV6_MASK"] = vrfLite["ipv6_mask"].(string)
+							} else if extensionValues["IPV6_MASK"] != nil {
+								vrfLiteMap["IPV6_MASK"] = extensionValues["IPV6_MASK"].(string)
+							}
+
+							if vrfLite["ipv6_neighbor"] != "" {
+								vrfLiteMap["IPV6_NEIGHBOR"] = vrfLite["ipv6_neighbor"].(string)
+							} else if extensionValues["IPV6_NEIGHBOR"] != nil {
+								vrfLiteMap["IPV6_NEIGHBOR"] = extensionValues["IPV6_NEIGHBOR"].(string)
+							}
+
+							if vrfLite["auto_vrf_lite_flag"] != "" {
+								vrfLiteMap["AUTO_VRF_LITE_FLAG"] = vrfLite["auto_vrf_lite_flag"].(string)
+							} else if extensionValues["AUTO_VRF_LITE_FLAG"] != nil {
+								vrfLiteMap["AUTO_VRF_LITE_FLAG"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
+							}
+
+							if extensionValues["IF_NAME"] != nil {
+								vrfLiteMap["IF_NAME"] = extensionValues["IF_NAME"].(string)
+							}
+						} else {
+							return fmt.Errorf("No VRF_LITE Data found for switch %s", attachMap["serialNumber"].(string))
+						}
+
+						vrfLiteList = append(vrfLiteList, vrfLiteMap)
+					}
+					contMap := make(map[string]interface{})
+					vrfLiteStr, err := json.Marshal(map[string]interface{}{
+						"VRF_LITE_CONN": vrfLiteList,
+					})
+					if err != nil {
+						return err
+					}
+					contMap["VRF_LITE_CONN"] = string(vrfLiteStr)
+					vrfLiteStr, err = json.Marshal(contMap)
+					if err != nil {
+						return err
+					}
+					attachMap["extensionValues"] = string(vrfLiteStr)
+				} else {
+					attachMap["extensionValues"] = ""
+				}
+
 				attachList = append(attachList, attachMap)
 			}
 
@@ -836,7 +1110,7 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 			return fmt.Errorf("VRF record is not deployed yet. Either make deploy=false or provide attachments")
 		}
 	}
-
+	d.SetId(vrf.Name)
 	log.Println("[DEBUG] End of Update method ", d.Id())
 	return resourceDCNMVRFRead(d, m)
 }
@@ -877,10 +1151,59 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 					attachMap["vlan_id"] = vlan
 				}
 			}
+			if attachMap["vrf_lite"] != nil {
+				lites := attachMap["vrf_lite"].(*schema.Set).List()
 
+				liteGet := make([]interface{}, 0, 1)
+				for _, val := range lites {
+					vrfLite := val.(map[string]interface{})
+					vrfLiteMap := make(map[string]interface{}, 0)
+
+					durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/switches?vrf-names=%s&serial-numbers=%s", fabricName, dn, attachMap["serial_number"].(string))
+					cont, err := dcnmClient.GetviaURL(durl)
+					if err != nil {
+						return err
+					}
+					extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+					extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+					var extensionValues map[string]interface{}
+
+					extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+					err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
+					if err != nil {
+						return err
+					}
+					vrfLiteMap["peer_vrf_name"] = vrfLite["peer_vrf_name"]
+					if len(extensionValues) != 0 {
+						//vrfLiteMap["peer_vrf_name"] = extensionValues["PEER_VRF_NAME"].(string)
+						log.Printf("vrfLite[\"dot1q_id\"]: %v\n", vrfLite["dot1q_id"])
+						if vrfLite["dot1q_id"] != "" {
+							vrfLiteMap["dot1q_id"] = extensionValues["DOT1Q_ID"].(string)
+						}
+						if vrfLite["neighbor_ip"] != "" {
+							vrfLiteMap["neighbor_ip"] = extensionValues["NEIGHBOR_IP"].(string)
+						}
+
+						if vrfLite["neighbor_asn"] != "" {
+							vrfLiteMap["neighbor_asn"] = extensionValues["NEIGHBOR_ASN"].(string)
+						}
+						if vrfLite["ipv6_mask"] != "" {
+							vrfLiteMap["ipv6_mask"] = extensionValues["IPV6_MASK"].(string)
+						}
+						if vrfLite["ipv6_neighbor"] != "" {
+							vrfLiteMap["ipv6_neighbor"] = extensionValues["IPV6_NEIGHBOR"].(string)
+						}
+						if vrfLite["auto_vrf_lite_flag"] != "" {
+							vrfLiteMap["auto_vrf_lite_flag"] = extensionValues["AUTO_VRF_LITE_FLAG"].(string)
+						}
+					}
+					liteGet = append(liteGet, vrfLiteMap)
+				}
+				attachMap["vrf_lite"] = liteGet
+			}
 			attachGet = append(attachGet, attachMap)
 		}
-
+		log.Printf("attachGet: %v\n", attachGet)
 		d.Set("attachments", attachGet)
 	}
 

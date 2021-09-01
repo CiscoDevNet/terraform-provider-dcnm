@@ -461,11 +461,19 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	if nid, ok := d.GetOk("network_id"); ok {
 		segID = nid.(string)
 	} else {
-		cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/segments/ids", fabricName))
-		if err != nil {
-			return err
+		if dcnmClient.GetPlatform() == "nd" {
+			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
+			if err != nil {
+				return err
+			}
+			segID = cont.S("l2vni").String()
+		} else {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/segments/ids", fabricName))
+			if err != nil {
+				return err
+			}
+			segID = cont.S("segmentId").String()
 		}
-		segID = cont.S("segmentId").String()
 	}
 
 	network := models.Network{}
@@ -552,6 +560,8 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if tag, ok := d.GetOk("tag"); ok {
 		networkProfile.Tag = tag.(string)
+	} else {
+		networkProfile.Tag = "12345"
 	}
 	if trm, ok := d.GetOk("trm_enable_flag"); ok {
 		networkProfile.TRMEnable = trm.(bool)

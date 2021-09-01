@@ -5,6 +5,7 @@ import (
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func Provider() *schema.Provider {
@@ -50,23 +51,43 @@ func Provider() *schema.Provider {
 				Default:     900000,
 				Description: "Expiration time in miliseconds for DCNM server",
 			},
+
+			"platform": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"dcnm",
+					"nd",
+				}, false),
+				Default:     "dcnm",
+				Description: "DCNM platfom selection ND/DCNM",
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"dcnm_vrf":       resourceDCNMVRF(),
-			"dcnm_inventory": resourceDCNMInventroy(),
-			"dcnm_network":   resourceDCNMNetwork(),
-			"dcnm_interface": resourceDCNMInterface(),
-			"dcnm_rest":      resourceDCNMRest(),
+			"dcnm_vrf":            resourceDCNMVRF(),
+			"dcnm_inventory":      resourceDCNMInventroy(),
+			"dcnm_network":        resourceDCNMNetwork(),
+			"dcnm_interface":      resourceDCNMInterface(),
+			"dcnm_rest":           resourceDCNMRest(),
+			"dcnm_policy":         resourceDCNMPolicy(),
+			"dcnm_service_node":   resourceDCNMServiceNode(),
+			"dcnm_route_peering":  resourceRoutePeering(),
+			"dcnm_service_policy": resourceDCNMServicePolicy(),
+			"dcnm_template":       resourceDCNMTemplate(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"dcnm_vrf":       datasourceDCNMVRF(),
-			"dcnm_inventory": datasourceDCNMInventory(),
-			"dcnm_network":   datasourceDCNMNetwork(),
-			"dcnm_interface": datasourceDCNMInterface(),
+			"dcnm_vrf":            datasourceDCNMVRF(),
+			"dcnm_inventory":      datasourceDCNMInventory(),
+			"dcnm_network":        datasourceDCNMNetwork(),
+			"dcnm_interface":      datasourceDCNMInterface(),
+			"dcnm_policy":         datasourceDCNMPolicy(),
+			"dcnm_service_node":   datasourceDCNMServiceNode(),
+			"dcnm_route_peering":  datasourceDCNMRoutePeering(),
+			"dcnm_service_policy": datasourceDCNMServicePolicy(),
+			"dcnm_template":       datasourceDCNMTemplate(),
 		},
-
 		ConfigureFunc: configClient,
 	}
 }
@@ -79,6 +100,7 @@ func configClient(d *schema.ResourceData) (interface{}, error) {
 		IsInsecure: d.Get("insecure").(bool),
 		ProxyURL:   d.Get("proxy_url").(string),
 		Expiry:     d.Get("expiry").(int),
+		Platform:   d.Get("platform").(string),
 	}
 
 	if err := config.Valid(); err != nil {
@@ -106,7 +128,7 @@ func (c Config) Valid() error {
 }
 
 func (c Config) getClient() interface{} {
-	return client.GetClient(c.URL, c.Username, c.Password, int64(c.Expiry), client.Insecure(c.IsInsecure), client.ProxyUrl(c.ProxyURL))
+	return client.GetClient(c.URL, c.Username, c.Password, int64(c.Expiry), client.Insecure(c.IsInsecure), client.ProxyUrl(c.ProxyURL), client.Platform(c.Platform))
 }
 
 type Config struct {
@@ -116,4 +138,5 @@ type Config struct {
 	IsInsecure bool
 	ProxyURL   string
 	Expiry     int
+	Platform   string
 }
