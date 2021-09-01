@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -36,6 +37,10 @@ func (client *Client) injectAuthenticationHeader(req *http.Request, path string)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("dcnm-token", client.authToken.token)
+	if client.platform == "nd" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", client.authToken.token))
+	} else {
+		req.Header.Set("dcnm-token", client.authToken.token)
+	}
 	return req, nil
 }

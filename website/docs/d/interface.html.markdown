@@ -28,6 +28,7 @@ data "dcnm_interface" "check" {
 * `serial_number` - (Required) Dn for the interface module.
 * `name` - (Required) name of the interface.
 * `type` - (Required) type of the interface. Allowed values are "loopback", "port-channel", "vpc", "sub-interface", "ethernet".
+**NOTE**: Interface type of "sub-interface" is not supported in DCNM 12.
 
 ## Common Attribute Reference ##
 

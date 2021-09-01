@@ -1,7 +1,9 @@
 package dcnm
 
 import (
+	"fmt"
 	"hash/crc32"
+	"io/ioutil"
 	"reflect"
 	"sort"
 	"strings"
@@ -14,6 +16,24 @@ func stripQuotes(word string) string {
 		return strings.TrimSuffix(strings.TrimPrefix(word, "\""), "\"")
 	}
 	return word
+}
+
+func toStringList(configured []interface{}) []string {
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			vs = append(vs, val)
+		}
+	}
+	return vs
+}
+
+func getErrorFromContainer(cont *container.Container, err error) error {
+	if contErr := stripQuotes(cont.S("error", "detail").String()); cont != nil && contErr != "null" {
+		return fmt.Errorf(contErr)
+	}
+	return err
 }
 
 func cleanJsonString(data string) (*container.Container, error) {
@@ -103,4 +123,12 @@ func setDifference(a, b []string) (diff []string) {
 		}
 	}
 	return
+}
+func readFile(filename string) (string, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println("File reading error", err)
+		return "", err
+	}
+	return string(data), nil
 }
