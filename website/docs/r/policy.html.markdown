@@ -40,6 +40,7 @@ resource "dcnm_policy" "second" {
 * `description`- (Optional) Description of the policy. The description may include the details regarding the policy.Default value is "".
 * `entity_name`- (Optional) Name of the entity.i.e."SWITCH".
 * `entity_type`- (Optional) Type of the entity.i.e."SWITCH".
+* `template_content_type`- (Optional) Template content type of the policy.
 
 
 ## Attribute Reference
