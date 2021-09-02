@@ -188,7 +188,7 @@ func dataSourceDCNMServiceNodeRead(d *schema.ResourceData, m interface{}) error 
 
 	var durl string
 	if dcnmClient.GetPlatform() == "nd" {
-		durl = fmt.Sprintf("/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
+		durl = fmt.Sprintf("/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	} else {
 		durl = fmt.Sprintf("/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s", fabricName, serviceNodeName)
 	}
