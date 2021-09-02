@@ -45,8 +45,8 @@ var TemplateURLS = map[string]map[string]string{
 		"Validate": "/rest/config/templates/validate",
 	},
 	"nd": {
-		"Create":   "/appcenter/cisco/dcnm/api/v1/configtemplate/rest/config/templates/template?templateName=%s",
-		"Common":   "/appcenter/cisco/dcnm/api/v1/configtemplate/rest/config/templates/%s",
+		"Create":   "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template?templateName=%s",
+		"Common":   "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/%s",
 		"Validate": "/configtemplate/rest/config/templates/validate",
 	},
 }
