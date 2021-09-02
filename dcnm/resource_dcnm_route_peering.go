@@ -22,10 +22,10 @@ var URLS = map[string]map[string]string{
 		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
 	},
 	"NDUrl": {
-		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
-		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
-		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
-		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
+		"Create": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings",
+		"Common": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/%s",
+		"Deploy": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/deployments",
+		"Attach": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/peerings/%s/attachments",
 	},
 }
 

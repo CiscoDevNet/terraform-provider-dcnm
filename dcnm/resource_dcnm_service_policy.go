@@ -163,10 +163,10 @@ var servicePolicyURLs = map[string]map[string]string{
 		"Attach": "/appcenter/Cisco/elasticservice/elasticservice-api/fabrics/%s/service-nodes/%s/policies/%s/attachments",
 	},
 	"nd": {
-		"Create": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies",
-		"Common": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/%s",
-		"Deploy": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/deployments",
-		"Attach": "/appcenter/cisco/dcnm/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/attachments",
+		"Create": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies",
+		"Common": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/%s",
+		"Deploy": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/deployments",
+		"Attach": "/appcenter/cisco/ndfc/api/v1/elastic-service/fabrics/%s/service-nodes/%s/policies/%s/attachments",
 	},
 }
 
@@ -245,7 +245,7 @@ func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) erro
 
 	peeringCont, err := getRoutePeering(dcnmClient, attachedFabricName, fabricName, serviceNodeName, peeringName)
 	if err != nil {
-		return err
+		return getErrorFromContainer(peeringCont, err)
 	}
 
 	servicePolicy := models.ServicePolicy{
@@ -371,7 +371,7 @@ func resourceDCNMServicePolicyUpdate(d *schema.ResourceData, m interface{}) erro
 
 	peeringCont, err := getRoutePeering(dcnmClient, attachedFabricName, fabricName, serviceNodeName, peeringName)
 	if err != nil {
-		return err
+		return getErrorFromContainer(peeringCont, err)
 	}
 
 	servicePolicy := models.ServicePolicy{
