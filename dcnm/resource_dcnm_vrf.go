@@ -1149,6 +1149,8 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 				attachMap["attach"] = attachStatus
 				if attachMap["vlan_id"].(int) != 0 {
 					attachMap["vlan_id"] = vlan
+				} else {
+					attachMap["vlan_id"] = d.Get("vlan_id").(int)
 				}
 			}
 			if attachMap["vrf_lite"] != nil {
@@ -1164,16 +1166,42 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 					if err != nil {
 						return err
 					}
-					extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
-					extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+					extensionValueString := stripQuotes(cont.Index(0).S("switchDetailsList").Index(0).S("extensionValues").String())
+					// extensionValueString = fmt.Sprintf("%s", extensionValueString)
+					// extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+					// extensionValueString := stripQuotes(extensionValues.S("extensionValues").String())
 					var extensionValues map[string]interface{}
 
-					extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
-					err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
-					if err != nil {
-						return err
+					if extensionValueString == "null" {
+						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues").Index(0)
+						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+						var extensionValues map[string]interface{}
+
+						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
+						err = json.Unmarshal([]byte(extensionValueString), &extensionValues)
+						if err != nil {
+							return err
+						}
+					} else {
+
+						extensionValueString = strings.Replace(extensionValueString, "\\\"", "\"", -1)
+						extensionValueString = strings.Replace(extensionValueString, "\\\"", "\"", -1)
+						log.Printf("strrr %q", extensionValueString)
+						var extensionValuesList []interface{}
+
+						err := json.Unmarshal([]byte(extensionValueString), &extensionValues)
+						if err != nil {
+							fmt.Println(err)
+						}
+
+						_ = json.Unmarshal([]byte(extensionValues["VRF_LITE_CONN"].(string)), &extensionValues)
+
+						extensionValuesList = extensionValues["VRF_LITE_CONN"].([]interface{})
+						extensionValues = extensionValuesList[0].(map[string]interface{})
+
 					}
 					vrfLiteMap["peer_vrf_name"] = vrfLite["peer_vrf_name"]
+					log.Println("[DEBUG] ee", extensionValues)
 					if len(extensionValues) != 0 {
 						//vrfLiteMap["peer_vrf_name"] = extensionValues["PEER_VRF_NAME"].(string)
 						log.Printf("vrfLite[\"dot1q_id\"]: %v\n", vrfLite["dot1q_id"])

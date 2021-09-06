@@ -112,7 +112,7 @@ func resourceDCNMServiceNode() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"yes", "no",
+					"true", "no", "false",
 				}, false),
 				Default: "no",
 			},

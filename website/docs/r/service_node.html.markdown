@@ -47,7 +47,7 @@ resource "dcnm_service_node" "example" {
 - `switches` - (Required) List of serial Numbers of the switch where service node will be added.
 - `admin_state` - (Optional) Admin state for the Service Node. Allowed values are true and false. Default value is true.
 - `allowed_vlans` - (Optional) Allowed vlan names of the Service. Default value is "none".
-- `bpdu_guard_flag` - (Optional) BPDU flag for the service node. Allowed values are "yes" and "no". Default value is "no".
+- `bpdu_guard_flag` - (Optional) BPDU flag for the service node. Allowed values are "true" ,"false" and "no". Default value is "no".
 - `form_factor` - (Optional) Form factor of the service node. Allowed values are "Physical" and "Virtual". Default value is "Virtual".
 - `mtu` - (Optional) MTU of the service node. Default value is "jumbo".
 - `policy_description` - (Optional) Description of the attached policy.
