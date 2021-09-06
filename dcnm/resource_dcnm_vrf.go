@@ -1149,8 +1149,6 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 				attachMap["attach"] = attachStatus
 				if attachMap["vlan_id"].(int) != 0 {
 					attachMap["vlan_id"] = vlan
-				} else {
-					attachMap["vlan_id"] = d.Get("vlan_id").(int)
 				}
 			}
 			if attachMap["vrf_lite"] != nil {
