@@ -1285,8 +1285,13 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 				attachment := val.(map[string]interface{})
 
 				attachMap := make(map[string]interface{})
-
-				attachMap["fabric"] = fabricName
+				durl := fmt.Sprintf("/rest/control/switches/%s/fabric-name", attachment["serial_number"].(string))
+				cont, err := dcnmClient.GetviaURL(durl)
+				if err != nil {
+					return err
+				}
+				attachmentFabricName := stripQuotes(cont.S("fabricName").String())
+				attachMap["fabric"] = attachmentFabricName
 				attachMap["vrfName"] = dn
 				attachMap["deployment"] = false
 				attachMap["serialNumber"] = attachment["serial_number"].(string)
