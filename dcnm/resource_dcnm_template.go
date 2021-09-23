@@ -43,8 +43,11 @@ func resourceDCNMTemplate() *schema.Resource {
 				Optional: true,
 			},
 			"supported_platforms": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"template_type": &schema.Schema{
 				Type:     schema.TypeString,
@@ -164,7 +167,12 @@ func resourceDCNMTemplateCreate(d *schema.ResourceData, m interface{}) error {
 		propertyMap["tags"] = ""
 	}
 	if supported_platforms, ok := d.GetOk("supported_platforms"); ok {
-		propertyMap["supported_platforms"] = supported_platforms.(string)
+		platformList := make([]string, 0, 1)
+		for _, val := range supported_platforms.([]interface{}) {
+			platformList = append(platformList, val.(string))
+		}
+		supported_platforms := strings.Join(platformList, ",")
+		propertyMap["supported_platforms"] = supported_platforms
 	} else {
 		propertyMap["supported_platforms"] = ""
 	}
@@ -272,7 +280,12 @@ func resourceDCNMTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 		propertyMap["tags"] = ""
 	}
 	if supported_platforms, ok := d.GetOk("supported_platforms"); ok {
-		propertyMap["supported_platforms"] = supported_platforms.(string)
+		platformList := make([]string, 0, 1)
+		for _, val := range supported_platforms.([]interface{}) {
+			platformList = append(platformList, val.(string))
+		}
+		supported_platforms := strings.Join(platformList, ",")
+		propertyMap["supported_platforms"] = supported_platforms
 	} else {
 		propertyMap["supported_platforms"] = ""
 	}

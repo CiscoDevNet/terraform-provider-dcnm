@@ -6,11 +6,7 @@ resource "dcnm_policy" "example" {
                             "AAA_GROUP" : "management"
                         }
     priority        =   500
-    source          =   "Ethernet1/3_FABRIC"
-    entity_name     =   "Ethernet1/3"
-    entity_type     =   "INTERFACE"
     description     =   "This is demo policy."
-    template_content_type   =   "TEMPLATE_CLI"
 
 }
 data "dcnm_policy" "example"{

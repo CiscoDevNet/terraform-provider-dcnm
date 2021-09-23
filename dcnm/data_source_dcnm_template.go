@@ -20,6 +20,33 @@ func datasourceDCNMTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tags": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"supported_platforms": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"template_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"template_sub_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"template_content_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }

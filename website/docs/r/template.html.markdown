@@ -17,7 +17,7 @@ resource "dcnm_template" "example" {
   name = "test"
   content = file("<<TXT File Name>></TXT>")
   description = "Test"
-  supported_platforms = "N9K"
+  supported_platforms = ["N9K","N3K"]
   template_type="POLICY"
   template_content_type="TEMPLATE_CLI"
   tags="tag1"
@@ -57,7 +57,7 @@ vrf $$VRF_NAME$$
 ##
 EOF
 description = "Test"
-supported_platforms = "N9K"
+supported_platforms = ["N9K","N3K"]
 template_type="POLICY"
 template_content_type="TEMPLATE_CLI"
 tags="tag1"
