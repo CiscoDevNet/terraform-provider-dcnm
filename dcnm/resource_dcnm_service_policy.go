@@ -310,6 +310,7 @@ func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) erro
 	if err != nil {
 		return getErrorFromContainer(cont, err)
 	}
+	d.SetId(fmt.Sprintf("%s/%s/%s/%s", fabricName, serviceNodeName, attachedFabricName, policyName))
 
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		deployModel := models.ServicePolicyDeploy{
@@ -354,7 +355,6 @@ func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) erro
 		log.Println("[DEBUG] End of Deploy Method.")
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s/%s", fabricName, serviceNodeName, attachedFabricName, policyName))
 	log.Println("[DEBUG] End of Create ", d.Id())
 	return resourceDCNMServicePolicyRead(d, m)
 }

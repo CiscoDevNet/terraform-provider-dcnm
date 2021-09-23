@@ -34,6 +34,30 @@ func resourceDCNMTemplate() *schema.Resource {
 					return CompareDiffs(old, new, d)
 				},
 			},
+			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"tags": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"supported_platforms": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"template_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"template_sub_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"template_content_type": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -66,18 +90,14 @@ func CompareDiffs(old, new string, d *schema.ResourceData) bool {
 	new2, _ := GetStringInBetweenTwoString(new, "##template properties", "##")
 	new1 := strings.Replace(new, new2, "", -1)
 	new1 = re1.ReplaceAllString(new1, "\n")
-	new2 = re1.ReplaceAllString(new2, `\n`)
-	serverMap, _ := getTemplateProps(old2)
-	localMap, _ := getTemplateProps(new2)
-	log.Println("LocalMAPpp", localMap)
-	for key, val := range localMap {
-		if w, ok := serverMap[key]; ok {
 
-			if val != w {
-				return false
-			}
-		}
+	if len(old1) != 0 {
+		old1 = old1[1:]
 	}
+	new1 = strings.Replace(new1, "\n\n", "\n", -1)
+	old1 = strings.Replace(old1, "\n\n", "\n", -1)
+	new1 = strings.Replace(new1, "\n\n", "\n", -1)
+	old1 = strings.Replace(old1, "\n\n", "\n", -1)
 	if old1 == new1 {
 		return true
 	}
@@ -129,8 +149,53 @@ func resourceDCNMTemplateCreate(d *schema.ResourceData, m interface{}) error {
 	var fileContent string
 	fileContent = d.Get("content").(string)
 
+	temp := models.Template{}
+	temp.Name = name
+
+	propertyMap := make(map[string]string)
+	if description, ok := d.GetOk("description"); ok {
+		propertyMap["description"] = description.(string)
+	} else {
+		propertyMap["description"] = ""
+	}
+	if tags, ok := d.GetOk("tags"); ok {
+		propertyMap["tags"] = tags.(string)
+	} else {
+		propertyMap["tags"] = ""
+	}
+	if supported_platforms, ok := d.GetOk("supported_platforms"); ok {
+		propertyMap["supported_platforms"] = supported_platforms.(string)
+	} else {
+		propertyMap["supported_platforms"] = ""
+	}
+	if template_type, ok := d.GetOk("template_type"); ok {
+		propertyMap["template_type"] = template_type.(string)
+	} else {
+		propertyMap["template_type"] = ""
+	}
+	if template_sub_type, ok := d.GetOk("template_sub_type"); ok {
+		propertyMap["template_sub_type"] = template_sub_type.(string)
+	} else {
+		propertyMap["template_sub_type"] = ""
+	}
+	if template_content_type, ok := d.GetOk("template_content_type"); ok {
+		propertyMap["template_content_type"] = template_content_type.(string)
+	} else {
+		propertyMap["template_content_type"] = ""
+	}
+	content := fmt.Sprintf(`
+	##template properties
+	name=%s;
+	description = %s;
+	tags=%s;
+	supportedPlatforms=%s;
+	contentType=%s;
+	templateType=%s;
+	templateSubType=%s;
+	##`, name, propertyMap["description"], propertyMap["tags"], propertyMap["supported_platforms"], propertyMap["template_content_type"], propertyMap["template_type"], propertyMap["template_sub_type"])
+	fileContent = fmt.Sprintf("%s \n %s", content, fileContent)
+	temp.Content = fileContent
 	cont, err := dcnmClient.ValidateTemplateContent(TemplateURLS[dcnmClient.GetPlatform()]["Validate"], fileContent)
-	log.Println("[DEBUG] container", cont)
 
 	if err != nil {
 		return err
@@ -138,9 +203,6 @@ func resourceDCNMTemplateCreate(d *schema.ResourceData, m interface{}) error {
 	if !cont.Exists("status") {
 		return fmt.Errorf("Template Content is not valid.")
 	}
-	temp := models.Template{}
-	temp.Name = name
-	temp.Content = fileContent
 	dURL := fmt.Sprintf(TemplateURLS[dcnmClient.GetPlatform()]["Create"], name)
 	cont, err = dcnmClient.Save(dURL, &temp)
 	if err != nil {
@@ -164,7 +226,6 @@ func resourceDCNMTemplateRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return getErrorFromContainer(cont, err)
 	}
-
 	setTemplateAttribute(d, cont)
 	d.SetId(dn)
 	log.Println("[DEBUG] End of Read method ", d.Id())
@@ -198,9 +259,50 @@ func resourceDCNMTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 	var fileContent string
 
 	fileContent = d.Get("content").(string)
-	// }
+	temp := models.TemplateUpdate{}
+	propertyMap := make(map[string]string)
+	if description, ok := d.GetOk("description"); ok {
+		propertyMap["description"] = description.(string)
+	} else {
+		propertyMap["description"] = ""
+	}
+	if tags, ok := d.GetOk("tags"); ok {
+		propertyMap["tags"] = tags.(string)
+	} else {
+		propertyMap["tags"] = ""
+	}
+	if supported_platforms, ok := d.GetOk("supported_platforms"); ok {
+		propertyMap["supported_platforms"] = supported_platforms.(string)
+	} else {
+		propertyMap["supported_platforms"] = ""
+	}
+	if template_type, ok := d.GetOk("template_type"); ok {
+		propertyMap["template_type"] = template_type.(string)
+	} else {
+		propertyMap["template_type"] = ""
+	}
+	if template_sub_type, ok := d.GetOk("template_sub_type"); ok {
+		propertyMap["template_sub_type"] = template_sub_type.(string)
+	} else {
+		propertyMap["template_sub_type"] = ""
+	}
+	if template_content_type, ok := d.GetOk("template_content_type"); ok {
+		propertyMap["template_content_type"] = template_content_type.(string)
+	} else {
+		propertyMap["template_content_type"] = ""
+	}
+	new2, _ := GetStringInBetweenTwoString(fileContent, "##template properties", "##")
+	fileContent = strings.Replace(fileContent, "\\r\\n", "\n", -1)
+	content := fmt.Sprintf("\n##template properties\nname=%s;\ndescription = %s;\ntags=%s;\nsupportedPlatforms=%s;\ncontentType=%s;\ntemplateType=%s;\ntemplateSubType=%s;\n##", name, propertyMap["description"], propertyMap["tags"], propertyMap["supported_platforms"], propertyMap["template_content_type"], propertyMap["template_type"], propertyMap["template_sub_type"])
+	content = strings.Replace(content, "\n", "\n\t", -1)
+	fileContent = strings.Replace(fileContent, new2, "", -1)
+	fileContent = fmt.Sprintf("%s \n %s", content, fileContent)
+	re1 := regexp.MustCompile(`\n\t`)
+	fileContent = re1.ReplaceAllString(fileContent, "\n")
+	fileContent = strings.Replace(fileContent, "\n", `\n`, -1)
+	fileContent = strings.Replace(fileContent, "\\n\\n", "\r\n", -1)
+	fileContent = strings.Replace(fileContent, "\\\"", "\"", -1)
 	cont, err := dcnmClient.ValidateTemplateContent(TemplateURLS[dcnmClient.GetPlatform()]["Validate"], fileContent)
-	log.Println("[DEBUG] container", cont)
 
 	if err != nil {
 		return err
@@ -209,7 +311,6 @@ func resourceDCNMTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Template Content is not valid.")
 	}
 
-	temp := models.TemplateUpdate{}
 	temp.Content = fileContent
 	cont, err = dcnmClient.Update(fmt.Sprintf(TemplateURLS[dcnmClient.GetPlatform()]["Common"], name), &temp)
 	if err != nil {

@@ -24,5 +24,11 @@ data "dcnm_template" "ex"{
 
 * `name` - (Required) name of Template.
 * `content` - (Optional) File name or file content.
+* `description` - (Optional) Description of template.
+* `supported_platforms` - (Optional) Platform supported by the template.
+* `template_type` - (Optional) Type of template.
+* `template_content_type` - (Optional) Content type of template.
+* `tags` - (Optional) Tag of template.
+* `template_sub_type` - (Optional) Sub type of template.
 
 
