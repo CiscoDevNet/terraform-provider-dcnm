@@ -16,15 +16,17 @@ Manages DCNM Template
 resource "dcnm_template" "example" {
   name = "test"
   content = file("<<TXT File Name>></TXT>")
+  description = "Test"
+  supported_platforms = "N9K"
+  template_type="POLICY"
+  template_content_type="TEMPLATE_CLI"
+  tags="tag1"
+  template_sub_type="VXLAN"
 }
 
 resource "dcnm_template" "example1" {
       name = "test"
     content = <<EOF
-##template properties
-name=test;
-description = "Created template resource from terraform";
-##
 ##template variables
 #    Copyright (c) 2019 by Cisco Systems, Inc.
 #    All rights reserved.
@@ -54,6 +56,12 @@ vrf $$VRF_NAME$$
 
 ##
 EOF
+description = "Test"
+supported_platforms = "N9K"
+template_type="POLICY"
+template_content_type="TEMPLATE_CLI"
+tags="tag1"
+template_sub_type="VXLAN"
 }
 
 
@@ -64,6 +72,13 @@ EOF
 
 * `name` - (Required) Name of Template.
 * `content` - (Required) Content of file or file name.
+* `description` - (Optional) Description of template.
+* `supported_platforms` - (Optional) Platform supported by the template.
+* `template_type` - (Optional) Type of template.
+* `template_content_type` - (Optional) Content type of template.
+* `tags` - (Optional) Tag of template.
+* `template_sub_type` - (Optional) Sub type of template.
+
 
 
 ## Attribute Reference
