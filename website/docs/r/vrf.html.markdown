@@ -44,15 +44,12 @@ resource "dcnm_vrf" "first" {
     loopback_id   = 70
     loopback_ipv4 = "1.2.3.4"
     vrf_lite {
+      peer_vrf_name = "vrf_lite"
+      interface_name = "Ethernet1/1"
       auto_vrf_lite_flag = false
       dot1q_id = 2
-      ip_mask = ""
-      ipv6_mask = ""
-      ipv6_neighbor = ""
       neighbor_asn = "500"
       neighbor_ip = "10.1.1.1"
-      peer_vrf_name = "vrf_lite"
-             }
     }
   }
 }
@@ -103,18 +100,16 @@ resource "dcnm_vrf" "first" {
 - `attachments.loopback_id` - (Optional) Loopback id for the switch attachment.
 - `attachments.loopback_ipv4` - (Optional) Loopback ipv4 address for the switch attachment.
 - `attachments.loopback_ipv6` - (Optional) Loopback ipv6 address for the switch attachment.
-- `attachments.vrf_lite` - (Optional) Vrf lite for the switch attachment.
-- `attachments.vrf_lite.peer_vrf_name` - (Required) Name of vrf lite  for the switch attachment.
-- `attachments.vrf_lite.dotq_id` - (Optional) Dotq id of  vrf lite for the switch attachment.
+- `attachments.vrf_lite` - (Optional) VRF lite for the switch attachment.
+- `attachments.vrf_lite.peer_vrf_name` - (Required) Name of vrf lite for the switch attachment.
+- `attachments.vrf_lite.interface_name` - (Required) Interface name of external edge router for the switch attachment.
+- `attachments.vrf_lite.dotq_id` - (Optional) Dotq id of vrf lite for the switch attachment.
 - `attachments.vrf_lite.ip_mask` - (Optional) Ip mask of vrf lite for the switch attachment.
 - `attachments.vrf_lite.neighbor_ip` - (Optional) Neighbor ip of vrf lite for the switch attachment.
 - `attachments.vrf_lite.neighbor_asn` - (Optional) Neighbor asn of vrf lite for the switch attachment.
 - `attachments.vrf_lite.ipv6_mask` - (Optional) Ipv6 mask of vrf lite for the switch attachment.
 - `attachments.vrf_lite.ipv6_neighbor` - (Optional) Ipv6 neighbor of vrf lite for the switch attachment.
 - `attachments.vrf_lite.auto_vrf_lite_flag` - (Optional) Auto vrf lite flag of vrf lite for the switch attachment.
-
-
-
 
 ## Attribute Reference
 
@@ -129,4 +124,3 @@ An existing VRF can be [imported][docs-import] into this resource via its fabric
 ```
 terraform import dcnm_vrf.example <fabric_name>:<vrf_name>
 ```
-
