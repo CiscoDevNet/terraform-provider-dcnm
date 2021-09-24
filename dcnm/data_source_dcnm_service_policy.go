@@ -18,13 +18,13 @@ func datasourceDCNMServicePolicy() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"fabric_name": &schema.Schema{
+			"service_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"attached_fabric_name": &schema.Schema{
+			"attached_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -145,8 +145,8 @@ func dataSourceDCNMServicePolicyRead(d *schema.ResourceData, m interface{}) erro
 	dcnmClient := m.(*client.Client)
 
 	policyName := d.Get("policy_name").(string)
-	fabricName := d.Get("fabric_name").(string)
-	attachedFabricName := d.Get("attached_fabric_name").(string)
+	fabricName := d.Get("service_fabric").(string)
+	attachedFabricName := d.Get("attached_fabric").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
 
 	cont, err := getServicePolicy(dcnmClient, attachedFabricName, fabricName, serviceNodeName, policyName)

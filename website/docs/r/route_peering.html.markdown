@@ -16,9 +16,9 @@ Route Peering when deployment mode is "IntraTenantFW" and service node "Firewall
 
 resource "dcnm_route_peering" first{
     name = "RP-2"
-    attached_fabric_name = "main_fabric_2"
+    attached_fabric = "main_fabric_2"
     deployment_mode = "IntraTenantFW"
-    fabric_name = "testService"
+    service_fabric = "testService"
     next_hop_ip = "192.168.1.11"
     option = "None"  # Always have "None" peering option
     service_networks {
@@ -47,9 +47,9 @@ Route Peering when deployment mode is "InterTenantFW" and service node "Firewall
 ```hcl
 resource "dcnm_route_peering" first{
     name = "tf-5"
-    attached_fabric_name = "Test_fabric_1"
+    attached_fabric = "Test_fabric_1"
     deployment_mode = "InterTenantFW"
-    fabric_name = "testService"
+    service_fabric = "testService"
     option = "StaticPeering"
     service_networks {
         network_name = "net"
@@ -89,9 +89,9 @@ Route Peering when deployment mode is "OneArmADC" and service node "ADC":
 ```hcl
 resource "dcnm_route_peering" first{
     name = "tfsnadc"
-    attached_fabric_name = "Test_fabric_1"
+    attached_fabric = "Test_fabric_1"
     deployment_mode = "OneArmADC" # Should not have "None" peering option
-    fabric_name = "testService"
+    service_fabric = "testService"
     option = "EBGPDynamicPeering"
     service_networks {
         network_name = "netadc"
@@ -117,9 +117,9 @@ Route Peering when deployment mode is "TwoArmADC" and service node "ADC":
 ```hcl
 resource "dcnm_route_peering" "adc3"{
    name = "tfsnadc12"
-    attached_fabric_name = "Test_fabric_1"
+    attached_fabric = "Test_fabric_1"
     deployment_mode = "TwoArmADC"
-    fabric_name = "testService"
+    service_fabric = "testService"
     option = "StaticPeering" # Should not have "None" peering option
     service_networks {
         network_name = "netadc"
@@ -153,9 +153,9 @@ Route Peering when deployment mode is "OneArmVNF" and service node "VNF":
 ```hcl
 resource "dcnm_route_peering" "adc3"{
    name = "tf"
-    attached_fabric_name = "Test_fabric_1"
+    attached_fabric = "Test_fabric_1"
     deployment_mode = "OneArmVNF" # Should not have "None" peering option
-    fabric_name = "testService"
+    service_fabric = "testService"
     option = "StaticPeering"
     service_networks {
         network_name = "netadc"
@@ -180,9 +180,9 @@ resource "dcnm_route_peering" "adc3"{
 ## Argument Reference ##
 
 * `name` - (Required) Name of route peering.
-* `attached_fabric_name` - (Required) Name of the target fabric for route peering operations.
+* `attached_fabric` - (Required) Name of the target fabric for route peering operations.
 * `deployment_mode` - (Required) Type of service node.Allowed values are "IntraTenantFW","InterTenantFW","OneArmADC","TwoArmADC","OneArmVNF".
-* `fabric_name` - (Required) Name of the target fabric for route peering operations.
+* `service_fabric` - (Required) Name of the target fabric for route peering operations.
 * `next_hop_ip` - (Optional) Nexthop IPV4 information.NOTE: This object is applicable only when 'deploy_mode' is 'IntraTenantFW'
 * `option` - (Required) Specifies the type of peering.Allowed values are "StaticPeering","EBGPDynamicPeering","None".
 * `service_networks` - (Required) List of network under which peering will be created.

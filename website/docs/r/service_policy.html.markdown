@@ -18,8 +18,8 @@ Manages DCNM Service Policy
 
 resource "dcnm_service_policy" "example" {
   policy_name              = "SP-2"
-  fabric_name              = "external"
-  attached_fabric_name     = "main_fabric_2"
+  service_fabric              = "external"
+  attached_fabric    = "main_fabric_2"
   dest_network             = "dev_network_two"
   dest_vrf_name            = "dev_vrf_one"
   next_hop_ip              = "10.10.10.2"
@@ -34,8 +34,8 @@ resource "dcnm_service_policy" "example" {
 ## Argument Reference
 
 - `policy_name` - (Required) Name of Object Service Policy.
-- `fabric_name` - (Required) Fabric name under which Service Policy should be created.
-- `attached_fabric_name` - (Required) Attached Fabric name of the Service Policy.
+- `service_fabric` - (Required) Fabric name under which Service Policy should be created.
+- `attached_fabric` - (Required) Attached Fabric name of the Service Policy.
 - `dest_network` - (Required) Destination network of the Service Policy.
 - `dest_vrf_name` - (Required) Destination VRF name of the Service Policy.
 - `next_hop_ip` - (Required) Next hop IP of the Service Policy.

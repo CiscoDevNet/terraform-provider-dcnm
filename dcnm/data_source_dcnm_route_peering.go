@@ -18,7 +18,7 @@ func datasourceDCNMRoutePeering() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"attached_fabric_name": &schema.Schema{
+			"attached_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -35,7 +35,7 @@ func datasourceDCNMRoutePeering() *schema.Resource {
 					"OneArmVNF",
 				}, false),
 			},
-			"fabric_name": &schema.Schema{
+			"service_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -157,8 +157,8 @@ func datasourceRoutePeeringRead(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Read method", d.Id())
 	dcnmClient := m.(*client.Client)
 
-	AttachedFabricName := d.Get("attached_fabric_name").(string)
-	extFabric := d.Get("fabric_name").(string)
+	AttachedFabricName := d.Get("attached_fabric").(string)
+	extFabric := d.Get("service_fabric").(string)
 	node := d.Get("service_node_name").(string)
 	name := d.Get("name").(string)
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)

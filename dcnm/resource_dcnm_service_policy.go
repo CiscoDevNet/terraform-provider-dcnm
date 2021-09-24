@@ -32,13 +32,13 @@ func resourceDCNMServicePolicy() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"fabric_name": {
+			"service_fabric": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"attached_fabric_name": {
+			"attached_fabric": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -183,8 +183,8 @@ func setServicePolicyAttributes(d *schema.ResourceData, cont *container.Containe
 	serviceNodeName := stripQuotes(cont.S("serviceNodeName").String())
 
 	d.Set("policy_name", policyName)
-	d.Set("fabric_name", fabricName)
-	d.Set("attached_fabric_name", attachedFabricName)
+	d.Set("service_fabric", fabricName)
+	d.Set("attached_fabric", attachedFabricName)
 	d.Set("dest_network", stripQuotes(cont.S("destinationNetwork").String()))
 	d.Set("dest_vrf_name", stripQuotes(cont.S("destinationVrfName").String()))
 	d.Set("next_hop_ip", stripQuotes(cont.S("nextHopIp").String()))
@@ -238,8 +238,8 @@ func resourceDCNMServicePolicyCreate(d *schema.ResourceData, m interface{}) erro
 	dcnmClient := m.(*client.Client)
 
 	policyName := d.Get("policy_name").(string)
-	fabricName := d.Get("fabric_name").(string)
-	attachedFabricName := d.Get("attached_fabric_name").(string)
+	fabricName := d.Get("service_fabric").(string)
+	attachedFabricName := d.Get("attached_fabric").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
 	peeringName := d.Get("peering_name").(string)
 
@@ -364,8 +364,8 @@ func resourceDCNMServicePolicyUpdate(d *schema.ResourceData, m interface{}) erro
 	dcnmClient := m.(*client.Client)
 
 	policyName := d.Get("policy_name").(string)
-	fabricName := d.Get("fabric_name").(string)
-	attachedFabricName := d.Get("attached_fabric_name").(string)
+	fabricName := d.Get("service_fabric").(string)
+	attachedFabricName := d.Get("attached_fabric").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
 	peeringName := d.Get("peering_name").(string)
 
@@ -510,8 +510,8 @@ func resourceDCNMServicePolicyDelete(d *schema.ResourceData, m interface{}) erro
 	dcnmClient := m.(*client.Client)
 
 	policyName := d.Get("policy_name").(string)
-	fabricName := d.Get("fabric_name").(string)
-	attachedFabricName := d.Get("attached_fabric_name").(string)
+	fabricName := d.Get("service_fabric").(string)
+	attachedFabricName := d.Get("attached_fabric").(string)
 	serviceNodeName := d.Get("service_node_name").(string)
 
 	dURL := fmt.Sprintf(servicePolicyURLs[dcnmClient.GetPlatform()]["Attach"]+"?policy-names=%s", fabricName, serviceNodeName, attachedFabricName, policyName)

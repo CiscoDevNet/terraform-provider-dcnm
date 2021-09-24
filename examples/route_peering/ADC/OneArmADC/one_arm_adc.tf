@@ -1,8 +1,8 @@
 resource "dcnm_route_peering" "adc"{
    name = "tf6"
-    attached_fabric_name = "terraform"
+    attached_fabric = "terraform"
     deployment_mode = "OneArmADC"
-    fabric_name = "edge"
+    service_fabric = "edge"
     option = "EBGPDynamicPeering"
     service_networks {
         network_name = "netadc"

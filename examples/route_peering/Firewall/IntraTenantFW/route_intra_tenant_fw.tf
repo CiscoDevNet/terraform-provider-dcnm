@@ -1,9 +1,9 @@
 # firewall "IntraTenantFW"
 resource "dcnm_route_peering" first{
     name = "RP-3"
-    attached_fabric_name = "terraform"
+    attached_fabric = "terraform"
     deployment_mode = "IntraTenantFW"
-    fabric_name = "edge"
+    service_fabric = "edge"
     next_hop_ip = "192.168.1.11"
     option = "None"
     service_networks {
