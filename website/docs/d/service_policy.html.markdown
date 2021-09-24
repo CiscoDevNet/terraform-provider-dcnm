@@ -15,8 +15,8 @@ Data source for DCNM Service Policy
 
 data "dcnm_service_policy" "example" {
   policy_name              = "SP-2"  
-  fabric_name              = "external"
-  attached_fabric_name     = "main_fabric_2"
+  service_fabric              = "external"
+  attached_fabric     = "main_fabric_2"
   service_node_name        = "SN-1"
 }
 
@@ -25,8 +25,8 @@ data "dcnm_service_policy" "example" {
 ## Argument Reference ##
 
 * `policy_name` - (Required) Name of Object Service Policy.
-* `fabric_name` - (Required) Fabric name under which Service Policy should be created.
-* `attached_fabric_name` - (Required) Attached Fabric name of the Service Policy.
+* `service_fabric` - (Required) Fabric name under which Service Policy should be created.
+* `attached_fabric` - (Required) Attached Fabric name of the Service Policy.
 * `service_node_name` - (Required) Node name of the Service Policy.
 
 
