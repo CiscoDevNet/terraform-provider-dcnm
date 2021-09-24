@@ -44,7 +44,7 @@ func resourceRoutePeering() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"attached_fabric_name": &schema.Schema{
+			"attached_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +61,7 @@ func resourceRoutePeering() *schema.Resource {
 					"OneArmVNF",
 				}, false),
 			},
-			"fabric_name": &schema.Schema{
+			"service_fabric": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -210,9 +210,9 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 	rp := models.RoutePeering{}
 
 	name := d.Get("name").(string)
-	AttachedFabricName := d.Get("attached_fabric_name").(string)
+	AttachedFabricName := d.Get("attached_fabric").(string)
 	DeploymentMode := d.Get("deployment_mode").(string)
-	FabricName := d.Get("fabric_name").(string)
+	FabricName := d.Get("service_fabric").(string)
 	NextHopIp := d.Get("next_hop_ip").(string)
 	Option := d.Get("option").(string)
 	if ReverseNextHopIp, ok := d.GetOk("reverse_next_hop_ip"); ok {
@@ -246,6 +246,7 @@ func resourceRoutePeeringCreate(d *schema.ResourceData, m interface{}) error {
 		sNet.VrfName = netInfo["vrf_name"].(string)
 		sNet.Vlan = netInfo["vlan_id"].(int)
 		nvPairMap["gatewayIpAddress"] = netInfo["gateway_ip_address"].(string)
+		nvPairMap["vlanId"] = netInfo["vlan_id"].(int)
 		sNet.NVPairs = nvPairMap
 		snObjs = append(snObjs, &sNet)
 
@@ -368,9 +369,9 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 	rp := models.RoutePeering{}
 
 	name := d.Get("name").(string)
-	AttachedFabricName := d.Get("attached_fabric_name").(string)
+	AttachedFabricName := d.Get("attached_fabric").(string)
 	DeploymentMode := d.Get("deployment_mode").(string)
-	FabricName := d.Get("fabric_name").(string)
+	FabricName := d.Get("service_fabric").(string)
 	NextHopIp := d.Get("next_hop_ip").(string)
 	Option := d.Get("option").(string)
 	if ReverseNextHopIp, ok := d.GetOk("reverse_next_hop_ip"); ok {
@@ -401,6 +402,7 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 		sNet.VrfName = netInfo["vrf_name"].(string)
 		sNet.Vlan = netInfo["vlan_id"].(int)
 		nvPairMap["gatewayIpAddress"] = netInfo["gateway_ip_address"].(string)
+		nvPairMap["vlanId"] = netInfo["vlan_id"].(int)
 		sNet.NVPairs = nvPairMap
 		snObjs = append(snObjs, &sNet)
 
@@ -508,8 +510,8 @@ func resourceRoutePeeringUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceRoutePeeringDelete(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining of Delete Route", d.Id())
 	dcnmClient := m.(*client.Client)
-	AttachedFabricName := d.Get("attached_fabric_name").(string)
-	extFabric := d.Get("fabric_name").(string)
+	AttachedFabricName := d.Get("attached_fabric").(string)
+	extFabric := d.Get("service_fabric").(string)
 	node := d.Get("service_node_name").(string)
 	name := d.Get("name").(string)
 	var dURL string
@@ -600,10 +602,10 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 	}
 	if cont.Exists("fabricName") {
 		FabricName = stripQuotes(cont.S("fabricName").String())
-		d.Set("fabric_name", stripQuotes(cont.S("fabricName").String()))
+		d.Set("service_fabric", stripQuotes(cont.S("fabricName").String()))
 	}
 	if cont.Exists("attachedFabricName") {
-		d.Set("attached_fabric_name", stripQuotes(cont.S("attachedFabricName").String()))
+		d.Set("attached_fabric", stripQuotes(cont.S("attachedFabricName").String()))
 	}
 	if cont.Exists("deploymentMode") {
 		d.Set("deployment_mode", stripQuotes(cont.S("deploymentMode").String()))
@@ -650,6 +652,7 @@ func setPeeringAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		netMap["vrf_name"] = netinfo[i]["vrfName"].(string)
 		nvPairs := netinfo[i]["nvPairs"].(map[string]interface{})
 		netMap["gateway_ip_address"] = nvPairs["gatewayIpAddress"].(string)
+		netMap["vlan_id"] = nvPairs["vlanId"].(string)
 		serviceNetwork = append(serviceNetwork, netMap)
 	}
 	d.Set("service_networks", serviceNetwork)
@@ -696,8 +699,8 @@ func resourceRoutePeeringRead(d *schema.ResourceData, m interface{}) error {
 	log.Println("[DEBUG] Begining Read method", d.Id())
 	dcnmClient := m.(*client.Client)
 
-	AttachedFabricName := d.Get("attached_fabric_name").(string)
-	extFabric := d.Get("fabric_name").(string)
+	AttachedFabricName := d.Get("attached_fabric").(string)
+	extFabric := d.Get("service_fabric").(string)
 	node := d.Get("service_node_name").(string)
 	name := d.Get("name").(string)
 	cont, err := getRoutePeering(dcnmClient, AttachedFabricName, extFabric, node, name)

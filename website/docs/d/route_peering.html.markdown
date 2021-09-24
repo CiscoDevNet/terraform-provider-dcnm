@@ -15,8 +15,8 @@ Data source for DCNM Route Peering
 
 data "dcnm_route_peering" "example"{
   name = "tf"
-  attached_fabric_name = "Test_fabric_1"
-  fabric_name   = "testService"
+  attached_fabric = "Test_fabric_1"
+  service_fabric   = "testService"
   service_node_name = "snadc"
 }
 
@@ -26,8 +26,8 @@ data "dcnm_route_peering" "example"{
 ## Argument Reference ##
 
 * `name` - (Required) name of route peering.
-* `fabric_name` - (Required) Name of the target fabric for route peering operations.
-* `attached_fabric_name` - (Required) Name of the target fabric for route peering operations.
+* `service_fabric` - (Required) Name of the target fabric for route peering operations.
+* `attached_fabric` - (Required) Name of the target fabric for route peering operations.
 * `service_node_name`- (Required) Name of service node under which route peering is will be created.
 
 

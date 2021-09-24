@@ -1,8 +1,8 @@
 resource "dcnm_route_peering" first{
     name = "tf5"
-    attached_fabric_name = "terraform"
+    attached_fabric = "terraform"
     deployment_mode = "InterTenantFW"
-    fabric_name = "edge"
+    service_fabric = "edge"
     option = "StaticPeering"
     service_networks {
         network_name = "net"

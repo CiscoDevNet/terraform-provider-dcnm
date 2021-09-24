@@ -1,8 +1,8 @@
 resource "dcnm_route_peering" "adc3"{
    name = "tf"
-    attached_fabric_name = "Test_fabric_1"
+    attached_fabric = "Test_fabric_1"
     deployment_mode = "OneArmVNF" # Should not have "None" peering option
-    fabric_name = "testService"
+    service_fabric = "testService"
     option = "StaticPeering"
     service_networks {
         network_name = "netadc"
