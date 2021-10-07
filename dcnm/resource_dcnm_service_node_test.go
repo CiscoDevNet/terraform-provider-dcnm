@@ -120,9 +120,6 @@ func testAccCheckDCNMServiceNodeExists(name string, serviceNode *models.ServiceN
 		if configCont.Exists("intfDescription") {
 			netProfile.Description = stripQuotes(configCont.S("intfDescription").String())
 		}
-
-		*network = *networkGet
-		*profile = *netProfile
 		return nil
 	}
 }
@@ -150,18 +147,6 @@ func testAccCheckDCNMServiceNodeAttributes(desc string, serviceNode *models.Serv
 
 		if "fab2" != serviceNode.AttachedFabricName {
 			return fmt.Errorf("Bad Network fabric name %s", serviceNode.AttachedFabricName)
-		}
-
-		if 2301 != profile.Vlan {
-			return fmt.Errorf("Bad Network VLAN %d", profile.Vlan)
-		}
-
-		if "vlan1" != profile.VlanName {
-			return fmt.Errorf("Bad Network VLAN name %s", profile.VlanName)
-		}
-
-		if desc != profile.Description {
-			return fmt.Errorf("Bad Network description %s", profile.Description)
 		}
 		return nil
 	}
