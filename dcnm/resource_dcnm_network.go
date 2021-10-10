@@ -122,6 +122,18 @@ func resourceDCNMNetwork() *schema.Resource {
 				Computed: true,
 			},
 
+			"secondary_gw_3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"secondary_gw_4": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"arp_supp_flag": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -152,7 +164,25 @@ func resourceDCNMNetwork() *schema.Resource {
 				Computed: true,
 			},
 
+			"dhcp_3": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"dhcp_vrf": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"dhcp_vrf_2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"dhcp_vrf_3": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -210,6 +240,30 @@ func resourceDCNMNetwork() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  300,
+			},
+
+			"netflow_flag": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"svi_netflow_monitor": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"vlan_netflow_monitor": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"nve_id": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
 			},
 
 			"attachments": &schema.Schema{
@@ -319,7 +373,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("l2_only_flag", false)
 		}
 		if cont.Exists("vlanId") && stripQuotes(cont.S("vlanId").String()) != "" {
-			if vlan, err := strconv.Atoi(stripQuotes(cont.S("vlanId").String())); err == nil {
+			if vlan := stripQuotes(cont.S("vlanId").String()); err == nil {
 				d.Set("vlan_id", vlan)
 			}
 		}
@@ -336,7 +390,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("description", stripQuotes(cont.S("intfDescription").String()))
 		}
 		if cont.Exists("mtu") && stripQuotes(cont.S("mtu").String()) != "" {
-			if mtu, err := strconv.Atoi(stripQuotes(cont.S("mtu").String())); err == nil {
+			if mtu := stripQuotes(cont.S("mtu").String()); err == nil {
 				d.Set("mtu", mtu)
 			}
 		}
@@ -345,6 +399,12 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		}
 		if cont.Exists("secondaryGW2") {
 			d.Set("secondary_gw_2", stripQuotes(cont.S("secondaryGW2").String()))
+		}
+		if cont.Exists("secondaryGW3") {
+			d.Set("secondary_gw_3", stripQuotes(cont.S("secondaryGW3").String()))
+		}
+		if cont.Exists("secondaryGW4") {
+			d.Set("secondary_gw_4", stripQuotes(cont.S("secondaryGW4").String()))
 		}
 		if cont.Exists("suppressArp") && stripQuotes(cont.S("suppressArp").String()) != "" {
 			if arp, err := strconv.ParseBool(stripQuotes(cont.S("suppressArp").String())); err == nil {
@@ -369,11 +429,20 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		if cont.Exists("dhcpServerAddr2") {
 			d.Set("dhcp_2", stripQuotes(cont.S("dhcpServerAddr2").String()))
 		}
+		if cont.Exists("dhcpServerAddr3") {
+			d.Set("dhcp_3", stripQuotes(cont.S("dhcpServerAddr3").String()))
+		}
 		if cont.Exists("vrfDhcp") {
 			d.Set("dhcp_vrf", stripQuotes(cont.S("vrfDhcp").String()))
 		}
+		if cont.Exists("vrfDhcp2") {
+			d.Set("dhcp_vrf_2", stripQuotes(cont.S("vrfDhcp2").String()))
+		}
+		if cont.Exists("vrfDhcp3") {
+			d.Set("dhcp_vrf_3", stripQuotes(cont.S("vrfDhcp3").String()))
+		}
 		if cont.Exists("loopbackId") && stripQuotes(cont.S("loopbackId").String()) != "" {
-			if loopback, err := strconv.Atoi(stripQuotes(cont.S("loopbackId").String())); err == nil {
+			if loopback := stripQuotes(cont.S("loopbackId").String()); err == nil {
 				d.Set("loopback_id", loopback)
 			}
 		}
@@ -400,6 +469,22 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			}
 		} else {
 			d.Set("l3_gateway_flag", false)
+		}
+		if cont.Exists("ENABLE_NETFLOW") && stripQuotes(cont.S("ENABLE_NETFLOW").String()) != "" {
+			if l3, err := strconv.ParseBool(stripQuotes(cont.S("ENABLE_NETFLOW").String())); err == nil {
+				d.Set("netflow_flag", l3)
+			}
+		} else {
+			d.Set("netflow_flag", false)
+		}
+		if cont.Exists("SVI_NETFLOW_MONITOR") {
+			d.Set("svi_netflow_monitor", stripQuotes(cont.S("SVI_NETFLOW_MONITOR").String()))
+		}
+		if cont.Exists("SVI_NETFLOW_MONITOR") {
+			d.Set("vlan_netflow_monitor", stripQuotes(cont.S("SVI_NETFLOW_MONITOR").String()))
+		}
+		if cont.Exists("nveId") {
+			d.Set("nve_id", stripQuotes(cont.S("nveId").String()))
 		}
 	}
 
@@ -510,14 +595,14 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.GatewayIPv6 = ipv6.(string)
 	}
 	if vlan, ok := d.GetOk("vlan_id"); ok {
-		networkProfile.Vlan = vlan.(int)
+		networkProfile.Vlan = strconv.Itoa(vlan.(int))
 	} else {
 		durl := fmt.Sprintf("/rest/resource-manager/vlan/%s?vlanUsageType=TOP_DOWN_NETWORK_VLAN", fabricName)
 		cont, err := dcnmClient.GetviaURL(durl)
 		if err != nil {
 			return err
 		}
-		vlan, err := strconv.Atoi(cont.String())
+		vlan := cont.String()
 		if err == nil {
 			networkProfile.Vlan = vlan
 		}
@@ -529,13 +614,21 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.Description = desc.(string)
 	}
 	if mtu, ok := d.GetOk("mtu"); ok {
-		networkProfile.MTU = mtu.(int)
+		networkProfile.MTU = strconv.Itoa(mtu.(int))
+	} else {
+		networkProfile.MTU = ""
 	}
 	if secgw1, ok := d.GetOk("secondary_gw_1"); ok {
 		networkProfile.SecondaryGate1 = secgw1.(string)
 	}
 	if secgw2, ok := d.GetOk("secondary_gw_2"); ok {
 		networkProfile.SecondaryGate2 = secgw2.(string)
+	}
+	if secgw3, ok := d.GetOk("secondary_gw_3"); ok {
+		networkProfile.SecondaryGate3 = secgw3.(string)
+	}
+	if secgw4, ok := d.GetOk("secondary_gw_4"); ok {
+		networkProfile.SecondaryGate4 = secgw4.(string)
 	}
 	if arp, ok := d.GetOk("arp_supp_flag"); ok {
 		networkProfile.ARPSuppFlag = arp.(bool)
@@ -545,6 +638,20 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if mcast, ok := d.GetOk("mcast_group"); ok {
 		networkProfile.McastGroup = mcast.(string)
+	} else {
+		if dcnmClient.GetPlatform() == "nd" {
+			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
+			if err != nil {
+				return err
+			}
+			networkProfile.McastGroup = stripQuotes(cont.S("mcastip").String())
+		} else {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
+			if err != nil {
+				return err
+			}
+			networkProfile.McastGroup = stripQuotes(cont.S("mcastGroupIpAddress").String())
+		}
 	}
 	if dhcp1, ok := d.GetOk("dhcp_1"); ok {
 		networkProfile.DHCPServer1 = dhcp1.(string)
@@ -552,11 +659,22 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	if dhcp2, ok := d.GetOk("dhcp_2"); ok {
 		networkProfile.DHCPServer2 = dhcp2.(string)
 	}
+	if dhcp3, ok := d.GetOk("dhcp_3"); ok {
+		networkProfile.DHCPServer3 = dhcp3.(string)
+	}
 	if dhcpvrf, ok := d.GetOk("dhcp_vrf"); ok {
 		networkProfile.DHCPServerVRF = dhcpvrf.(string)
 	}
+	if dhcpvrf2, ok := d.GetOk("dhcp_vrf_2"); ok {
+		networkProfile.DHCPServerVRF2 = dhcpvrf2.(string)
+	}
+	if dhcpvrf3, ok := d.GetOk("dhcp_vrf_3"); ok {
+		networkProfile.DHCPServerVRF3 = dhcpvrf3.(string)
+	}
 	if loopback, ok := d.GetOk("loopback_id"); ok {
-		networkProfile.LookbackID = loopback.(int)
+		networkProfile.LookbackID = strconv.Itoa(loopback.(int))
+	} else {
+		networkProfile.LookbackID = ""
 	}
 	if tag, ok := d.GetOk("tag"); ok {
 		networkProfile.Tag = tag.(string)
@@ -571,6 +689,20 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if l3enable, ok := d.GetOk("l3_gateway_flag"); ok {
 		networkProfile.L3GatewayEnable = l3enable.(bool)
+	}
+	if netflowFlag, ok := d.GetOk("netflow_flag"); ok {
+		networkProfile.EnableNetflow = netflowFlag.(bool)
+	}
+	if SVINetflowMonitor, ok := d.GetOk("svi_netflow_monitor"); ok {
+		networkProfile.SVINetflowMonitor = SVINetflowMonitor.(string)
+	}
+	if vlanNetflowMonitor, ok := d.GetOk("vlan_netflow_monitor"); ok {
+		networkProfile.VLANNetflowMonitor = vlanNetflowMonitor.(string)
+	}
+	if nveId, ok := d.GetOk("nve_id"); ok {
+		networkProfile.NVEId = strconv.Itoa(nveId.(int))
+	} else {
+		networkProfile.NVEId = ""
 	}
 	networkProfile.NetworkName = name
 	networkProfile.SegmentID = segID
@@ -616,6 +748,8 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 				}
 				if attachment["switch_ports"] != nil {
 					attachMap["switchPorts"] = listToString(attachment["switch_ports"])
+				} else {
+					attachMap["switchPorts"] = ""
 				}
 
 				if attachment["dot1_qvlan"] != nil {
@@ -628,6 +762,8 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 
 				if attachment["free_form_config"] != nil {
 					attachMap["freeformConfig"] = attachment["free_form_config"].(string)
+				} else {
+					attachMap["freeformConfig"] = ""
 				}
 
 				if attachment["extension_values"] != nil {
@@ -742,7 +878,17 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.GatewayIPv6 = ipv6.(string)
 	}
 	if vlan, ok := d.GetOk("vlan_id"); ok {
-		networkProfile.Vlan = vlan.(int)
+		networkProfile.Vlan = strconv.Itoa(vlan.(int))
+	} else {
+		durl := fmt.Sprintf("/rest/resource-manager/vlan/%s?vlanUsageType=TOP_DOWN_NETWORK_VLAN", fabricName)
+		cont, err := dcnmClient.GetviaURL(durl)
+		if err != nil {
+			return err
+		}
+		vlan := cont.String()
+		if err == nil {
+			networkProfile.Vlan = vlan
+		}
 	}
 	if vlanName, ok := d.GetOk("vlan_name"); ok {
 		networkProfile.VlanName = vlanName.(string)
@@ -751,13 +897,21 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.Description = desc.(string)
 	}
 	if mtu, ok := d.GetOk("mtu"); ok {
-		networkProfile.MTU = mtu.(int)
+		networkProfile.MTU = strconv.Itoa(mtu.(int))
+	} else {
+		networkProfile.MTU = ""
 	}
 	if secgw1, ok := d.GetOk("secondary_gw_1"); ok {
 		networkProfile.SecondaryGate1 = secgw1.(string)
 	}
 	if secgw2, ok := d.GetOk("secondary_gw_2"); ok {
 		networkProfile.SecondaryGate2 = secgw2.(string)
+	}
+	if secgw3, ok := d.GetOk("secondary_gw_3"); ok {
+		networkProfile.SecondaryGate3 = secgw3.(string)
+	}
+	if secgw4, ok := d.GetOk("secondary_gw_4"); ok {
+		networkProfile.SecondaryGate4 = secgw4.(string)
 	}
 	if arp, ok := d.GetOk("arp_supp_flag"); ok {
 		networkProfile.ARPSuppFlag = arp.(bool)
@@ -767,6 +921,20 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	if mcast, ok := d.GetOk("mcast_group"); ok {
 		networkProfile.McastGroup = mcast.(string)
+	} else {
+		if dcnmClient.GetPlatform() == "nd" {
+			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
+			if err != nil {
+				return err
+			}
+			networkProfile.McastGroup = cont.S("mcastip").String()
+		} else {
+			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
+			if err != nil {
+				return err
+			}
+			networkProfile.McastGroup = cont.S("mcastGroupIpAddress").String()
+		}
 	}
 	if dhcp1, ok := d.GetOk("dhcp_1"); ok {
 		networkProfile.DHCPServer1 = dhcp1.(string)
@@ -774,14 +942,27 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	if dhcp2, ok := d.GetOk("dhcp_2"); ok {
 		networkProfile.DHCPServer2 = dhcp2.(string)
 	}
+	if dhcp3, ok := d.GetOk("dhcp_3"); ok {
+		networkProfile.DHCPServer3 = dhcp3.(string)
+	}
 	if dhcpvrf, ok := d.GetOk("dhcp_vrf"); ok {
 		networkProfile.DHCPServerVRF = dhcpvrf.(string)
 	}
+	if dhcpvrf2, ok := d.GetOk("dhcp_vrf_2"); ok {
+		networkProfile.DHCPServerVRF2 = dhcpvrf2.(string)
+	}
+	if dhcpvrf3, ok := d.GetOk("dhcp_vrf_3"); ok {
+		networkProfile.DHCPServerVRF3 = dhcpvrf3.(string)
+	}
 	if loopback, ok := d.GetOk("loopback_id"); ok {
-		networkProfile.LookbackID = loopback.(int)
+		networkProfile.LookbackID = strconv.Itoa(loopback.(int))
+	} else {
+		networkProfile.LookbackID = ""
 	}
 	if tag, ok := d.GetOk("tag"); ok {
 		networkProfile.Tag = tag.(string)
+	} else {
+		networkProfile.Tag = "12345"
 	}
 	if trm, ok := d.GetOk("trm_enable_flag"); ok {
 		networkProfile.TRMEnable = trm.(bool)
@@ -791,6 +972,20 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	if l3enable, ok := d.GetOk("l3_gateway_flag"); ok {
 		networkProfile.L3GatewayEnable = l3enable.(bool)
+	}
+	if netflowFlag, ok := d.GetOk("netflow_flag"); ok {
+		networkProfile.EnableNetflow = netflowFlag.(bool)
+	}
+	if SVINetflowMonitor, ok := d.GetOk("svi_netflow_monitor"); ok {
+		networkProfile.SVINetflowMonitor = SVINetflowMonitor.(string)
+	}
+	if vlanNetflowMonitor, ok := d.GetOk("vlan_netflow_monitor"); ok {
+		networkProfile.VLANNetflowMonitor = vlanNetflowMonitor.(string)
+	}
+	if nveId, ok := d.GetOk("nve_id"); ok {
+		networkProfile.NVEId = strconv.Itoa(nveId.(int))
+	} else {
+		networkProfile.NVEId = ""
 	}
 	networkProfile.NetworkName = name
 	networkProfile.SegmentID = segID
