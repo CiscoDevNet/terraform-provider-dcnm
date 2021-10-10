@@ -14,29 +14,38 @@ type Network struct {
 }
 
 type NetworkProfileConfig struct {
-	NetworkName     string `json:"networkName,omitempty"`
-	VRFName         string `json:"vrfName,omitempty"`
-	SegmentID       string `json:"segmentId,omitempty"`
-	Vlan            int    `json:"vlanId,omitempty"`
-	MTU             int    `json:"mtu,omitempty"`
-	GatewayIpv4     string `json:"gatewayIpAddress,omitempty"`
-	GatewayIPv6     string `json:"gatewayIpV6Address,omitempty"`
-	VlanName        string `json:"vlanName,omitempty"`
-	Description     string `json:"intfDescription,omitempty"`
-	SecondaryGate1  string `json:"secondaryGW1,omitempty"`
-	SecondaryGate2  string `json:"secondaryGW2,omitempty"`
-	ARPSuppFlag     bool   `json:"suppressArp,omitempty"`
-	IRFlag          bool   `json:"enableIR,omitempty"`
-	McastGroup      string `json:"mcastGroup,omitempty"`
-	DHCPServer1     string `json:"dhcpServerAddr1,omitempty"`
-	DHCPServer2     string `json:"dhcpServerAddr2,omitempty"`
-	DHCPServerVRF   string `json:"vrfDhcp,omitempty"`
-	LookbackID      int    `json:"loopbackId,omitempty"`
-	Tag             string `json:"tag,omitempty"`
-	TRMEnable       bool   `json:"trmEnabled,omitempty"`
-	RTBothFlag      bool   `json:"rtBothAuto,omitempty"`
-	L3GatewayEnable bool   `json:"enableL3OnBorder,omitempty"`
-	L2OnlyFlag      bool   `json:"isLayer2Only,omitempty"`
+	NetworkName        string `json:"networkName"`
+	VRFName            string `json:"vrfName"`
+	SegmentID          string `json:"segmentId"`
+	Vlan               string `json:"vlanId"`
+	MTU                string `json:"mtu"`
+	GatewayIpv4        string `json:"gatewayIpAddress"`
+	GatewayIPv6        string `json:"gatewayIpV6Address"`
+	VlanName           string `json:"vlanName"`
+	Description        string `json:"intfDescription"`
+	SecondaryGate1     string `json:"secondaryGW1"`
+	SecondaryGate2     string `json:"secondaryGW2"`
+	SecondaryGate3     string `json:"secondaryGW3"`
+	SecondaryGate4     string `json:"secondaryGW4"`
+	ARPSuppFlag        bool   `json:"suppressArp"`
+	IRFlag             bool   `json:"enableIR"`
+	McastGroup         string `json:"mcastGroup"`
+	DHCPServer1        string `json:"dhcpServerAddr1"`
+	DHCPServer2        string `json:"dhcpServerAddr2"`
+	DHCPServer3        string `json:"dhcpServerAddr3"`
+	DHCPServerVRF      string `json:"vrfDhcp"`
+	DHCPServerVRF2     string `json:"vrfDhcp2"`
+	DHCPServerVRF3     string `json:"vrfDhcp3"`
+	LookbackID         string `json:"loopbackId"`
+	Tag                string `json:"tag"`
+	TRMEnable          bool   `json:"trmEnabled"`
+	RTBothFlag         bool   `json:"rtBothAuto"`
+	L3GatewayEnable    bool   `json:"enableL3OnBorder"`
+	L2OnlyFlag         bool   `json:"isLayer2Only"`
+	EnableNetflow      bool   `json:"ENABLE_NETFLOW"`
+	SVINetflowMonitor  string `json:"SVI_NETFLOW_MONITOR"`
+	VLANNetflowMonitor string `json:"VLAN_NETFLOW_MONITOR"`
+	NVEId              string `json:"nveId"`
 }
 
 func (network *Network) ToMap() (map[string]interface{}, error) {
