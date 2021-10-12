@@ -208,7 +208,7 @@ func resourceDCNMTemplateCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if !cont.Exists("status") {
+	if !cont.Exists("status") && cont.S("reportItemType").String() == "ERROR" {
 		return fmt.Errorf("Template Content is not valid.")
 	}
 	dURL := fmt.Sprintf(TemplateURLS[dcnmClient.GetPlatform()]["Create"], name)
@@ -320,7 +320,7 @@ func resourceDCNMTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if !cont.Exists("status") {
+	if !cont.Exists("status") && cont.S("reportItemType").String() == "ERROR" {
 		return fmt.Errorf("Template Content is not valid.")
 	}
 
