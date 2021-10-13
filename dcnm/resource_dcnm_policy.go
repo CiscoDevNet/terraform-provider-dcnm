@@ -22,55 +22,61 @@ func resourceDCNMPolicy() *schema.Resource {
 			State: resourceDCNMPolicyImporter,
 		},
 		Schema: map[string]*schema.Schema{
-			"policy_id": &schema.Schema{
+			"policy_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: schema.SchemaValidateFunc(IsEmpty()),
+				ValidateFunc: IsEmpty(),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return true
 				},
 			},
-			"serial_number": &schema.Schema{
+			"serial_number": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"source": &schema.Schema{
+			"source": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"entity_type": &schema.Schema{
+			"entity_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"entity_name": &schema.Schema{
+			"entity_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"priority": &schema.Schema{
+			"priority": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"template_name": &schema.Schema{
+			"template_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"template_content_type": &schema.Schema{
+			"template_content_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
-			"template_props": &schema.Schema{
+			"template_props": {
 				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"deploy": &schema.Schema{
+			"deploy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -176,7 +182,7 @@ func resourceDCNMPolicyCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Deploy the policy
-	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
 
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
@@ -201,30 +207,47 @@ func getAllPolicy(client *client.Client, policyId string) (*container.Container,
 func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
 	d.Set("policy_id", stripQuotes(cont.S("policyId").String()))
 	d.Set("serial_number", stripQuotes(cont.S("serialNumber").String()))
-	d.Set("source", stripQuotes(cont.S("source").String()))
-	d.Set("description", stripQuotes(cont.S("description").String()))
-	d.Set("entity_type", stripQuotes(cont.S("entityType").String()))
-	d.Set("entity_name", stripQuotes(cont.S("entityName").String()))
-	d.Set("template_name", stripQuotes(cont.S("templateName").String()))
-	d.Set("template_content_type", stripQuotes(cont.S("templateContentType").String()))
-	d.Set("priority", stripQuotes(cont.S("priority").String()))
-	var strByte []byte
-	strJson := stripQuotes(cont.S("nvPairs").String())
-	strByte = []byte(strJson)
-	var nvPair map[string]interface{}
-	json.Unmarshal(strByte, &nvPair)
-	props, ok := d.GetOk("template_props")
 
-	map2 := make(map[string]interface{})
-	for k, _ := range props.(map[string]interface{}) {
-		map2[k] = nvPair[k]
-
+	if cont.Exists("source") {
+		d.Set("source", stripQuotes(cont.S("source").String()))
 	}
-	if !ok {
-		d.Set("template_props", nvPair)
-	} else {
+	if cont.Exists("description") {
+		d.Set("description", stripQuotes(cont.S("description").String()))
+	}
+	if cont.Exists("entityType") {
+		d.Set("entity_type", stripQuotes(cont.S("entityType").String()))
+	}
+	if cont.Exists("entityName") {
+		d.Set("entity_name", stripQuotes(cont.S("entityName").String()))
+	}
+	if cont.Exists("templateName") {
+		d.Set("template_name", stripQuotes(cont.S("templateName").String()))
+	}
+	if cont.Exists("templateContentType") {
+		d.Set("template_content_type", stripQuotes(cont.S("templateContentType").String()))
+	}
+	if cont.Exists("priority") {
+		d.Set("priority", stripQuotes(cont.S("priority").String()))
+	}
+	var strByte []byte
+	if cont.Exists("nvPairs") {
+		strJson := stripQuotes(cont.S("nvPairs").String())
+		strByte = []byte(strJson)
+		var nvPair map[string]interface{}
+		json.Unmarshal(strByte, &nvPair)
+		props, ok := d.GetOk("template_props")
 
-		d.Set("template_props", map2)
+		map2 := make(map[string]interface{})
+		for k, _ := range props.(map[string]interface{}) {
+			map2[k] = nvPair[k]
+
+		}
+		if !ok {
+			d.Set("template_props", nvPair)
+		} else {
+
+			d.Set("template_props", map2)
+		}
 	}
 
 	return d
@@ -235,10 +258,7 @@ func resourceDCNMPolicyRead(d *schema.ResourceData, m interface{}) error {
 	dcnmClient := m.(*client.Client)
 
 	dn := d.Id()
-	var policyId string
-
-	policyId = "POLICY-" + dn
-
+	policyId := "POLICY-" + dn
 	cont, err := getAllPolicy(dcnmClient, policyId)
 
 	if err != nil {
