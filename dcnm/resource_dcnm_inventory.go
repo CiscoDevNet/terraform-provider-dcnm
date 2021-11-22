@@ -522,7 +522,7 @@ func resourceDCNMInventroyUpdate(d *schema.ResourceData, m interface{}) error {
 
 			durl := fmt.Sprintf("/fm/fmrest/lanConfig/saveSwitchCredentials")
 			if dcnmClient.GetPlatform() == "nd" {
-				durl = fmt.Sprintf("rest/lanConfig/saveSwitchCredentials")
+				durl = fmt.Sprintf("/rest/lanConfig/saveSwitchCredentials")
 			}
 			cont, err = dcnmClient.UpdateCred(durl, body)
 			if err != nil {

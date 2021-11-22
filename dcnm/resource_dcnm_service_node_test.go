@@ -111,7 +111,7 @@ func testAccCheckDCNMServiceNodeExists(name string, serviceNode *models.ServiceN
 		}
 		if configCont.Exists("vlanId") && stripQuotes(configCont.S("vlanId").String()) != "" {
 			if vlan, err := strconv.Atoi(stripQuotes(configCont.S("vlanId").String())); err == nil {
-				netProfile.Vlan = vlan
+				netProfile.Vlan = strconv.Itoa(vlan)
 			}
 		}
 		if configCont.Exists("vlanName") {

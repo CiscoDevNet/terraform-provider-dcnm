@@ -1,6 +1,6 @@
 resource "dcnm_template" "example1" {
-    name = "test"
-    content = <<EOF
+  name                  = "test"
+  content               = <<EOF
 ##template variables
 #    Copyright (c) 2019 by Cisco Systems, Inc.
 #    All rights reserved.
@@ -30,14 +30,14 @@ vrf $$VRF_NAME$$
 
 ##
 EOF
-description = "Test"
-supported_platforms = ["N9K","N3K"]
-template_type="POLICY"
-template_content_type="TEMPLATE_CLI"
-tags="tag1"
-template_sub_type="VXLAN"
+  description           = "Test"
+  supported_platforms   = ["N9K", "N3K"]
+  template_type         = "POLICY"
+  template_content_type = "TEMPLATE_CLI"
+  tags                  = "tag1"
+  template_sub_type     = "VXLAN"
 }
 
-data "dcnm_template" "ex"{
-  name="${dcnm_template.ex1.id}"
+data "dcnm_template" "ex" {
+  name = dcnm_template.ex1.id
 }
