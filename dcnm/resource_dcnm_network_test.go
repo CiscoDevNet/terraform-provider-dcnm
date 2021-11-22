@@ -113,7 +113,7 @@ func testAccCheckDCNMNetworkExists(name string, network *models.Network, profile
 		}
 		if configCont.Exists("vlanId") && stripQuotes(configCont.S("vlanId").String()) != "" {
 			if vlan, err := strconv.Atoi(stripQuotes(configCont.S("vlanId").String())); err == nil {
-				netProfile.Vlan = vlan
+				netProfile.Vlan = strconv.Itoa(vlan)
 			}
 		}
 		if configCont.Exists("vlanName") {
@@ -158,7 +158,7 @@ func testAccCheckDCNMNetworkAttributes(desc string, network *models.Network, pro
 			return fmt.Errorf("Bad Network VRF name %s", network.VRF)
 		}
 
-		if 2301 != profile.Vlan {
+		if strconv.Itoa(2301) != (profile.Vlan) {
 			return fmt.Errorf("Bad Network VLAN %d", profile.Vlan)
 		}
 

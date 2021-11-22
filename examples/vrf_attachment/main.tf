@@ -33,7 +33,7 @@ resource "dcnm_vrf" "first" {
   static_default_route    = false
   deploy                  = true
   attachments {
-    serial_number = "${data.dcnm_inventory.inv.serial_number}"
+    serial_number = data.dcnm_inventory.inv.serial_number
     vlan_id       = 2300
     attach        = true
     loopback_id   = 70

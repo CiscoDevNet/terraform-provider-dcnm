@@ -33,7 +33,7 @@ resource "dcnm_network" "first" {
 
   deploy = true
   attachments {
-    serial_number = "${dcnm_inventory.example1.serial_number}"
+    serial_number = dcnm_inventory.example1.serial_number
     vlan_id       = 2300
     attach        = true
     switch_ports = [
@@ -42,12 +42,12 @@ resource "dcnm_network" "first" {
     ]
   }
   attachments {
-    serial_number = "${dcnm_inventory.example2.serial_number}"
+    serial_number = dcnm_inventory.example2.serial_number
     vlan_id       = 0
     attach        = false
   }
   attachments {
-    serial_number = "${dcnm_inventory.example3.serial_number}"
+    serial_number = dcnm_inventory.example3.serial_number
     vlan_id       = 2300
     attach        = true
     switch_ports = ["Ethernet1/1",

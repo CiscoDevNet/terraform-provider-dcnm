@@ -10,12 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
-// func main() {
-// 	plugin.Serve(&plugin.ServeOpts{
-// 		ProviderFunc: dcnm.Provider,
-// 	})
-// }
-
 func main() {
 	var debugMode bool
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
