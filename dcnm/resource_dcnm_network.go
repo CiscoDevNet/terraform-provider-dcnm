@@ -374,7 +374,8 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 		}
 		if cont.Exists("vlanId") && stripQuotes(cont.S("vlanId").String()) != "" {
 			if vlan := stripQuotes(cont.S("vlanId").String()); err == nil {
-				d.Set("vlan_id", vlan)
+					vlanInt,_:= strconv.Atoi(vlan)
+					d.Set("vlan_id", vlanInt)
 			}
 		}
 		if cont.Exists("vlanName") {
@@ -484,7 +485,8 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("vlan_netflow_monitor", stripQuotes(cont.S("SVI_NETFLOW_MONITOR").String()))
 		}
 		if cont.Exists("nveId") {
-			d.Set("nve_id", stripQuotes(cont.S("nveId").String()))
+			nveInt,_:= strconv.Atoi(stripQuotes(cont.S("nveId").String()))
+			d.Set("nve_id",nveInt)
 		}
 	}
 
