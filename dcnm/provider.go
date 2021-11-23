@@ -59,7 +59,7 @@ func Provider() *schema.Provider {
 					"dcnm",
 					"nd",
 				}, false),
-				Default:     "dcnm",
+				DefaultFunc: schema.EnvDefaultFunc("DCNM_PLATFORM", "dcnm"),
 				Description: "DCNM platfom selection ND/DCNM",
 			},
 		},
