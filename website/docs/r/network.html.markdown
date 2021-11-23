@@ -26,18 +26,24 @@ resource "dcnm_network" "first" {
   ipv6_gateway    = "2001:db8::1/64"
   mtu             = 1500
   secondary_gw_1  = "192.0.3.1/24"
-  secondary_gw_2  = "192.0.3.1/24"
+  secondary_gw_2  = "192.0.3.2/24"
+  secondary_gw_3  = "192.0.3.3/24"
+  secondary_gw_4  = "192.0.3.4/24"
   arp_supp_flag   = true
   ir_enable_flag  = false
   mcast_group     = "239.1.2.2"
   dhcp_1          = "1.2.3.4"
   dhcp_2          = "1.2.3.5"
+  dhcp_3          = "1.2.3.6"
   dhcp_vrf        = "VRF1012"
+  dhcp_vrf_2      = "VRF1013"
+  dhcp_vrf_3      = "VRF1014"
   loopback_id     = 100
   tag             = "1400"
   rt_both_flag    = true
   trm_enable_flag = true
   l3_gateway_flag = true
+  netflow_flag    = false
 
   deploy = true
   attachments {
@@ -76,20 +82,29 @@ resource "dcnm_network" "first" {
 * `tag` - (Optional) tag for the Network. Ranging from 0 to 4294967295.
 * `secondary_gw_1` - (Optional) ipv4 secondary gateway 1 for the network.
 * `secondary_gw_2` - (Optional) ipv4 secondary gateway 2 for the network.
+* `secondary_gw_3` - (Optional) ipv4 secondary gateway 3 for the network.
+* `secondary_gw_4` - (Optional) ipv4 secondary gateway 4 for the network.
 * `arp_supp_flag` - (Optional) arp suppression flag for the network.
 * `ir_enable_flag` - (Optional) ingress replication flag for the network.
 * `mcast_group` - (Optional) multicast group address for the network.
 * `dhcp_1` - (Optional) ipv4 address of DHCP server 1 for the network.
 * `dhcp_2` - (Optional) ipv4 address of DHCP server 2 for the network.
+* `dhcp_3` - (Optional) ipv4 address of DHCP server 3 for the network.
 * `dhcp_vrf` - (Optional) vrf name of DHCP server for the network.
+* `dhcp_vrf_2` - (Optional) vrf name of DHCP server 2 for the network.
+* `dhcp_vrf_3` - (Optional) vrf name of DHCP server 3 for the network.
 * `loopback_id` - (Optional) loopback id for the network. Ranging from 0 to 1023.
 * `rt_both_flag` - (Optional) l2 VNI route-target both enable flag for the network.
 * `trm_enable_flag` - (Optional) TRM enable flag for the network.
 * `l3_gateway_flag` - (Optional) enable L3 gateway on border flag for the network. 
-* `template` - (Optional) template name for the network. Values allowed "Default_VRF_Universal" and "Service_Network_Universal". Default is "Default_VRF_Universal".
+* `netflow_flag` - (Optional) enable Netflow flag for the network. default is "false". 
+* `template` - (Optional) template name for the network. Values allowed "Default_Network_Universal" and "Service_Network_Universal". Default is "Default_Network_Universal".
 * `extension_template` - (Optional) extension Template name for the network. Values allowed are "Default_Network_Extension_Universal". Default is "Default_Network_Extension_Universal".
 * `service_template` - (Optional) service template name for the network.
 * `source` - (Optional) source for the network.
+* `svi_netflow_monitor` - (Optional) SVI netflow monitor for the network.
+* `vlan_netflow_monitor` - (Optional) VLAN netflow monitor for the network.
+* `nve_id` - (Optional) NVE-Id of the network. Default value is 1.
 
 * `deploy` - (Optional) deploy flag, used to deploy the network. Default value is "true".
 * `deploy_timeout` - (Optional) deployment timeout, used as the limiter for the deployment status check for network resource. It is in the unit of seconds and default value is "300".
