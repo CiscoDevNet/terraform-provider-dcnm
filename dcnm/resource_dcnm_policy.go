@@ -210,15 +210,23 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 
 	if cont.Exists("source") {
 		d.Set("source", stripQuotes(cont.S("source").String()))
+	} else {
+		d.Set("source", "")
 	}
 	if cont.Exists("description") {
 		d.Set("description", stripQuotes(cont.S("description").String()))
+	} else {
+		d.Set("description", "")
 	}
 	if cont.Exists("entityType") {
 		d.Set("entity_type", stripQuotes(cont.S("entityType").String()))
+	} else {
+		d.Set("entity_type", "")
 	}
 	if cont.Exists("entityName") {
 		d.Set("entity_name", stripQuotes(cont.S("entityName").String()))
+	} else {
+		d.Set("entity_name", "")
 	}
 	if cont.Exists("templateName") {
 		d.Set("template_name", stripQuotes(cont.S("templateName").String()))

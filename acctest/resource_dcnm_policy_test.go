@@ -18,22 +18,26 @@ var providerfPolicy *schema.Provider
 func TestAccDCNMPolicy_Basic(t *testing.T) {
 	var policy_default models.Policy
 	var policy_updated models.Policy
-	defaultSerialNumber := "9BH270169LJ"
-	otherSerialNumber := ""
-	resourceName := "dcnm_policy.first"
+	defaultSerialNumber := "9LMU8W6W8VG"
+	otherSerialNumber := "9CIWTMB13GP"
+	resourceName := "dcnm_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactoriesInternal(&providerfPolicy),
-		// CheckDestroy:      testAccCheckDCNMPolicyDestroy,
+		CheckDestroy:      testAccCheckDCNMPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testCreatePolicyWithoutTemplate(defaultSerialNumber),
-				ExpectError: regexp.MustCompile(`...`),
+				ExpectError: regexp.MustCompile(`Missing required argument`),
+			},
+			{
+				Config:      testCreatePolicyMissingTemplateProps(defaultSerialNumber),
+				ExpectError: regexp.MustCompile(`Missing required argument`),
 			},
 			{
 				Config:      testCreatePolicyWithoutSerialNumber(),
-				ExpectError: regexp.MustCompile(`...`),
+				ExpectError: regexp.MustCompile(`Missing required argument`),
 			},
 			{
 				Config: testCreatePolicyBasic(defaultSerialNumber),
@@ -44,13 +48,14 @@ func TestAccDCNMPolicy_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "entity_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "entity_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "template_content_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "template_content_type", "TEMPLATE_CLI"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deploy"},
 			},
 			{
 				Config: testCreatePolicyBasicWithOptionalValues(defaultSerialNumber),
@@ -66,9 +71,10 @@ func TestAccDCNMPolicy_Basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deploy"},
 			},
 			{
 				Config: testCreatePolicyBasic(otherSerialNumber),
@@ -79,22 +85,14 @@ func TestAccDCNMPolicy_Basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deploy"},
 			},
 			{
 				Config: testCreatePolicyBasic(defaultSerialNumber),
 			},
-			// Before code
-			// {
-			// 	Config: testAccCheckDCNMPolicyConfig_basic("test-demo-1", "test policy"),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckDCNMPolicyExists("dcnm_policy.first", &policy),
-			// 		testAccCheckDCNMPolicyAttributes("test-demo-1", &policy),
-			// 	),
-			// 	ExpectNonEmptyPlan: true,
-			// },
 		},
 	})
 }
@@ -118,6 +116,7 @@ func TestAccDCNMPolicy_Basic(t *testing.T) {
 // 		},
 // 	})
 // }
+
 func testAccCheckDCNMPolicyExists(name string, policy *models.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -129,7 +128,7 @@ func testAccCheckDCNMPolicyExists(name string, policy *models.Policy) resource.T
 		}
 
 		dcnmClient := (*providerfPolicy).Meta().(*client.Client)
-		cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/policies/%s", "test-demo-1"))
+		cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/policies/POLICY-%s", rs.Primary.ID))
 		log.Printf("[DEBUG] before err %s", cont)
 		if err != nil {
 			return err
@@ -165,6 +164,17 @@ func testCreatePolicyWithoutSerialNumber() string {
 		}
 	}
 	`
+}
+func testCreatePolicyMissingTemplateProps(serial_number string) string {
+	return fmt.Sprintf(`
+	resource "dcnm_policy" "test" {
+		serial_number = "%s"
+		template_name 	= 	"aaa_radius_deadtime"
+		template_props 	= 	{
+			"DTIME" : "0"
+		}
+	}
+	`, serial_number)
 }
 func testCreatePolicyBasic(serial_number string) string {
 	return fmt.Sprintf(`
@@ -213,45 +223,16 @@ func testAccCheckPolicyIdNotEqual(pid1, pid2 *models.Policy) resource.TestCheckF
 	}
 }
 
-// func testAccCheckDCNMPolicyConfig_basic(policyId string, description string) string {
-// 	return fmt.Sprintf(`
-// 	resource "dcnm_policy" "test" {
-// 		serial_number = "9BH270169LJ"
-// 		description="%s"
-// 		template_name = "aaa_radius_deadtime"
-// 		template_props = {
-//         "DTIME" : "0"
-//         "AAA_GROUP" : "%s"
-//       }
-// 	}
-// 	`, description, "management")
-// }
+func testAccCheckDCNMPolicyDestroy(s *terraform.State) error {
+	dcnmClient := (*providerfPolicy).Meta().(*client.Client)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type == "dcnm_policy" {
+			_, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/policies/POLICY-%s", rs.Primary.ID))
+			if err == nil {
+				return fmt.Errorf("Policy still exists!!")
+			}
+		}
+	}
 
-// func testAccCheckDCNMPolicyDestroy(s *terraform.State) error {
-// 	dcnmClient := (*providerfPolicy).Meta().(*client.Client)
-// 	for _, rs := range s.RootModule().Resources {
-// 		if rs.Type == "dcnm_policy" {
-// 			_, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/control/policies/%s", "test"))
-// 			if err == nil {
-// 				return fmt.Errorf("Policy still exists!!")
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// func testAccCheckDCNMPolicyAttributes(name string, policy *models.Policy) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if "test-demo-1" != policy.PolicyId {
-// 			return fmt.Errorf("bad Policy name %s", policy.PolicyId)
-// 		}
-// 		if "9BH270169LJ" != policy.SerialNumber {
-// 			return fmt.Errorf("bad serial number %s", policy.SerialNumber)
-// 		}
-// 		if "aaa_radius_deadtime" != policy.TemplateName {
-// 			return fmt.Errorf("bad template name %s", policy.TemplateName)
-// 		}
-// 		return nil
-// 	}
-// }
+	return nil
+}
