@@ -1,3 +1,13 @@
+## 1.1.0 (December 17, 2021)
+IMPROVEMENTS:
+- New resource and data source for dcnm_policy, dcnm_route_peering, dcnm_service_node, dcnm_service_policy, dcnm_template
+- Add support for NDFC 12.x
+- Add support for secondary_gw_3, secondary_gw_4, dhcp_3, dhcp_vrf_2, dhcp_vrf_3, netflow_flag, svi_netflow_monitor, vlan_netflow_monitor, nve_id in dcnm_network resource and data source
+- Add support for vrf_lite attachment in dcnm_vrf resource
+
+BUG FIXES:
+- Fix typo in bpdu_guard_flag in dcnm_interface resource
+
 ## 1.0.0 (May 28, 2021)
 
 IMPROVEMENTS:
