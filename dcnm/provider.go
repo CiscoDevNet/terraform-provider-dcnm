@@ -15,21 +15,21 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DCNM_USERNAME", nil),
-				Description: "Username for the DCNM account",
+				Description: "Username for the DCNM/NDFC account",
 			},
 
 			"password": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DCNM_PASSWORD", nil),
-				Description: "Password for the DCNM account",
+				Description: "Password for the DCNM/NDFC account",
 			},
 
 			"url": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("DCNM_URL", nil),
-				Description: "URL for the DCNM server",
+				Description: "URL for the DCNM/NDFC server",
 			},
 
 			"insecure": &schema.Schema{
@@ -42,14 +42,14 @@ func Provider() *schema.Provider {
 			"proxy_url": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Proxy server URL for DCNM",
+				Description: "Proxy server URL for DCNM/NDFC",
 			},
 
 			"expiry": &schema.Schema{
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     900000,
-				Description: "Expiration time in miliseconds for DCNM server",
+				Description: "Expiration time in miliseconds for DCNM/NDFC server",
 			},
 
 			"platform": &schema.Schema{
@@ -60,7 +60,7 @@ func Provider() *schema.Provider {
 					"nd",
 				}, false),
 				DefaultFunc: schema.EnvDefaultFunc("DCNM_PLATFORM", "dcnm"),
-				Description: "DCNM platfom selection ND/DCNM",
+				Description: "NDFC/DCNM platfom selection ND/DCNM",
 			},
 		},
 

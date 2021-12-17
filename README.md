@@ -24,7 +24,7 @@ If you are building the provider, follow the instructions to [install it as a pl
 
 ex.
 ```hcl
-#configure provider with your Cisco DCNM credentials.
+#configure provider with your Cisco DCNM/NDFC credentials.
 terraform {
   required_providers {
     dcnm = {
@@ -34,21 +34,22 @@ terraform {
 }
 
 provider "dcnm" {
-  # Cisco DCNM user name
+  # Cisco DCNM/NDFC user name
   username = "admin"
-  # Cisco DCNM password
+  # Cisco DCNM/NDFC password
   password = "password"
-  # Cisco DCNM url
+  # Cisco DCNM/NDFC url
   url      = "https://my-cisco-dcnm.com"
   insecure = true
   proxy_url = "https://proxy_server:proxy_port"
+  platform = "dcnm"
 }
 
 resource "dcnm_inventory" "first" {
   fabric_name   = "fab1"
   username      = "Username for NXOS switch"
   password      = "Password for NXOS switch"
-  ip            = "IP of DCNM switch"
+  ip            = "IP of NXOS switch"
 }
 ```
 

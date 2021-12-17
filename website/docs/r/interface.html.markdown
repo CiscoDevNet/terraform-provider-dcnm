@@ -105,7 +105,7 @@ resource "dcnm_interface" "second" {
 * `fabric_name` - (Required) fabric name under which interface should be created.
 * `name` - (Required) name of the interface. It must be in proper format for example, for loopback: "loopback5", for port-channel "port-channel5", for virtual port channel "vPC17", for sub-interface "Ethernet1/41.8" and for ethernet "Ethernet1/4".
 * `type` - (Required) type of the interface. Allowed values are "loopback", "port-channel", "vpc", "sub-interface", "ethernet".
-**NOTE**: Interface type of "sub-interface" is not supported in DCNM 12.
+**NOTE**: Interface type of "sub-interface" is not supported in NDFC 12.
 * `policy` - (Required) policy name for the interface.
 * `switch_name_1` - (Required) name of the switch which should be associated to the interface.
 * `admin_state` - (Optional) administrative state for the interface. Allowed values are "true" and "false". Default value is "true".
