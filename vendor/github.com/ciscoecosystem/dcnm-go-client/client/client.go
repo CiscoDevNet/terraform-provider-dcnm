@@ -171,7 +171,7 @@ func (c *Client) MakeRequest(method, path string, body *container.Container, aut
 	}
 	return req, nil
 }
-func (c *Client) makeRequestForText(method, path string, body string, authenticated bool) (*http.Request, error) {
+func (c *Client) MakeRequestForText(method, path string, body string, authenticated bool) (*http.Request, error) {
 
 	if c.platform == "nd" && authenticated && !models.IsService(path) {
 		path = fmt.Sprint("/appcenter/cisco/ndfc/api/v1", path)
