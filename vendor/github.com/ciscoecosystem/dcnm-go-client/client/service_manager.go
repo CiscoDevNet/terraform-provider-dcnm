@@ -59,7 +59,7 @@ func (c *Client) SaveDeploy(endpoint string, policyIds string) (*container.Conta
 	return cont, checkforerrors(cont, resp)
 }
 func (c *Client) ValidateTemplateContent(endpoint string, content string) (*container.Container, error) {
-	req, err := c.makeRequestForText("POST", endpoint, content, true)
+	req, err := c.MakeRequestForText("POST", endpoint, content, true)
 	if err != nil {
 		return nil, err
 	}

@@ -40,6 +40,14 @@ func resourceDCNMRest() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"payload_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"json", "text",
+				}, false),
+				Default: "json",
+			},
 		},
 	}
 }
@@ -59,9 +67,16 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 		op = "POST"
 	}
 
-	_, err := makeAndDoRest(dcnmClient, path, op, payload)
-	if err != nil {
-		return err
+	if d.Get("payload_type").(string) == "json" {
+		_, err := makeAndDoRest(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := makeAndDoRestForText(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -85,9 +100,16 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 		op = "PUT"
 	}
 
-	_, err := makeAndDoRest(dcnmClient, path, op, payload)
-	if err != nil {
-		return err
+	if d.Get("payload_type").(string) == "json" {
+		_, err := makeAndDoRest(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := makeAndDoRestForText(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(path)
@@ -115,9 +137,16 @@ func resourceDCNMRestDelete(d *schema.ResourceData, m interface{}) error {
 		op = "DELETE"
 	}
 
-	_, err := makeAndDoRest(dcnmClient, path, op, payload)
-	if err != nil {
-		return err
+	if d.Get("payload_type").(string) == "json" {
+		_, err := makeAndDoRest(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := makeAndDoRestForText(dcnmClient, path, op, payload)
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId("")
@@ -127,6 +156,7 @@ func resourceDCNMRestDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func makeAndDoRest(client *client.Client, path, op, payload string) (*container.Container, error) {
+
 	jsonPayload, err := container.ParseJSON([]byte(payload))
 	if err != nil {
 		return nil, err
@@ -145,7 +175,21 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 	return respCont, checkerrorsRest(respCont, resp)
 }
 
+func makeAndDoRestForText(client *client.Client, path, op, content string) (*container.Container, error) {
+	req, err := client.MakeRequestForText(op, path, content, true)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "text/plain")
+	cont, resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return cont, checkerrorsRest(cont, resp)
+}
+
 func checkerrorsRest(cont *container.Container, resp *http.Response) error {
+
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
