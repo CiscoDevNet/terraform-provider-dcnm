@@ -646,13 +646,21 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 			if err != nil {
 				return err
 			}
-			networkProfile.McastGroup = stripQuotes(cont.S("mcastip").String())
+			if cont.Exists("mcastip") {
+				networkProfile.McastGroup = stripQuotes(cont.S("mcastip").String())
+			} else {
+				networkProfile.McastGroup = ""
+			}
 		} else {
 			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
 			if err != nil {
 				return err
 			}
-			networkProfile.McastGroup = stripQuotes(cont.S("mcastGroupIpAddress").String())
+			if cont.Exists("mcastGroupIpAddress") {
+				networkProfile.McastGroup = stripQuotes(cont.S("mcastGroupIpAddress").String())
+			} else {
+				networkProfile.McastGroup = ""
+			}
 		}
 	}
 	if dhcp1, ok := d.GetOk("dhcp_1"); ok {
