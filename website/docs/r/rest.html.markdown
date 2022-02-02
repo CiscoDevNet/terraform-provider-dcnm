@@ -29,13 +29,6 @@ resource "dcnm_rest" "first" {
  EOF 
 }
 
-resource "dcnm_rest" "template_validate" {
-  path    = "/rest/config/templates/validate"
-  method  = "POST"
-  payload = file("payload.txt")
-  payload_type = "text"
-}
-
 ```
 
 
@@ -43,8 +36,7 @@ resource "dcnm_rest" "template_validate" {
 
 * `path` - (Required) DCNM REST endpoint, where the data is being sent.
 * `method` - (Optional) HTTP method. Allowed values are "GET", "PUT", "POST", "DELETE".
-* `payload` - (Required) JSON/TEXT payload data.
-* `payload_type` - (Required) Encoding type for payload. Allowed values are "json" and "text". Default value is "json".
+* `payload` - (Required) JSON encoded payload data.
 
 NOTE: This resource will not work well in the case of Terraform destroy if there is a change in the terraform configuration required to destroy the object from the DCNM, as Destroy only has the access to the data in the state file. To destroy the objects created via dcnm_rest in such cases modify the payload and method and use the Terraform apply instead.
 
