@@ -22,8 +22,8 @@ resource "dcnm_rest" "first" {
 }
 
 resource "dcnm_rest" "template_validate" {
-  path    = "/rest/config/templates/validate"
-  method  = "POST"
-  payload = file("payload.txt")
+  path         = "/rest/config/templates/validate"
+  method       = "POST"
+  payload      = file("payload.txt")
   payload_type = "text"
 }
