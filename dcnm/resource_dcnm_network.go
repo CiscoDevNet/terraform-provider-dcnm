@@ -642,22 +642,16 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
-			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
-			if err != nil {
-				return err
-			}
+			cont, _ := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
 			if cont.Exists("mcastip") {
-				networkProfile.McastGroup = stripQuotes(cont.S("mcastip").String())
+				networkProfile.McastGroup = models.G(cont, "mcastip")
 			} else {
 				networkProfile.McastGroup = ""
 			}
 		} else {
-			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
-			if err != nil {
-				return err
-			}
+			cont, _ := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
 			if cont.Exists("mcastGroupIpAddress") {
-				networkProfile.McastGroup = stripQuotes(cont.S("mcastGroupIpAddress").String())
+				networkProfile.McastGroup = models.G(cont, "mcastGroupIpAddress")
 			} else {
 				networkProfile.McastGroup = ""
 			}
@@ -933,20 +927,14 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
-			cont, err := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
-			if err != nil {
-				return err
-			}
+			cont, _ := dcnmClient.GetviaURL(fmt.Sprintf("/rest/top-down/fabrics/%s/netinfo", fabricName))
 			if cont.Exists("mcastip") {
 				networkProfile.McastGroup = stripQuotes(cont.S("mcastip").String())
 			} else {
 				networkProfile.McastGroup = ""
 			}
 		} else {
-			cont, err := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
-			if err != nil {
-				return err
-			}
+			cont, _ := dcnmClient.GetSegID(fmt.Sprintf("/rest/managed-pool/fabrics/%s/multicast-group-address?segment-id=%s", fabricName, segID))
 			if cont.Exists("mcastGroupIpAddress") {
 				networkProfile.McastGroup = stripQuotes(cont.S("mcastGroupIpAddress").String())
 			} else {
