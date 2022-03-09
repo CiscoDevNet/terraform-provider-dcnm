@@ -24,22 +24,38 @@ Authentication with user-id and password.
 
  ```hcl
 
-    provider "dcnm" {
-      # cisco-dcnm/ndfc user name
-      username = "admin"
-      # cisco-dcnm/ndfc password
-      password = "password"
-      # cisco-dcnm/ndfc url
-      url      = "https://my-cisco-dcnm.com"
-      insecure = true
-      platform = "dcnm"
+terraform {
+  required_providers {
+    dcnm = {
+      source = "CiscoDevNet/dcnm"
     }
- 
+  }
+}
+
+provider "dcnm" {
+  # cisco-dcnm/ndfc user name
+  username = "admin"
+  # cisco-dcnm/ndfc password
+  password = "password"
+  # cisco-dcnm/ndfc url
+  url      = "https://my-cisco-dcnm.com"
+  insecure = true
+  platform = "dcnm"
+}
+
  ```
 
 Example Usage
 ------------
 ```hcl
+
+terraform {
+  required_providers {
+    dcnm = {
+      source = "CiscoDevNet/dcnm"
+    }
+  }
+}
 
 #configure provider with your cisco dcnm/ndfc credentials.
 provider "dcnm" {
