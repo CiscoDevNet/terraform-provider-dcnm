@@ -1,3 +1,11 @@
+## 1.2.0 (March 9, 2022)
+IMPROVEMENTS:
+- Add capability to post text file with dcnm_rest resource to support template validation by introducing payload_type attribute
+
+BUG FIXES:
+- Add provider source to examples
+- Fix handling of Multicast Group setting when not provided by user in dcnm_network.
+
 ## 1.1.0 (December 17, 2021)
 IMPROVEMENTS:
 - New resource and data source for dcnm_policy, dcnm_route_peering, dcnm_service_node, dcnm_service_policy, dcnm_template
