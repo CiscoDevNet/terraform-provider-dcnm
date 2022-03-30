@@ -69,7 +69,7 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if payload == "" {
-		if op == "POST" || op == "POST" {
+		if op == "POST" || op == "PUT" {
 			return fmt.Errorf("payload should be given when method is POST")
 		}
 	}
@@ -108,7 +108,7 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if payload == "" {
-		if op == "POST" || op == "POST" {
+		if op == "POST" || op == "PUT" {
 			return fmt.Errorf("payload should be given when method is POST")
 		}
 	}
