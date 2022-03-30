@@ -240,7 +240,7 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 		props, ok := d.GetOk("template_props")
 
 		map2 := make(map[string]interface{})
-		for k, _ := range props.(map[string]interface{}) {
+		for k := range props.(map[string]interface{}) {
 			map2[k] = nvPair[k]
 		}
 		if !ok {
@@ -287,6 +287,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 	policy.SerialNumber = serialNumber
 	policy.TemplateName = templateName
+	policy.Deleted = false
 	policy.NVPairs = nvPairMap
 	if policyId, ok := d.GetOk("policy_id"); ok {
 		policy.PolicyId = policyId.(string)
@@ -322,7 +323,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 	// Deploy the policy
-	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
 
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
@@ -340,9 +341,23 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
 
-	policyId := d.Get("policy_id").(string)
-	durl := fmt.Sprintf("/rest/control/policies/%s", policyId)
-	cont, err := dcnmClient.Delete(durl)
+	policy := models.Policy{
+		Id:           d.Id(),
+		SerialNumber: d.Get("serial_number").(string),
+		TemplateName: d.Get("template_name").(string),
+		NVPairs:      d.Get("template_props").(map[string]interface{}),
+		Deleted:      true,
+	}
+
+	policy.NVPairs = d.Get("template_props").(map[string]interface{})
+	if policyId, ok := d.GetOk("policy_id"); ok {
+		policy.PolicyId = policyId.(string)
+	} else {
+		policy.PolicyId = "POLICY-" + d.Id()
+	}
+
+	dUrl := fmt.Sprintf("/rest/control/policies/%s", policy.PolicyId)
+	cont, err := dcnmClient.Update(dUrl, &policy)
 	if err != nil {
 		if cont != nil {
 			return diag.Errorf(cont.String())
@@ -366,13 +381,15 @@ func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
 	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
 	cont, err := dcnmClient.GetviaURL(url)
 	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: ", err)
+		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
 	}
 
+	fabric := models.G(cont, "fabricName")
+
 	// deploy fabric
-	err = deployFabric(dcnmClient, models.G(cont, "fabricName"))
+	err = deployswitch(dcnmClient, fabric, serialNumber, 300)
 	if err != nil {
-		fmt.Errorf("error deploying fabric after policy deletion: ", err)
+		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
 	}
 
 	return nil

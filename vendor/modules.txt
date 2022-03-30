@@ -52,7 +52,7 @@ github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
-# github.com/ciscoecosystem/dcnm-go-client v0.2.2
+# github.com/ciscoecosystem/dcnm-go-client v0.2.3
 ## explicit
 github.com/ciscoecosystem/dcnm-go-client/client
 github.com/ciscoecosystem/dcnm-go-client/container
@@ -132,7 +132,6 @@ github.com/hashicorp/terraform-plugin-go/tfprotov5/tftypes
 # github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.3
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema
