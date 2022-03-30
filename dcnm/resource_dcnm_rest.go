@@ -38,7 +38,7 @@ func resourceDCNMRest() *schema.Resource {
 
 			"payload": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"payload_type": {
 				Type:     schema.TypeString,
@@ -58,6 +58,9 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 	dcnmClient := m.(*client.Client)
 	path := d.Get("path").(string)
 	payload := d.Get("payload").(string)
+	if payload == "" {
+		return fmt.Errorf("payload should be given when method is POST")
+	}
 
 	var op string
 
@@ -91,6 +94,9 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 	dcnmClient := m.(*client.Client)
 	path := d.Get("path").(string)
 	payload := d.Get("payload").(string)
+	if payload == "" {
+		return fmt.Errorf("payload should be given when method is PUT")
+	}
 
 	var op string
 
@@ -162,9 +168,20 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 		return nil, err
 	}
 
-	req, err := client.MakeRequest(op, path, jsonPayload, true)
-	if err != nil {
-		return nil, err
+	var req *http.Request
+
+	platform := client.GetPlatform()
+
+	if platform == "nd" {
+		req, err = client.MakeRestNDRequest(op, path, jsonPayload, true)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		req, err = client.MakeRequest(op, path, jsonPayload, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	respCont, resp, err := client.Do(req)
