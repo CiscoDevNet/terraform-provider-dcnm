@@ -59,9 +59,6 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 	dcnmClient := m.(*client.Client)
 	path := d.Get("path").(string)
 	payload := d.Get("payload").(string)
-	if payload == "" {
-		return fmt.Errorf("payload should be given when method is POST")
-	}
 
 	var op string
 
@@ -69,6 +66,12 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 		op = method.(string)
 	} else {
 		op = "POST"
+	}
+
+	if payload == "" {
+		if op == "POST" || op == "POST" {
+			return fmt.Errorf("payload should be given when method is POST")
+		}
 	}
 
 	if d.Get("payload_type").(string) == "json" {
@@ -95,9 +98,6 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 	dcnmClient := m.(*client.Client)
 	path := d.Get("path").(string)
 	payload := d.Get("payload").(string)
-	if payload == "" {
-		return fmt.Errorf("payload should be given when method is PUT")
-	}
 
 	var op string
 
@@ -105,6 +105,12 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 		op = method.(string)
 	} else {
 		op = "PUT"
+	}
+
+	if payload == "" {
+		if op == "POST" || op == "POST" {
+			return fmt.Errorf("payload should be given when method is POST")
+		}
 	}
 
 	if d.Get("payload_type").(string) == "json" {
