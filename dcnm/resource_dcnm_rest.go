@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -170,9 +171,7 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 
 	var req *http.Request
 
-	platform := client.GetPlatform()
-
-	if platform == "nd" {
+	if strings.HasPrefix(path, "/appcenter/cisco/ndfc") {
 		req, err = client.MakeRestNDRequest(op, path, jsonPayload, true)
 		if err != nil {
 			return nil, err
