@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -68,12 +67,6 @@ func resourceDCNMRestCreate(d *schema.ResourceData, m interface{}) error {
 		op = "POST"
 	}
 
-	if payload == "" {
-		if op == "POST" || op == "PUT" {
-			return fmt.Errorf("payload should be given when method is POST/PUT")
-		}
-	}
-
 	if d.Get("payload_type").(string) == "json" {
 		_, err := makeAndDoRest(dcnmClient, path, op, payload)
 		if err != nil {
@@ -105,12 +98,6 @@ func resourceDCNMRestUpdate(d *schema.ResourceData, m interface{}) error {
 		op = method.(string)
 	} else {
 		op = "PUT"
-	}
-
-	if payload == "" {
-		if op == "POST" || op == "PUT" {
-			return fmt.Errorf("payload should be given when method is POST/PUT")
-		}
 	}
 
 	if d.Get("payload_type").(string) == "json" {
@@ -177,7 +164,7 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 
 	var req *http.Request
 
-	if strings.HasPrefix(path, "/appcenter/cisco/ndfc") {
+	if client.GetPlatform() == "nd" {
 		req, err = client.MakeRestNDRequest(op, path, jsonPayload, true)
 		if err != nil {
 			return nil, err
