@@ -1,3 +1,8 @@
+## 1.2.1 (April 6, 2022)
+BUG FIXES:
+- Fix dcnm_policy resource destroy issue and add redeployement of switch to policy destroy workflow.
+- Fix dcnm_rest resource to work with ndfc, accept any URL and not require payload when not needed.
+
 ## 1.2.0 (March 9, 2022)
 IMPROVEMENTS:
 - Add capability to post text file with dcnm_rest resource to support template validation by introducing payload_type attribute
