@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
 	"github.com/ciscoecosystem/dcnm-go-client/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var policyDeployMutex sync.Mutex
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -184,12 +187,13 @@ func resourceDCNMPolicyCreate(d *schema.ResourceData, m interface{}) error {
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
-
+		policyDeployMutex.Lock()
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
 		if err != nil {
 			d.Set("deploy", false)
 			return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 		}
+		policyDeployMutex.Unlock()
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
 	return resourceDCNMPolicyRead(d, m)
@@ -324,12 +328,13 @@ func resourceDCNMPolicyUpdate(d *schema.ResourceData, m interface{}) error {
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
-
+		policyDeployMutex.Lock()
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
 		if err != nil {
 			d.Set("deploy", false)
 			return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 		}
+		policyDeployMutex.Unlock()
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
 	d.SetId(stripQuotes(cont.S("id").String()))
