@@ -38,7 +38,7 @@ func resourceDCNMRest() *schema.Resource {
 
 			"payload": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"payload_type": {
 				Type:     schema.TypeString,
@@ -162,9 +162,18 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 		return nil, err
 	}
 
-	req, err := client.MakeRequest(op, path, jsonPayload, true)
-	if err != nil {
-		return nil, err
+	var req *http.Request
+
+	if client.GetPlatform() == "nd" {
+		req, err = client.MakeRestNDRequest(op, path, jsonPayload, true)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		req, err = client.MakeRequest(op, path, jsonPayload, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	respCont, resp, err := client.Do(req)

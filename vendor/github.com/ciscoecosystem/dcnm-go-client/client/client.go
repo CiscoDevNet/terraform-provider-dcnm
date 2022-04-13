@@ -133,6 +133,42 @@ func GetClient(clientURL, username, password string, expiry int64, options ...Op
 	return clientImpl
 }
 
+func (c *Client) MakeRestNDRequest(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
+	url, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	reqURL := c.baseURL.ResolveReference(url)
+	log.Println("req", reqURL)
+	log.Println("req", reqURL.String())
+
+	var req *http.Request
+	if body == nil {
+		req, err = http.NewRequest(method, reqURL.String(), nil)
+	} else {
+		req, err = http.NewRequest(method, reqURL.String(), bytes.NewBuffer(body.Bytes()))
+	}
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	log.Printf("authenticated: %v\n", authenticated)
+	if authenticated {
+		log.Println("HTTP request ", method, path, req)
+	}
+	if authenticated {
+		req, err = c.injectAuthenticationHeader(req, path)
+		if err != nil {
+			return req, err
+		}
+	}
+	if authenticated {
+		log.Println("HTTP request after injection ", method, path, req)
+	}
+	log.Println("HTTP request after injection ", method, path, req)
+	return req, nil
+}
+
 func (c *Client) MakeRequest(method, path string, body *container.Container, authenticated bool) (*http.Request, error) {
 
 	if c.platform == "nd" && authenticated && !models.IsService(path) && !models.IsTemplate(path) {

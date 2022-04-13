@@ -11,6 +11,7 @@ type Policy struct {
 	Priority            string      `json:"priority,omitempty"`
 	TemplateName        string      `json:"templateName,omitempty"`
 	TemplateContentType string      `json:"templateContentType,omitempty"`
+	Deleted             bool      `json:"deleted,omitempty"`
 	NVPairs             interface{} `json:"nvpairs,omitempty"`
 }
 
@@ -34,6 +35,8 @@ func (policy *Policy) ToMap() (map[string]interface{}, error) {
 	A(policyMap, "description", policy.Description)
 
 	A(policyMap, "templateContentType", policy.TemplateContentType)
+
+	A(policyMap, "deleted", policy.Deleted)
 
 	if policy.NVPairs != nil {
 		A(policyMap, "nvPairs", policy.NVPairs)

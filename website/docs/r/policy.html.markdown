@@ -42,6 +42,7 @@ resource "dcnm_policy" "second" {
 * `entity_type`- (Optional) Type of the entity.i.e."SWITCH".
 * `template_content_type`- (Optional) Template content type of the policy.
 
+#### `Note`: Destroying Policy will re-deploy the switch.
 
 ## Attribute Reference
 
