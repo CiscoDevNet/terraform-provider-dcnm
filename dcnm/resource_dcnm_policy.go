@@ -16,6 +16,7 @@ import (
 )
 
 var policyDeployMutex sync.Mutex
+var policyDeleteMutex sync.Mutex
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -344,6 +345,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
+	policyDeleteMutex.Lock()
 	dcnmClient := m.(*client.Client)
 
 	policy := models.Policy{
@@ -376,7 +378,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId("")
-
+	policyDeleteMutex.Unlock()
 	log.Println("[DEBUG] End of Delete method ", d.Id())
 	return nil
 }
