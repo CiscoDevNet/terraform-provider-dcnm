@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -13,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var policyDeployMutex sync.Mutex
+var policyDeleteMutex sync.Mutex
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -186,12 +190,13 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
-
+		policyDeployMutex.Lock()
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.Errorf("policy is created but failed to deploy with error : %s", err)
 		}
+		policyDeployMutex.Unlock()
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
 	return resourceDCNMPolicyRead(ctx, d, m)
@@ -325,12 +330,13 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
-
+		policyDeployMutex.Lock()
 		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.Errorf("policy is created but failed to deploy with error : %s", err)
 		}
+		policyDeployMutex.Unlock()
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
 	d.SetId(stripQuotes(cont.S("id").String()))
@@ -339,6 +345,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
+	policyDeleteMutex.Lock()
 	dcnmClient := m.(*client.Client)
 
 	policy := models.Policy{
@@ -371,7 +378,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	d.SetId("")
-
+	policyDeleteMutex.Unlock()
 	log.Println("[DEBUG] End of Delete method ", d.Id())
 	return nil
 }
