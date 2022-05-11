@@ -41,6 +41,7 @@ func resourceDCNMInventroy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				Sensitive: true,
 			},
 
 			"auth_protocol": &schema.Schema{
@@ -265,10 +266,10 @@ func getSwitchInfo(cont *container.Container) map[string]interface{} {
 func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Create method ")
 
-	// Get attribute values from Terraform Config
 	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
-
+	
+	// Get attribute values from Terraform Config
 	fabricName := d.Get("fabric_name").(string)
 
 	delSwtiches := make([]string, 0, 1)
@@ -314,7 +315,6 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/test-reachability", strconv.Itoa(fabricID))
 		cont, err := dcnmClient.Save(dUrl, &inv)
 		if err != nil {
-			diags = append(diags, diag.Errorf("error at test reachability for switch %s: %s", ip, err)...)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
 				Detail:   fmt.Sprintf("error at test reachability for switch %s: %s", ip, err),
@@ -327,7 +327,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		if switchM.Selectable != "true" || switchM.Reachable != "true" {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Detail:   fmt.Sprintf("Desired switch is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
+				Detail:   fmt.Sprintf("desired switch is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
 			})
 			continue
 		}
@@ -375,7 +375,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		if migrate {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Detail:   fmt.Sprintf("Timeout occurs before going into normal mode. Hence removing it! %s", ip),
+				Detail:   fmt.Sprintf("timeout occurs before going into normal mode. Hence removing it! %s", ip),
 			})
 			delSwtiches = append(delSwtiches, serialNum)
 			delFlag = true
@@ -414,7 +414,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Detail:   "Some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
+			Detail:   "some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
 		})
 	}
 
@@ -502,7 +502,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 	if d.HasChange("deploy") && !d.Get("deploy").(bool) {
 		d.Set("deploy", true)
-		return append(diags,diag.Errorf("Deployed switches can not be undeployed")...)
+		return append(diags,diag.Errorf("deployed switches can not be undeployed")...)
 	}
 	delSwtiches := make([]string, 0, 1)
 	var delFlag bool
@@ -598,7 +598,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 			if switchM.Selectable != "true" || switchM.Reachable != "true" {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Warning,
-					Detail:   fmt.Sprintf("Desired switch: is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
+					Detail:   fmt.Sprintf("desired switch: is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
 				})
 				continue
 			}
@@ -648,7 +648,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 			if migrate {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Warning,
-					Detail:   fmt.Sprintf("Timeout occurs before going into normal mode. Hence removing it! %s", ip),
+					Detail:   fmt.Sprintf("timeout occurs before going into normal mode. Hence removing it! %s", ip),
 				})
 				delSwtiches = append(delSwtiches, serialNum)
 				delFlag = true
@@ -686,7 +686,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Detail:   "Some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
+				Detail:   "some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
 			})
 		}
 
@@ -870,7 +870,7 @@ func resourceDCNMInventroyDelete(ctx context.Context, d *schema.ResourceData, m 
 		}
 		d.SetId(strings.Join(leftIps, ","))
 
-		return append(diags, diag.Errorf("All switches are not deleted properly")...)
+		return append(diags, diag.Errorf("all switches are not deleted properly")...)
 	}
 	d.SetId("")
 
