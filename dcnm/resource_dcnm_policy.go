@@ -394,9 +394,14 @@ func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
 	fabric := models.G(cont, "fabricName")
 
 	// deploy fabric
-	err = deployswitch(dcnmClient, fabric, serialNumber, 300)
+	// err = deployswitch(dcnmClient, fabric, serialNumber, 300)
+	// if err != nil {
+	// 	return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
+	// }
+	durl := fmt.Sprintf("rest/control/fabrics/%s/config-deploy/%s", fabric, serialNumber)
+	_, err = dcnmClient.SaveAndDeploy(durl)
 	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
+		return err
 	}
 
 	return nil
