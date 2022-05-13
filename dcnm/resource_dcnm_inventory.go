@@ -25,72 +25,72 @@ func resourceDCNMInventroy() *schema.Resource {
 		DeleteContext: resourceDCNMInventroyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"fabric_name": &schema.Schema{
+			"fabric_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				Sensitive: true,
 			},
 
-			"auth_protocol": &schema.Schema{
+			"auth_protocol": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
 			},
 
-			"max_hops": &schema.Schema{
+			"max_hops": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 
-			"second_timeout": &schema.Schema{
+			"second_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 
-			"preserve_config": &schema.Schema{
+			"preserve_config": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "false",
 			},
 
-			"platform": &schema.Schema{
+			"platform": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"switch_config": &schema.Schema{
+			"switch_config": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip": &schema.Schema{
+						"ip": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"switch_name": &schema.Schema{
+						"switch_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"role": &schema.Schema{
+						"role": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -107,25 +107,25 @@ func resourceDCNMInventroy() *schema.Resource {
 							}, false),
 						},
 
-						"switch_db_id": &schema.Schema{
+						"switch_db_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"serial_number": &schema.Schema{
+						"serial_number": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"model": &schema.Schema{
+						"model": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
-						"mode": &schema.Schema{
+						"mode": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -135,19 +135,19 @@ func resourceDCNMInventroy() *schema.Resource {
 				Set: resourceDCNMSwitchConfigHash,
 			},
 
-			"config_timeout": &schema.Schema{
+			"config_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  5,
 			},
 
-			"deploy": &schema.Schema{
+			"deploy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
 
-			"ips": &schema.Schema{
+			"ips": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -183,7 +183,7 @@ func extractFabricID(dcnmClient *client.Client, fabricName string) (int, error) 
 		return 0, err
 	}
 
-	id, err := strconv.Atoi(stripQuotes(cont.S("id").String()))
+	id, err := strconv.Atoi(models.G(cont,"id"))
 	if err != nil {
 		return 0, err
 	}
@@ -195,30 +195,31 @@ func extractSwitchinfo(contList *container.Container) models.Switch {
 
 	cont := contList.Index(0)
 
-	s.Reachable = stripQuotes(cont.S("reachable").String())
-	s.Auth = stripQuotes(cont.S("auth").String())
-	s.Known = stripQuotes(cont.S("known").String())
-	s.Valid = stripQuotes(cont.S("valid").String())
-	s.Selectable = stripQuotes(cont.S("selectable").String())
-	s.SysName = stripQuotes(cont.S("sysName").String())
-	s.IP = stripQuotes(cont.S("ipaddr").String())
-	s.Platform = stripQuotes(cont.S("platform").String())
-	s.Version = stripQuotes(cont.S("version").String())
-	s.LastChange = stripQuotes(cont.S("lastChange").String())
-	s.Hops, _ = strconv.Atoi(stripQuotes(cont.S("hopCount").String()))
-	s.DeviceIndex = stripQuotes(cont.S("deviceIndex").String())
-	s.StatReason = stripQuotes(cont.S("statusReason").String())
+	s.Reachable = models.G(cont,"reachable")
+	s.Auth = models.G(cont,"auth")
+	s.Known = models.G(cont,"known")
+	s.Valid = models.G(cont,"valid")
+	s.Selectable = models.G(cont,"selectable")
+	s.SysName = models.G(cont,"sysName")
+	s.IP = models.G(cont,"ipaddr")
+	s.Platform = models.G(cont,"platform")
+	s.Version = models.G(cont,"version")
+	s.LastChange = models.G(cont,"lastChange")
+	s.Hops, _ = strconv.Atoi(models.G(cont,"hopCount"))
+	s.DeviceIndex = models.G(cont,"deviceIndex")
+	s.StatReason = models.G(cont,"statusReason")
 
 	return s
 }
 
 func extractSerialNumber(cont *container.Container, ip string) (string, error) {
+
 	for i := 0; i < len(cont.Data().([]interface{})); i++ {
 		infoCont := cont.Index(i)
 
-		ipGet := stripQuotes(infoCont.S("ipAddress").String())
+		ipGet := models.G(infoCont,"ipAddress")
 		if ipGet == ip {
-			return stripQuotes(infoCont.S("serialNumber").String()), nil
+			return models.G(infoCont,"serialNumber"), nil
 		}
 	}
 
@@ -253,12 +254,12 @@ func getRemoteSwitch(dcnmClient *client.Client, fabric, ip, serialNum string) (*
 func getSwitchInfo(cont *container.Container) map[string]interface{} {
 
 	sInfo := make(map[string]interface{})
-	sInfo["ip"] = stripQuotes(cont.S("ipAddress").String())
-	sInfo["switch_name"] = stripQuotes(cont.S("logicalName").String())
-	sInfo["switch_db_id"] = stripQuotes(cont.S("switchDbID").String())
-	sInfo["serial_number"] = stripQuotes(cont.S("serialNumber").String())
-	sInfo["model"] = stripQuotes(cont.S("model").String())
-	sInfo["mode"] = stripQuotes(cont.S("mode").String())
+	sInfo["ip"] = models.G(cont,"ipAddress")
+	sInfo["switch_name"] = models.G(cont,"logicalName")
+	sInfo["switch_db_id"] = models.G(cont,"switchDbID")
+	sInfo["serial_number"] = models.G(cont,"serialNumber")
+	sInfo["model"] = models.G(cont,"model")
+	sInfo["mode"] = models.G(cont,"mode")
 
 	return sInfo
 }
@@ -363,7 +364,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 			}
 			serialNum = stripQuotes(cont.S("serialNumber").String())
 
-			if stripQuotes(cont.S("mode").String()) != "Migration" {
+			if models.G(cont,"mode") != "Migration" {
 				time.Sleep(10 * time.Second)
 				configTimeout = configTimeout - 10
 				migrate = false
@@ -382,41 +383,41 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 			continue
 		}
 
-		err = deployswitch(dcnmClient, fabricName, serialNum, configTimeout)
-		if err != nil {
-			delSwtiches = append(delSwtiches, serialNum)
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Detail:   fmt.Sprintf("error at switch deployment %s: %s", ip, err),
-			})
-			delFlag = true
-			continue
-		}
+		// err = deployswitch(dcnmClient, fabricName, serialNum, configTimeout)
+		// if err != nil {
+		// 	delSwtiches = append(delSwtiches, serialNum)
+		// 	diags = append(diags, diag.Diagnostic{
+		// 		Severity: diag.Warning,
+		// 		Detail:   fmt.Sprintf("error at switch deployment %s: %s", ip, err),
+		// 	})
+		// 	delFlag = true
+		// 	continue
+		// }
 
 		deployedIps = append(deployedIps, ip)
 		deployedSerial = append(deployedSerial, serialNum)
 	}
 
-	if delFlag {
-		for _, serial := range delSwtiches {
-			_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
-			if err == nil {
-				durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
-				_, delerr := dcnmClient.Delete(durl)
-				if delerr != nil {
-					log.Println()
-					diags = append(diags, diag.Diagnostic{
-						Severity: diag.Warning,
-						Detail:   fmt.Sprintf("error at deletion of switch %s", err),
-					})
-				}
-			}
-		}
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Detail:   "some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
-		})
-	}
+	// if delFlag {
+	// 	for _, serial := range delSwtiches {
+	// 		_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
+	// 		if err == nil {
+	// 			durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
+	// 			_, delerr := dcnmClient.Delete(durl)
+	// 			if delerr != nil {
+	// 				log.Println()
+	// 				diags = append(diags, diag.Diagnostic{
+	// 					Severity: diag.Warning,
+	// 					Detail:   fmt.Sprintf("error at deletion of switch %s", err),
+	// 				})
+	// 			}
+	// 		}
+	// 	}
+	// 	diags = append(diags, diag.Diagnostic{
+	// 		Severity: diag.Warning,
+	// 		Detail:   "some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
+	// 	})
+	// }
 
 	for _, ip := range deployedIps {
 		for _, val := range switchInfos {
@@ -948,16 +949,16 @@ func deployswitch(client *client.Client, fabric, serialNum string, configTime in
 }
 
 func deployFabric(client *client.Client, fabric string) error {
-	//Step 3 deploy fabric
-	durl := fmt.Sprintf("rest/control/fabrics/%s/config-deploy", fabric)
-	_, err := client.SaveAndDeploy(durl)
-	if err != nil {
-		return err
-	}
+	// //Step 3 deploy fabric
+	// durl := fmt.Sprintf("rest/control/fabrics/%s/config-deploy", fabric)
+	// _, err := client.SaveAndDeploy(durl)
+	// if err != nil {
+	// 	return err
+	// }
 
 	//Step 4 Save configuration
-	durl = fmt.Sprintf("rest/control/fabrics/%s/config-save", fabric)
-	_, err = client.SaveAndDeploy(durl)
+	durl := fmt.Sprintf("rest/control/fabrics/%s/config-save", fabric)
+	_, err := client.SaveAndDeploy(durl)
 	if err != nil {
 		return err
 	}
