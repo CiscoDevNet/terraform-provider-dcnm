@@ -391,7 +391,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("description", stripQuotes(cont.S("intfDescription").String()))
 		}
 		if cont.Exists("mtu") && stripQuotes(cont.S("mtu").String()) != "" {
-			if mtu := stripQuotes(cont.S("mtu").String()); err == nil {
+			if mtu, err := strconv.Atoi(stripQuotes(cont.S("mtu").String())); err == nil {
 				d.Set("mtu", mtu)
 			}
 		}
@@ -443,7 +443,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("dhcp_vrf_3", stripQuotes(cont.S("vrfDhcp3").String()))
 		}
 		if cont.Exists("loopbackId") && stripQuotes(cont.S("loopbackId").String()) != "" {
-			if loopback := stripQuotes(cont.S("loopbackId").String()); err == nil {
+			if loopback, err := strconv.Atoi(stripQuotes(cont.S("loopbackId").String())); err == nil {
 				d.Set("loopback_id", loopback)
 			}
 		}
