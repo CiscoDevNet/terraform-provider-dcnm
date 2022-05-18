@@ -38,9 +38,9 @@ func resourceDCNMInventroy() *schema.Resource {
 			},
 
 			"password": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
 				Sensitive: true,
 			},
 
@@ -183,7 +183,7 @@ func extractFabricID(dcnmClient *client.Client, fabricName string) (int, error) 
 		return 0, err
 	}
 
-	id, err := strconv.Atoi(models.G(cont,"id"))
+	id, err := strconv.Atoi(models.G(cont, "id"))
 	if err != nil {
 		return 0, err
 	}
@@ -195,35 +195,35 @@ func extractSwitchinfo(contList *container.Container) models.Switch {
 
 	cont := contList.Index(0)
 
-	s.Reachable = models.G(cont,"reachable")
-	s.Auth = models.G(cont,"auth")
-	s.Known = models.G(cont,"known")
-	s.Valid = models.G(cont,"valid")
-	s.Selectable = models.G(cont,"selectable")
-	s.SysName = models.G(cont,"sysName")
-	s.IP = models.G(cont,"ipaddr")
-	s.Platform = models.G(cont,"platform")
-	s.Version = models.G(cont,"version")
-	s.LastChange = models.G(cont,"lastChange")
-	s.Hops, _ = strconv.Atoi(models.G(cont,"hopCount"))
-	s.DeviceIndex = models.G(cont,"deviceIndex")
-	s.StatReason = models.G(cont,"statusReason")
+	s.Reachable = models.G(cont, "reachable")
+	s.Auth = models.G(cont, "auth")
+	s.Known = models.G(cont, "known")
+	s.Valid = models.G(cont, "valid")
+	s.Selectable = models.G(cont, "selectable")
+	s.SysName = models.G(cont, "sysName")
+	s.IP = models.G(cont, "ipaddr")
+	s.Platform = models.G(cont, "platform")
+	s.Version = models.G(cont, "version")
+	s.LastChange = models.G(cont, "lastChange")
+	s.Hops, _ = strconv.Atoi(models.G(cont, "hopCount"))
+	s.DeviceIndex = models.G(cont, "deviceIndex")
+	s.StatReason = models.G(cont, "statusReason")
 
 	return s
 }
 
 func extractSerialNumber(cont *container.Container, ip string) (string, error) {
 
-	for i := 0; i < len(cont.Data().([]interface{})); i++ {
-		infoCont := cont.Index(i)
-
-		ipGet := models.G(infoCont,"ipAddress")
-		if ipGet == ip {
-			return models.G(infoCont,"serialNumber"), nil
-		}
+	switchCont, err := cont.SearchInObjectList(
+		func(infoCont *container.Container) bool {
+			return ip == models.G(infoCont, "ipAddress")
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("no inventory found for given ip address")
 	}
 
-	return "", fmt.Errorf("no inventory found for given ip address")
+	return models.G(switchCont, "serialNumber"), nil
 }
 
 func getRemoteSwitch(dcnmClient *client.Client, fabric, ip, serialNum string) (*container.Container, error) {
@@ -234,32 +234,30 @@ func getRemoteSwitch(dcnmClient *client.Client, fabric, ip, serialNum string) (*
 		return nil, err
 	}
 
-	for i := 0; i < len(cont.Data().([]interface{})); i++ {
-		switchCont := cont.Index(i)
-		if ip != "" {
-			ipGet := stripQuotes(switchCont.S("ipAddress").String())
-			if ipGet == ip {
-				return switchCont, nil
+	switchCont, err := cont.SearchInObjectList(
+		func(infoCont *container.Container) bool {
+			if ip != "" {
+				return ip == models.G(infoCont, "ipAddress")
 			}
-		} else {
-			serialGet := stripQuotes(switchCont.S("serialNumber").String())
-			if serialGet == serialNum {
-				return switchCont, nil
-			}
-		}
+			return serialNum == models.G(infoCont, "serialNumber")
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("desired switch not found")
 	}
-	return nil, fmt.Errorf("desired switch not found")
+
+	return switchCont, nil
 }
 
 func getSwitchInfo(cont *container.Container) map[string]interface{} {
 
 	sInfo := make(map[string]interface{})
-	sInfo["ip"] = models.G(cont,"ipAddress")
-	sInfo["switch_name"] = models.G(cont,"logicalName")
-	sInfo["switch_db_id"] = models.G(cont,"switchDbID")
-	sInfo["serial_number"] = models.G(cont,"serialNumber")
-	sInfo["model"] = models.G(cont,"model")
-	sInfo["mode"] = models.G(cont,"mode")
+	sInfo["ip"] = models.G(cont, "ipAddress")
+	sInfo["switch_name"] = models.G(cont, "logicalName")
+	sInfo["switch_db_id"] = models.G(cont, "switchDbID")
+	sInfo["serial_number"] = models.G(cont, "serialNumber")
+	sInfo["model"] = models.G(cont, "model")
+	sInfo["mode"] = models.G(cont, "mode")
 
 	return sInfo
 }
@@ -269,7 +267,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
-	
+
 	// Get attribute values from Terraform Config
 	fabricName := d.Get("fabric_name").(string)
 
@@ -355,23 +353,23 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		var serialNum string
 		configTimeout := (d.Get("config_timeout").(int)) * 60
 		migrate := true
-
-		for configTimeout > 0 {
+		statusCheckInit := time.Now()
+		configTime := time.Now()
+		for configTime.Sub(statusCheckInit) <= (time.Duration(configTimeout) * time.Second) {
 			cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 			if err != nil {
 				log.Println("error at get call for switch in creation :", ip, err)
 				continue
 			}
-			serialNum = stripQuotes(cont.S("serialNumber").String())
+			serialNum = models.G(cont, "serialNumber")
 
-			if models.G(cont,"mode") != "Migration" {
+			if models.G(cont, "mode") != "Migration" {
 				time.Sleep(10 * time.Second)
-				configTimeout = configTimeout - 10
 				migrate = false
 				break
 			}
 			time.Sleep(5 * time.Second)
-			configTimeout = configTimeout - 5
+			configTime = time.Now()
 		}
 		if migrate {
 			diags = append(diags, diag.Diagnostic{
@@ -423,30 +421,27 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		for _, val := range switchInfos {
 			sInfo := val.(map[string]interface{})
 
-			if sInfo["ip"].(string) == ip {
-				if sInfo["role"] != "" {
-					cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
-					if err != nil {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Warning,
-							Detail:   fmt.Sprintf("error at get call for switch in creation %s: %s", ip, err),
-						})
-						continue
-					}
-					serialNum := stripQuotes(cont.S("serialNumber").String())
+			if sInfo["ip"].(string) == ip && sInfo["role"] != "" {
+				cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Detail:   fmt.Sprintf("error at get call for switch in creation %s: %s", ip, err),
+					})
+					continue
+				}
+				serialNum := models.G(cont,"serialNumber")
+				durl := "/rest/control/switches/roles"
+				sRole := models.SwitchRole{}
+				sRole.Role = roleMappingFunc(sInfo["role"].(string))
+				sRole.SerialNumber = serialNum
 
-					durl := "/rest/control/switches/roles"
-					sRole := models.SwitchRole{}
-					sRole.Role = roleMappingFunc(sInfo["role"].(string))
-					sRole.SerialNumber = serialNum
-
-					_, err = dcnmClient.SaveForAttachment(durl, &sRole)
-					if err != nil {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Warning,
-							Detail:   fmt.Sprintf("error at switch role assignment %s: %s", ip, err),
-						})
-					}
+				_, err = dcnmClient.SaveForAttachment(durl, &sRole)
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Detail:   fmt.Sprintf("error at switch role assignment %s: %s", ip, err),
+					})
 				}
 			}
 		}
@@ -455,7 +450,6 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 	delFlag = false
 	err = deployFabric(dcnmClient, fabricName)
 	if err != nil {
-		log.Println()
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Detail:   fmt.Sprintf("error at fabric deployment: %s", err),
@@ -484,26 +478,26 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("ips", ips)
 
 	if len(ips) == 0 {
-		return append(diags,diag.Errorf("none of the switches are discovered and deployed on the fabric, some internal issue in switches")...)
+		return append(diags, diag.Errorf("none of the switches are discovered and deployed on the fabric, some internal issue in switches")...)
 	}
 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Create method ", d.Id())
-	return append(diags, resourceDCNMInventroyRead(ctx,d, m)...)
+	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
 }
 
 func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Update method ", d.Id())
 
-	var diags diag.Diagnostics 
+	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
 
 	if d.HasChange("deploy") && !d.Get("deploy").(bool) {
 		d.Set("deploy", true)
-		return append(diags,diag.Errorf("deployed switches can not be undeployed")...)
+		return append(diags, diag.Errorf("deployed switches can not be undeployed")...)
 	}
 	delSwtiches := make([]string, 0, 1)
 	var delFlag bool
@@ -699,7 +693,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 				Detail:   fmt.Sprintf("error at fabric deployment: %s", err),
 			})
 			delFlag = true
- 		}
+		}
 
 		if delFlag {
 			for _, serial := range deployedSerial {
@@ -766,10 +760,10 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Update method ", d.Id())
-	return append(diags,resourceDCNMInventroyRead(ctx, d, m)...)
+	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
 }
 
-func resourceDCNMInventroyRead(ctx context.Context,d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventroyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Read method ", d.Id())
 
 	dcnmClient := m.(*client.Client)

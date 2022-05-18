@@ -189,18 +189,26 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
-		log.Println("[DEBUG] Begining Deployment ", d.Id())
-		policyDeployMutex.Lock()
-		_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policy.PolicyId)
+		err := deployPolicy(dcnmClient, policy.PolicyId)
 		if err != nil {
-			d.Set("deploy", false)
-			return diag.Errorf("policy is created but failed to deploy with error : %s", err)
+			d.Set("deploy",false)
+			return diag.FromErr(err)
 		}
-		policyDeployMutex.Unlock()
-		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
 	return resourceDCNMPolicyRead(ctx, d, m)
 
+}
+
+func deployPolicy(client *client.Client, policyId string) error {
+	log.Println("[DEBUG] Begining Deployment ", policyId)
+	policyDeployMutex.Lock()
+	_, err := client.SaveDeploy("/rest/control/policies/deploy", policyId)
+	if err != nil {
+		return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
+	}
+	policyDeployMutex.Unlock()
+	log.Println("[DEBUG] End of Deployment ", policyId)
+	return nil
 }
 
 func getAllPolicy(client *client.Client, policyId string) (*container.Container, error) {
@@ -345,7 +353,6 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 }
 func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
-	policyDeleteMutex.Lock()
 	dcnmClient := m.(*client.Client)
 
 	policy := models.Policy{
@@ -372,32 +379,35 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	err = deploySwitchFabric(dcnmClient, d.Get("serial_number").(string))
-	if err != nil {
-		return diag.FromErr(err)
+	// Deploy the policy
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
+		err := deployPolicy(dcnmClient, policy.PolicyId)
+		if err != nil {
+			d.Set("deploy",false)
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId("")
-	policyDeleteMutex.Unlock()
 	log.Println("[DEBUG] End of Delete method ", d.Id())
 	return nil
 }
 
-func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
-	// get fabric by switch serial number
-	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
-	cont, err := dcnmClient.GetviaURL(url)
-	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
-	}
+// func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
+// 	// get fabric by switch serial number
+// 	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
+// 	cont, err := dcnmClient.GetviaURL(url)
+// 	if err != nil {
+// 		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
+// 	}
 
-	fabric := models.G(cont, "fabricName")
+// 	fabric := models.G(cont, "fabricName")
 
-	// deploy fabric
-	err = deployswitch(dcnmClient, fabric, serialNumber, 300)
-	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
-	}
+// 	// deploy fabric
+// 	err = deployswitch(dcnmClient, fabric, serialNumber, 300)
+// 	if err != nil {
+// 		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
