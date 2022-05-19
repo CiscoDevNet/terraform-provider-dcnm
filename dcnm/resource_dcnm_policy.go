@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var policyDeployMutex sync.Mutex
-
-var policyDeleteMutex sync.Mutex
+var policyDeployMutexMap = make(map[string]*sync.Mutex, 0)
+var policyDeleteMutexMap = make(map[string]*sync.Mutex, 0)
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -190,7 +189,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
-		err := deployPolicy(dcnmClient, policy.PolicyId)
+		err := deployPolicy(dcnmClient, policy.PolicyId, serialNumber)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.FromErr(err)
@@ -266,9 +265,9 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err != nil {
 		d.SetId("")
 		if cont != nil {
-			return diag.Errorf(cont.String())
+			log.Println(cont.String())
 		}
-		return diag.FromErr(err)
+		log.Println(cont.String())
 	}
 	setPolicyAttributes(d, cont)
 	d.SetId(stripQuotes(cont.S("id").String()))
@@ -326,7 +325,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
-		err := deployPolicy(dcnmClient, policy.PolicyId)
+		err := deployPolicy(dcnmClient, policy.PolicyId, serialNumber)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.FromErr(err)
@@ -364,12 +363,16 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	policyDeleteMutex.Lock()
-	err = deploySwitchFabric(dcnmClient, d.Get("serial_number").(string))
-	if err != nil {
-		return diag.FromErr(err)
+	if _, ok := policyDeleteMutexMap[policy.SerialNumber]; !ok {
+		policyDeleteMutexMap[policy.SerialNumber] = &sync.Mutex{}
 	}
-	policyDeleteMutex.Unlock()
+
+	policyDeleteMutexMap[policy.SerialNumber].Lock()
+	_, err = getAllPolicy(dcnmClient, policy.PolicyId)
+	if err == nil {
+		_ = deploySwitchFabric(dcnmClient, d.Get("serial_number").(string))
+	}
+	policyDeleteMutexMap[policy.SerialNumber].Unlock()
 
 	d.SetId("")
 	log.Println("[DEBUG] End of Delete method ", d.Id())
@@ -395,14 +398,19 @@ func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
 	return nil
 }
 
-func deployPolicy(dcnmClient *client.Client, policyId string) error {
+func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
 	log.Println("[DEBUG] Begining Deployment ", policyId)
-	policyDeployMutex.Lock()
+
+	if _, ok := policyDeployMutexMap[serialNumber]; !ok {
+		policyDeployMutexMap[serialNumber] = &sync.Mutex{}
+	}
+
+	policyDeployMutexMap[serialNumber].Lock()
 	_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policyId)
 	if err != nil {
 		return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 	}
-	policyDeployMutex.Unlock()
+	policyDeployMutexMap[serialNumber].Unlock()
 	log.Println("[DEBUG] End of Deployment ", policyId)
 	return nil
 }
