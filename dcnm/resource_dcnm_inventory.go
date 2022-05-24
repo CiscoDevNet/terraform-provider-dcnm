@@ -483,26 +483,26 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 	d.Set("ips", ips)
 
 	if len(ips) == 0 {
-		return append(diags,diag.Errorf("none of the switches are discovered and deployed on the fabric, some internal issue in switches")...)
+		return append(diags, diag.Errorf("none of the switches are discovered and deployed on the fabric, some internal issue in switches")...)
 	}
 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Create method ", d.Id())
-	return append(diags, resourceDCNMInventroyRead(ctx,d, m)...)
+	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
 }
 
 func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Update method ", d.Id())
 
-	var diags diag.Diagnostics 
+	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
 
 	if d.HasChange("deploy") && !d.Get("deploy").(bool) {
 		d.Set("deploy", true)
-		return append(diags,diag.Errorf("Deployed switches can not be undeployed")...)
+		return append(diags, diag.Errorf("Deployed switches can not be undeployed")...)
 	}
 	delSwtiches := make([]string, 0, 1)
 	var delFlag bool
@@ -698,7 +698,7 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 				Detail:   fmt.Sprintf("error at fabric deployment: %s", err),
 			})
 			delFlag = true
- 		}
+		}
 
 		if delFlag {
 			for _, serial := range deployedSerial {
@@ -765,12 +765,12 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Update method ", d.Id())
-	return append(diags,resourceDCNMInventroyRead(ctx, d, m)...)
+	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
 }
 
-func resourceDCNMInventroyRead(ctx context.Context,d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventroyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Read method ", d.Id())
-
+	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
@@ -822,7 +822,7 @@ func resourceDCNMInventroyRead(ctx context.Context,d *schema.ResourceData, m int
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Read method ", d.Id())
-	return nil
+	return diags
 }
 
 func resourceDCNMInventroyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
