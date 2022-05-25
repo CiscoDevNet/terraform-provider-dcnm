@@ -266,7 +266,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 	log.Println("[DEBUG] Begining Create method ")
 
 	// Get attribute values from Terraform Config
-	var diags diag.Diagnostics
+	diags := diag.Diagnostics{}
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
@@ -495,7 +495,7 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Update method ", d.Id())
 
-	var diags diag.Diagnostics
+	diags := diag.Diagnostics{}
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
@@ -770,7 +770,8 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceDCNMInventroyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Read method ", d.Id())
-	var diags diag.Diagnostics
+
+	diags := diag.Diagnostics{}
 	dcnmClient := m.(*client.Client)
 
 	fabricName := d.Get("fabric_name").(string)
