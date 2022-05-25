@@ -16,7 +16,6 @@ import (
 )
 
 var policyDeployMutexMap = make(map[string]*sync.Mutex, 0)
-var policyDeleteMutexMap = make(map[string]*sync.Mutex, 0)
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -363,16 +362,16 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	if _, ok := policyDeleteMutexMap[policy.SerialNumber]; !ok {
-		policyDeleteMutexMap[policy.SerialNumber] = &sync.Mutex{}
+	if _, ok := policyDeployMutexMap[policy.SerialNumber]; !ok {
+		policyDeployMutexMap[policy.SerialNumber] = &sync.Mutex{}
 	}
 
-	policyDeleteMutexMap[policy.SerialNumber].Lock()
+	policyDeployMutexMap[policy.SerialNumber].Lock()
 	_, err = getAllPolicy(dcnmClient, policy.PolicyId)
 	if err == nil {
 		_ = deploySwitchFabric(dcnmClient, d.Get("serial_number").(string))
 	}
-	policyDeleteMutexMap[policy.SerialNumber].Unlock()
+	policyDeployMutexMap[policy.SerialNumber].Unlock()
 
 	d.SetId("")
 	log.Println("[DEBUG] End of Delete method ", d.Id())
