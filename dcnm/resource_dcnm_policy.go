@@ -105,6 +105,7 @@ func IsEmpty() schema.SchemaValidateFunc {
 		return
 	}
 }
+
 func resourceDCNMPolicyImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	log.Println("[DEBUG] Begining Importer ", d.Id())
 	dcnmClient := m.(*client.Client)
@@ -122,11 +123,13 @@ func resourceDCNMPolicyImporter(d *schema.ResourceData, m interface{}) ([]*schem
 	return []*schema.ResourceData{stateImport}, nil
 
 }
+
 func GetID(description string) string {
 	policyId := strings.Split(description, " ")[0]
 	id := strings.Split(policyId, "-")[1]
 	return id
 }
+
 func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Create method")
 
@@ -164,7 +167,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		Id := stripQuotes(cont.S("id").String())
+		Id := models.G(cont, "id")
 		policy.PolicyId = "POLICY-" + Id
 		d.SetId(Id)
 
@@ -178,7 +181,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 			return diag.FromErr(err)
 		}
 		// Get the id from resource
-		response := stripQuotes(cont.S("successList").String())
+		response := models.G(cont, "successList")
 		var info []map[string]interface{}
 		_ = json.Unmarshal([]byte(response), &info)
 		message := info[0]["message"].(string)
@@ -207,34 +210,35 @@ func getAllPolicy(client *client.Client, policyId string) (*container.Container,
 	}
 	return cont, nil
 }
+
 func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
-	d.Set("policy_id", stripQuotes(cont.S("policyId").String()))
-	d.Set("serial_number", stripQuotes(cont.S("serialNumber").String()))
+	d.Set("policy_id", models.G(cont, "policyId"))
+	d.Set("serial_number", models.G(cont, "serialNumber"))
 
 	if cont.Exists("source") {
-		d.Set("source", stripQuotes(cont.S("source").String()))
+		d.Set("source", models.G(cont, "source"))
 	}
 	if cont.Exists("description") {
-		d.Set("description", stripQuotes(cont.S("description").String()))
+		d.Set("description", models.G(cont, "description"))
 	}
 	if cont.Exists("entityType") {
-		d.Set("entity_type", stripQuotes(cont.S("entityType").String()))
+		d.Set("entity_type", models.G(cont, "entityType"))
 	}
 	if cont.Exists("entityName") {
-		d.Set("entity_name", stripQuotes(cont.S("entityName").String()))
+		d.Set("entity_name", models.G(cont, "entityName"))
 	}
 	if cont.Exists("templateName") {
-		d.Set("template_name", stripQuotes(cont.S("templateName").String()))
+		d.Set("template_name", models.G(cont, "templateName"))
 	}
 	if cont.Exists("templateContentType") {
-		d.Set("template_content_type", stripQuotes(cont.S("templateContentType").String()))
+		d.Set("template_content_type", models.G(cont, "templateContentType"))
 	}
 	if cont.Exists("priority") {
-		d.Set("priority", stripQuotes(cont.S("priority").String()))
+		d.Set("priority", models.G(cont, "priority"))
 	}
 	var strByte []byte
 	if cont.Exists("nvPairs") {
-		strJson := stripQuotes(cont.S("nvPairs").String())
+		strJson := models.G(cont, "nvPairs")
 		strByte = []byte(strJson)
 		var nvPair map[string]interface{}
 		json.Unmarshal(strByte, &nvPair)
@@ -260,7 +264,10 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	dcnmClient := m.(*client.Client)
 
 	dn := d.Id()
-	policyId := "POLICY-" + dn
+	policyId := dn
+	if dcnmClient.GetPlatform() != "nd" {
+		policyId = "POLICY-" + dn
+	}
 	cont, err := getAllPolicy(dcnmClient, policyId)
 	if err != nil {
 		d.SetId("")
@@ -268,9 +275,10 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 			log.Println(cont.String())
 		}
 		log.Println(cont.String())
+		return nil
 	}
 	setPolicyAttributes(d, cont)
-	d.SetId(stripQuotes(cont.S("id").String()))
+	d.SetId(models.G(cont, "id"))
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
 
@@ -290,12 +298,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	policy.TemplateName = templateName
 	policy.Deleted = false
 	policy.NVPairs = nvPairMap
-	if policyId, ok := d.GetOk("policy_id"); ok {
-		policy.PolicyId = policyId.(string)
-
-	} else {
-		policy.PolicyId = "POLICY-" + d.Id()
-	}
+	policy.PolicyId = "POLICY-" + d.Id()
 	if source, ok := d.GetOk("source"); ok {
 		policy.Source = source.(string)
 	}
@@ -331,7 +334,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 			return diag.FromErr(err)
 		}
 	}
-	d.SetId(stripQuotes(cont.S("id").String()))
+	d.SetId(models.G(cont, "id"))
 	return resourceDCNMPolicyRead(ctx, d, m)
 
 }
@@ -341,6 +344,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	policy := models.Policy{
 		Id:           d.Id(),
+		PolicyId:     "POLICY-" + d.Id(),
 		SerialNumber: d.Get("serial_number").(string),
 		TemplateName: d.Get("template_name").(string),
 		NVPairs:      d.Get("template_props").(map[string]interface{}),
@@ -348,11 +352,6 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	policy.NVPairs = d.Get("template_props").(map[string]interface{})
-	if policyId, ok := d.GetOk("policy_id"); ok {
-		policy.PolicyId = policyId.(string)
-	} else {
-		policy.PolicyId = "POLICY-" + d.Id()
-	}
 
 	dUrl := fmt.Sprintf("/rest/control/policies/%s", policy.PolicyId)
 	cont, err := dcnmClient.Update(dUrl, &policy)
@@ -370,7 +369,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	policyDeleteMutexMap[policy.SerialNumber].Lock()
 	_, err = getAllPolicy(dcnmClient, policy.PolicyId)
 	if err == nil {
-		_ = deploySwitchFabric(dcnmClient, d.Get("serial_number").(string))
+		recurSwitchDeployment(dcnmClient, d.Get("serial_number").(string))
 	}
 	policyDeleteMutexMap[policy.SerialNumber].Unlock()
 
@@ -396,6 +395,13 @@ func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
 	}
 
 	return nil
+}
+
+func recurSwitchDeployment(dcnmClient *client.Client, serialNumber string) {
+	err := deploySwitchFabric(dcnmClient, serialNumber)
+	if err != nil {
+		recurSwitchDeployment(dcnmClient, serialNumber)
+	}
 }
 
 func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
