@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 
@@ -337,12 +338,23 @@ func (c *Client) authenticate() error {
 func (c *Client) Do(req *http.Request) (*container.Container, *http.Response, error) {
 	log.Println("[DEBUG] Begining Do method ", req.URL.String())
 
+	reqDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
-	log.Println("[DEBUG] HTTP Request ", req.Method, req.URL.String())
-	log.Println("[DEBUG] HTTP Response ", resp.StatusCode, resp)
+
+	respDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("[DEBUG] \n--[ HTTP Request ]------------------------------------ \n %s\n---------------------------------------------\n", string(reqDump))
+	log.Printf("[DEBUG] \n--[ HTTP Response ]----------------------------------- \n %s\n---------------------------------------------\n", string(respDump))
 
 	bodybytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -350,7 +362,6 @@ func (c *Client) Do(req *http.Request) (*container.Container, *http.Response, er
 	}
 	bodystrings := string(bodybytes)
 	resp.Body.Close()
-	log.Println("[DEBUG] HTTP Response unique string ", req.Method, req.URL.String(), bodystrings)
 
 	obj, err := container.ParseJSON(bodybytes)
 	if err != nil && resp.StatusCode != 200 {

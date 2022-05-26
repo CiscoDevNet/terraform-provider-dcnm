@@ -914,3 +914,25 @@ func ParseJSONBuffer(buffer io.Reader) (*Container, error) {
 func (g *Container) MarshalJSON() ([]byte, error) {
 	return json.Marshal(g.Data())
 }
+
+//--[Custom Functions]-------------------------------------------------------------------------------
+
+func (g *Container) SearchInObjectList(condition func(*Container) bool) (*Container, error) {
+	children := g.Children()
+	for _, obj := range children {
+		if condition(obj) {
+			return obj, nil
+		}
+	}
+	return nil, fmt.Errorf("Object Not found")
+}
+
+func (g *Container) SearchInObjectListWithIndex(condition func(*Container) bool) (*Container, int, error) {
+	children := g.Children()
+	for index, obj := range children {
+		if condition(obj) {
+			return obj, index, nil
+		}
+	}
+	return nil, -1, fmt.Errorf("Object Not found")
+}
