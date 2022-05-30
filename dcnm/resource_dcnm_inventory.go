@@ -265,8 +265,6 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 
 	fabricName := d.Get("fabric_name").(string)
 
-	delSwtiches := make([]string, 0, 1)
-
 	ips := make([]string, 0, 1)
 	discoveredIps := make([]string, 0, 1)
 
@@ -1023,7 +1021,7 @@ func testReachabilityRoutine(wg *sync.WaitGroup, client *client.Client, inv *mod
 	if switchM.Selectable != "true" || switchM.Reachable != "true" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Detail:   fmt.Sprintf("Desired switch is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
+			Detail:   fmt.Sprintf("Desired switch is not reachable or not selectable or invalid user/password or bad authentication protocol %s", inv.SeedIP),
 		})
 		diagsChan <- diags
 		return
