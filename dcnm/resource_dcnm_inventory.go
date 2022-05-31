@@ -1037,7 +1037,7 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 	var serialNum string
 	migrate := true
 	initTime := time.Now()
-	for initTime.Sub(time.Now()) > (time.Duration(configTimeout) * time.Second) {
+	for time.Until(initTime) < (time.Duration(configTimeout) * time.Second) {
 		cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 		if err != nil {
 			log.Println("error at get call for switch in creation :", ip, err)
@@ -1069,8 +1069,10 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 			Detail:   fmt.Sprintf("error at switch deployment %s: %s", ip, err),
 		})
 		diags = append(diags, deleteSwitchFromFabric(dcnmClient, serialNum, fabricName)...)
+		prepareDiagsChan <- diags
+		return
 	}
-
+	prepareDiagsChan <- diags
 	deployedIPChan <- ip
 }
 
