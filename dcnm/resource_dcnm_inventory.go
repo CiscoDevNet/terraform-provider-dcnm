@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
+
 func resourceDCNMInventroy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDCNMInventroyCreate,
@@ -411,7 +413,6 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
-
 	err = deployFabric(dcnmClient, fabricName)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -419,8 +420,6 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 			Summary:  fmt.Sprintf("error at fabric deployment: %s", err),
 		})
 	}
-
-	
 
 	// if delFlag {
 	// 	for _, serial := range deployedSerial {
@@ -896,12 +895,17 @@ func deployswitch(client *client.Client, fabric, serialNum string, configTime in
 	}
 
 	// Step 2 deploy switch into fabric
+	if _, ok := switchDeployMutexMap[serialNum]; !ok {
+		switchDeployMutexMap[serialNum] = &sync.Mutex{}
+	}
 
+	switchDeployMutexMap[serialNum].Lock()
 	durl = fmt.Sprintf("rest/control/fabrics/%s/config-deploy/%s", fabric, serialNum)
 	_, err := client.SaveAndDeploy(durl)
 	if err != nil {
 		return err
 	}
+	switchDeployMutexMap[serialNum].Unlock()
 
 	return nil
 }
@@ -1060,6 +1064,7 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 		})
 	}
 
+	
 	err := deployswitch(dcnmClient, fabricName, serialNum, configTimeout)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{

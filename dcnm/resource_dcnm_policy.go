@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var policyDeployMutexMap = make(map[string]*sync.Mutex, 0)
-
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDCNMPolicyCreate,
@@ -361,16 +359,16 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(err)
 	}
 
-	if _, ok := policyDeployMutexMap[policy.SerialNumber]; !ok {
-		policyDeployMutexMap[policy.SerialNumber] = &sync.Mutex{}
+	if _, ok := switchDeployMutexMap[policy.SerialNumber]; !ok {
+		switchDeployMutexMap[policy.SerialNumber] = &sync.Mutex{}
 	}
 
-	policyDeployMutexMap[policy.SerialNumber].Lock()
+	switchDeployMutexMap[policy.SerialNumber].Lock()
 	_, err = getAllPolicy(dcnmClient, policy.PolicyId)
 	if err == nil {
 		recurSwitchDeployment(dcnmClient, d.Get("serial_number").(string))
 	}
-	policyDeployMutexMap[policy.SerialNumber].Unlock()
+	switchDeployMutexMap[policy.SerialNumber].Unlock()
 
 	d.SetId("")
 	log.Println("[DEBUG] End of Delete method ", d.Id())
@@ -406,16 +404,16 @@ func recurSwitchDeployment(dcnmClient *client.Client, serialNumber string) {
 func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
 	log.Println("[DEBUG] Begining Deployment ", policyId)
 
-	if _, ok := policyDeployMutexMap[serialNumber]; !ok {
-		policyDeployMutexMap[serialNumber] = &sync.Mutex{}
+	if _, ok := switchDeployMutexMap[serialNumber]; !ok {
+		switchDeployMutexMap[serialNumber] = &sync.Mutex{}
 	}
 
-	policyDeployMutexMap[serialNumber].Lock()
+	switchDeployMutexMap[serialNumber].Lock()
 	_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policyId)
 	if err != nil {
 		return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 	}
-	policyDeployMutexMap[serialNumber].Unlock()
+	switchDeployMutexMap[serialNumber].Unlock()
 	log.Println("[DEBUG] End of Deployment ", policyId)
 	return nil
 }
