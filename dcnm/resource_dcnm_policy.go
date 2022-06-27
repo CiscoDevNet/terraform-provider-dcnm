@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
-
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDCNMPolicyCreate,

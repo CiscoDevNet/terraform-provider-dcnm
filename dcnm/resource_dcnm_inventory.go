@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
@@ -14,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
 
 func resourceDCNMInventroy() *schema.Resource {
 	return &schema.Resource{
