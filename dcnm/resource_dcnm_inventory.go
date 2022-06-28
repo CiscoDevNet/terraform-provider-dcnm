@@ -1000,6 +1000,8 @@ func testReachabilityRoutine(wg *sync.WaitGroup, client *client.Client, inv mode
 		return
 	}
 
+	log.Printf("[DEBUG] Switch is discovered: %v", inv)
+
 	switchM := extractSwitchinfo(cont)
 
 	if switchM.Selectable != "true" || switchM.Reachable != "true" {
