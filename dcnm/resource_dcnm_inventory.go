@@ -856,7 +856,7 @@ func deployswitch(client *client.Client, fabric, serialNum string, configTime in
 		time.Sleep(time.Duration(timeLeft) * time.Second)
 	}
 	if !configDone {
-		return fmt.Errorf("Timeout occurs before completion of switch configuration")
+		return fmt.Errorf("timeout occurs before completion of switch configuration")
 	}
 
 	//Step 2 deploy switch into fabric
