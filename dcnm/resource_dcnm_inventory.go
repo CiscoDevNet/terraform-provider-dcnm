@@ -811,7 +811,7 @@ func checkDeploy(client *client.Client, fabric, serialNum string) (bool, error) 
 	for i := 0; i < totalSwitch; i++ {
 		switchCont := cont.Index(i)
 		if stripQuotes(switchCont.S("switchId").String()) == serialNum {
-			if stripQuotes(switchCont.S("status").String()) == "In-Sync" {
+			if status := models.G(switchCont, "status"); status == "In-Sync" || status == "Success" {
 				return true, nil
 			}
 		}

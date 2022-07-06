@@ -335,40 +335,42 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	return resourceDCNMPolicyRead(ctx, d, m)
 
 }
+
 func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	log.Println("[DEBUG] Begining Delete method ", d.Id())
+	log.Println("[DEBUG] Beginning Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
+	serialNumber := d.Get("serial_number").(string)
+	policyId := "POLICY-" + d.Id()
 
-	policy := models.Policy{
-		Id:           d.Id(),
-		PolicyId:     "POLICY-" + d.Id(),
-		SerialNumber: d.Get("serial_number").(string),
-		TemplateName: d.Get("template_name").(string),
-		NVPairs:      d.Get("template_props").(map[string]interface{}),
-		Deleted:      true,
+	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
+	cont, err := dcnmClient.GetviaURL(url)
+	if err != nil {
+		return diag.Errorf("error deploying fabric after policy deletion: %w", err)
 	}
+	fabric := models.G(cont, "fabricName")
 
-	policy.NVPairs = d.Get("template_props").(map[string]interface{})
-
-	dUrl := fmt.Sprintf("/rest/control/policies/%s", policy.PolicyId)
-	cont, err := dcnmClient.Update(dUrl, &policy)
+	dUrl := fmt.Sprintf("/rest/control/policies/%s", policyId)
+	cont, err = dcnmClient.Delete(dUrl)
 	if err != nil {
 		if cont != nil {
 			return diag.Errorf(cont.String())
 		}
-		return diag.FromErr(err)
+		return diag.Errorf("error while destroying policy %v", err)
 	}
 
-	if _, ok := switchDeployMutexMap[policy.SerialNumber]; !ok {
-		switchDeployMutexMap[policy.SerialNumber] = &sync.Mutex{}
+	if _, ok := switchDeployMutexMap[serialNumber]; !ok {
+		switchDeployMutexMap[serialNumber] = &sync.Mutex{}
 	}
 
-	switchDeployMutexMap[policy.SerialNumber].Lock()
-	_, err = getAllPolicy(dcnmClient, policy.PolicyId)
-	if err == nil {
-		recurSwitchDeployment(dcnmClient, d.Get("serial_number").(string))
+	switchDeployMutexMap[serialNumber].Lock()
+	isDeployed, err := checkDeploy(dcnmClient, fabric, serialNumber)
+	if err != nil {
+		return diag.Errorf("error deploying fabric after policy deletion: %w", err)
 	}
-	switchDeployMutexMap[policy.SerialNumber].Unlock()
+	if !isDeployed {
+		recurSwitchDeployment(dcnmClient, serialNumber)
+	}
+	switchDeployMutexMap[serialNumber].Unlock()
 
 	d.SetId("")
 	log.Println("[DEBUG] End of Delete method ", d.Id())
