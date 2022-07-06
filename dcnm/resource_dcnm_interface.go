@@ -5,7 +5,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -852,11 +851,6 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 		intfDeploy.SerialNumber = intfConfig.SerialNumber
 		intfDeploy.Name = intfConfig.InterfaceName
 
-		if _, ok := switchDeployMutexMap[intfConfig.SerialNumber]; !ok {
-			switchDeployMutexMap[intfConfig.SerialNumber] = &sync.Mutex{}
-		}
-
-		switchDeployMutexMap[intfConfig.SerialNumber].Lock()
 		cont, err = dcnmClient.SaveForAttachment("/rest/interface/deploy", &intfDeploy)
 		if err != nil {
 			errorMsg, flag := checkIntfErrors(cont)
@@ -865,7 +859,6 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 				return fmt.Errorf("interface is created but failed to deploy with error : %s", errorMsg)
 			}
 		}
-		switchDeployMutexMap[intfConfig.SerialNumber].Unlock()
 
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
@@ -1258,11 +1251,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 		intfDeploy := models.InterfaceDelete{}
 		intfDeploy.SerialNumber = intfConfig.SerialNumber
 		intfDeploy.Name = intfConfig.InterfaceName
-		if _, ok := switchDeployMutexMap[intfDeploy.SerialNumber]; !ok {
-			switchDeployMutexMap[intfDeploy.SerialNumber] = &sync.Mutex{}
-		}
 
-		switchDeployMutexMap[intfDeploy.SerialNumber].Lock()
 		cont, err = dcnmClient.SaveForAttachment("/rest/interface/deploy", &intfDeploy)
 		if err != nil {
 			errorMsg, flag := checkIntfErrors(cont)
@@ -1271,7 +1260,6 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 				return fmt.Errorf("interface is created but failed to deploy with error : %s", errorMsg)
 			}
 		}
-		switchDeployMutexMap[intfDeploy.SerialNumber].Unlock()
 
 		log.Println("[DEBUG] End of Deployment ", d.Id())
 	}
@@ -1340,11 +1328,6 @@ func resourceDCNMInterfaceDelete(d *schema.ResourceData, m interface{}) error {
 	intfDel.SerialNumber = serialNum
 	intfDel.Name = dn
 
-	if _, ok := switchDeployMutexMap[serialNum]; !ok {
-		switchDeployMutexMap[serialNum] = &sync.Mutex{}
-	}
-
-	switchDeployMutexMap[serialNum].Lock()
 	cont, err := dcnmClient.DeleteWithPayload("/rest/interface", &intfDel)
 	if err != nil {
 		if cont != nil {
@@ -1356,7 +1339,6 @@ func resourceDCNMInterfaceDelete(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	}
-	switchDeployMutexMap[serialNum].Lock()
 
 	d.SetId("")
 
