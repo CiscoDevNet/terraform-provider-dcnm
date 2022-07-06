@@ -406,16 +406,10 @@ func recurSwitchDeployment(dcnmClient *client.Client, serialNumber string) {
 func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
 	log.Println("[DEBUG] Begining Deployment ", policyId)
 
-	if _, ok := switchDeployMutexMap[serialNumber]; !ok {
-		switchDeployMutexMap[serialNumber] = &sync.Mutex{}
-	}
-
-	switchDeployMutexMap[serialNumber].Lock()
 	_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policyId)
 	if err != nil {
 		return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 	}
-	switchDeployMutexMap[serialNumber].Unlock()
 	log.Println("[DEBUG] End of Deployment ", policyId)
 	return nil
 }
