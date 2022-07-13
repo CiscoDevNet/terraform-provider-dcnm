@@ -236,7 +236,7 @@ func datasourceDCNMNetwork() *schema.Resource {
 							Computed: true,
 						},
 
-						"free_from_config": {
+						"free_form_config": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -327,7 +327,7 @@ func getNetworkAttachmentList(client *client.Client, fabric, network string) ([]
 
 		attachMap["dot1_qvlan"] = 0
 		attachMap["untagged"] = false
-		attachMap["free_from_config"] = ""
+		attachMap["free_form_config"] = ""
 		attachMap["extension_values"] = ""
 		attachMap["instance_values"] = ""
 

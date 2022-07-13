@@ -310,7 +310,7 @@ func resourceDCNMNetwork() *schema.Resource {
 							Computed: true,
 						},
 
-						"free_from_config": &schema.Schema{
+						"free_form_config": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
