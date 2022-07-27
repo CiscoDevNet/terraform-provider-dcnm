@@ -18,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
-
 func resourceDCNMInventroy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDCNMInventroyCreate,
@@ -1075,4 +1073,3 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 	deployedIPChan <- ip
 	wg.Done()
 }
-

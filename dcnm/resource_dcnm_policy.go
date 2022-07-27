@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const POLICY_PREFIX string = "POLICY-"
+
+var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
+
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDCNMPolicyCreate,
@@ -165,7 +169,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 			return diag.FromErr(err)
 		}
 		Id := models.G(cont, "id")
-		policy.PolicyId = "POLICY-" + Id
+		policy.PolicyId = POLICY_PREFIX + Id
 		d.SetId(Id)
 
 	} else {
@@ -183,7 +187,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 		_ = json.Unmarshal([]byte(response), &info)
 		message := info[0]["message"].(string)
 		Id := GetID(message)
-		policy.PolicyId = "POLICY-" + Id
+		policy.PolicyId = POLICY_PREFIX + Id
 		d.SetId(Id)
 	}
 
@@ -263,15 +267,15 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	dn := d.Id()
 	policyId := dn
 	if dcnmClient.GetPlatform() != "nd" {
-		policyId = "POLICY-" + dn
+		policyId = POLICY_PREFIX + dn
 	}
 	cont, err := getAllPolicy(dcnmClient, policyId)
 	if err != nil {
 		d.SetId("")
 		if cont != nil {
-			log.Println(cont.String())
+			log.Printf("[DEBUG] error while reading policy(%s): %v", policyId, cont.String())
 		}
-		log.Println(cont.String())
+		log.Printf("[DEBUG] error while reading policy(%s): %v", policyId, cont.String())
 		return nil
 	}
 	setPolicyAttributes(d, cont)
@@ -281,7 +285,7 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 
 }
 func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	log.Println("[DEBUG] Begining Update method")
+	log.Println("[DEBUG] Beginning Update method")
 
 	dcnmClient := m.(*client.Client)
 
@@ -295,7 +299,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	policy.TemplateName = templateName
 	policy.Deleted = false
 	policy.NVPairs = nvPairMap
-	policy.PolicyId = "POLICY-" + d.Id()
+	policy.PolicyId = POLICY_PREFIX + d.Id()
 	if source, ok := d.GetOk("source"); ok {
 		policy.Source = source.(string)
 	}
@@ -340,7 +344,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	log.Println("[DEBUG] Beginning Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
 	serialNumber := d.Get("serial_number").(string)
-	policyId := "POLICY-" + d.Id()
+	policyId := POLICY_PREFIX + d.Id()
 
 	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
 	cont, err := dcnmClient.GetviaURL(url)
@@ -378,6 +382,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
+	log.Println("[DEBUG] deploying switch: ", serialNumber)
 	// get fabric by switch serial number
 	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
 	cont, err := dcnmClient.GetviaURL(url)
@@ -404,7 +409,7 @@ func recurSwitchDeployment(dcnmClient *client.Client, serialNumber string) {
 }
 
 func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
-	log.Println("[DEBUG] Begining Deployment ", policyId)
+	log.Println("[DEBUG] Beginning Deployment ", policyId)
 
 	_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policyId)
 	if err != nil {

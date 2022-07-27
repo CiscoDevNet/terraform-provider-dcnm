@@ -638,7 +638,16 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	if ir, ok := d.GetOk("ir_enable_flag"); ok {
 		networkProfile.IRFlag = ir.(bool)
 	}
+
+	fabricType, err := getFabricType(dcnmClient, fabricName)
+	if err != nil {
+		log.Printf("[DEBUG] error retrieving fabric type of %s", fabricName)
+	}
+
 	if mcast, ok := d.GetOk("mcast_group"); ok {
+		if fabricType == "MFD" {
+			return fmt.Errorf("mcast_group is not allowed if fabric type is %s", fabricType)
+		}
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
@@ -923,7 +932,15 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	if ir, ok := d.GetOk("ir_enable_flag"); ok {
 		networkProfile.IRFlag = ir.(bool)
 	}
+	fabricType, err := getFabricType(dcnmClient, fabricName)
+	if err != nil {
+		log.Printf("[DEBUG] error retrieving fabric type of %s", fabricName)
+	}
+
 	if mcast, ok := d.GetOk("mcast_group"); ok {
+		if fabricType == "MFD" {
+			return fmt.Errorf("mcast_group is not allowed if fabric type is %s", fabricType)
+		}
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
@@ -1385,4 +1402,12 @@ func getNetworkDeploymentStatus(client *client.Client, fabricName, vrfName strin
 		}
 	}
 	return flag, nil
+}
+
+func getFabricType(dcnmClient *client.Client, fabricName string) (string, error) {
+	cont, err := dcnmClient.GetviaURL("/rest/control/fabrics/" + fabricName)
+	if err != nil {
+		return "", fmt.Errorf("policy is created but failed to deploy with error : %s", err)
+	}
+	return models.G(cont, "fabricType"), nil
 }

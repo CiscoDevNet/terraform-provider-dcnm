@@ -285,7 +285,7 @@ func (c *Client) authenticate() error {
 			return err
 		}
 
-		obj, resp, err := c.Do(req)
+		obj, resp, err := c.Do(req, true)
 		if err != nil {
 			return err
 		}
@@ -316,7 +316,7 @@ func (c *Client) authenticate() error {
 		}
 		req.Header.Set("Authorization", fmt.Sprintf("Basic %s", getBasicAuth(c.username, c.password)))
 
-		obj, resp, err := c.Do(req)
+		obj, resp, err := c.Do(req, true)
 		if err != nil {
 			return err
 		}
@@ -335,7 +335,7 @@ func (c *Client) authenticate() error {
 	return nil
 }
 
-func (c *Client) Do(req *http.Request) (*container.Container, *http.Response, error) {
+func (c *Client) Do(req *http.Request, skipPayload bool) (*container.Container, *http.Response, error) {
 	log.Println("[DEBUG] Begining Do method ", req.URL.String())
 
 	reqDump, err := httputil.DumpRequestOut(req, true)
@@ -353,8 +353,10 @@ func (c *Client) Do(req *http.Request) (*container.Container, *http.Response, er
 		log.Fatal(err)
 	}
 
-	log.Printf("[DEBUG] \n--[ HTTP Request ]------------------------------------ \n %s\n---------------------------------------------\n", string(reqDump))
-	log.Printf("[DEBUG] \n--[ HTTP Response ]----------------------------------- \n %s\n---------------------------------------------\n", string(respDump))
+	if !skipPayload {
+		log.Printf("[DEBUG] \n--[ HTTP Request ]------------------------------------ \n %s\n---------------------------------------------\n", string(reqDump))
+		log.Printf("[DEBUG] \n--[ HTTP Response ]----------------------------------- \n %s\n---------------------------------------------\n", string(respDump))
+	}
 
 	bodybytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

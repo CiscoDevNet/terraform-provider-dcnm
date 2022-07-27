@@ -176,7 +176,7 @@ func makeAndDoRest(client *client.Client, path, op, payload string) (*container.
 		}
 	}
 
-	respCont, resp, err := client.Do(req)
+	respCont, resp, err := client.Do(req, false)
 	if err != nil {
 		return nil, checkerrorsRest(respCont, resp)
 	}
@@ -190,7 +190,7 @@ func makeAndDoRestForText(client *client.Client, path, op, content string) (*con
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "text/plain")
-	cont, resp, err := client.Do(req)
+	cont, resp, err := client.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
