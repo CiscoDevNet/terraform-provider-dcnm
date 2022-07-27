@@ -86,7 +86,7 @@ resource "dcnm_network" "first" {
 * `secondary_gw_4` - (Optional) ipv4 secondary gateway 4 for the network.
 * `arp_supp_flag` - (Optional) arp suppression flag for the network.
 * `ir_enable_flag` - (Optional) ingress replication flag for the network.
-* `mcast_group` - (Optional) multicast group address for the network.
+* `mcast_group` - (Optional) multicast group address for the network (not applicable for fabrics of type MFD).
 * `dhcp_1` - (Optional) ipv4 address of DHCP server 1 for the network.
 * `dhcp_2` - (Optional) ipv4 address of DHCP server 2 for the network.
 * `dhcp_3` - (Optional) ipv4 address of DHCP server 3 for the network.
