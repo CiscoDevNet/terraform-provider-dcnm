@@ -155,43 +155,36 @@ func resourceDCNMNetwork() *schema.Resource {
 			"dhcp_1": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"dhcp_2": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"dhcp_3": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"dhcp_vrf": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"dhcp_vrf_2": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"dhcp_vrf_3": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"loopback_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 			},
 
 			"tag": &schema.Schema{
@@ -659,21 +652,33 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if dhcp1, ok := d.GetOk("dhcp_1"); ok {
 		networkProfile.DHCPServer1 = dhcp1.(string)
+	} else {
+		networkProfile.DHCPServer1 = ""
 	}
 	if dhcp2, ok := d.GetOk("dhcp_2"); ok {
 		networkProfile.DHCPServer2 = dhcp2.(string)
+	} else {
+		networkProfile.DHCPServer2 = ""
 	}
 	if dhcp3, ok := d.GetOk("dhcp_3"); ok {
 		networkProfile.DHCPServer3 = dhcp3.(string)
+	} else {
+		networkProfile.DHCPServer3 = ""
 	}
 	if dhcpvrf, ok := d.GetOk("dhcp_vrf"); ok {
 		networkProfile.DHCPServerVRF = dhcpvrf.(string)
+	} else {
+		networkProfile.DHCPServerVRF = ""
 	}
 	if dhcpvrf2, ok := d.GetOk("dhcp_vrf_2"); ok {
 		networkProfile.DHCPServerVRF2 = dhcpvrf2.(string)
+	} else {
+		networkProfile.DHCPServerVRF2 = ""
 	}
 	if dhcpvrf3, ok := d.GetOk("dhcp_vrf_3"); ok {
 		networkProfile.DHCPServerVRF3 = dhcpvrf3.(string)
+	} else {
+		networkProfile.DHCPServerVRF3 = ""
 	}
 	if loopback, ok := d.GetOk("loopback_id"); ok {
 		networkProfile.LookbackID = strconv.Itoa(loopback.(int))
@@ -944,21 +949,33 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	if dhcp1, ok := d.GetOk("dhcp_1"); ok {
 		networkProfile.DHCPServer1 = dhcp1.(string)
+	} else {
+		networkProfile.DHCPServer1 = ""
 	}
 	if dhcp2, ok := d.GetOk("dhcp_2"); ok {
 		networkProfile.DHCPServer2 = dhcp2.(string)
+	} else {
+		networkProfile.DHCPServer2 = ""
 	}
 	if dhcp3, ok := d.GetOk("dhcp_3"); ok {
 		networkProfile.DHCPServer3 = dhcp3.(string)
+	} else {
+		networkProfile.DHCPServer3 = ""
 	}
 	if dhcpvrf, ok := d.GetOk("dhcp_vrf"); ok {
 		networkProfile.DHCPServerVRF = dhcpvrf.(string)
+	} else {
+		networkProfile.DHCPServerVRF = ""
 	}
 	if dhcpvrf2, ok := d.GetOk("dhcp_vrf_2"); ok {
 		networkProfile.DHCPServerVRF2 = dhcpvrf2.(string)
+	} else {
+		networkProfile.DHCPServerVRF2 = ""
 	}
 	if dhcpvrf3, ok := d.GetOk("dhcp_vrf_3"); ok {
 		networkProfile.DHCPServerVRF3 = dhcpvrf3.(string)
+	} else {
+		networkProfile.DHCPServerVRF3 = ""
 	}
 	if loopback, ok := d.GetOk("loopback_id"); ok {
 		networkProfile.LookbackID = strconv.Itoa(loopback.(int))
