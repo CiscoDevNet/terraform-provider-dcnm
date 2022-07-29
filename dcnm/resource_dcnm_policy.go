@@ -259,6 +259,7 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 
 	return d
 }
+
 func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Read Method ", d.Id())
 
@@ -275,7 +276,7 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 		if cont != nil {
 			log.Printf("[DEBUG] error while reading policy(%s): %v", policyId, cont.String())
 		}
-		log.Printf("[DEBUG] error while reading policy(%s): %v", policyId, cont.String())
+		log.Printf("[DEBUG] error while reading policy(%v): %v", policyId, err)
 		return nil
 	}
 	setPolicyAttributes(d, cont)
@@ -284,6 +285,7 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	return nil
 
 }
+
 func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Beginning Update method")
 

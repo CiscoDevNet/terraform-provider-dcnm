@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceDCNMInventroy() *schema.Resource {
+func resourceDCNMInventory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDCNMInventroyCreate,
-		UpdateContext: resourceDCNMInventroyUpdate,
-		ReadContext:   resourceDCNMInventroyRead,
-		DeleteContext: resourceDCNMInventroyDelete,
+		CreateContext: resourceDCNMInventoryCreate,
+		UpdateContext: resourceDCNMInventoryUpdate,
+		ReadContext:   resourceDCNMInventoryRead,
+		DeleteContext: resourceDCNMInventoryDelete,
 
 		Schema: map[string]*schema.Schema{
 			"fabric_name": {
@@ -256,7 +256,7 @@ func getSwitchInfo(cont *container.Container) map[string]interface{} {
 	return sInfo
 }
 
-func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventoryCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Create method ")
 
 	// Get attribute values from Terraform Config
@@ -425,10 +425,10 @@ func resourceDCNMInventroyCreate(ctx context.Context, d *schema.ResourceData, m 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Create method ", d.Id())
-	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
+	return append(diags, resourceDCNMInventoryRead(ctx, d, m)...)
 }
 
-func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Update method ", d.Id())
 
 	diags := diag.Diagnostics{}
@@ -698,10 +698,10 @@ func resourceDCNMInventroyUpdate(ctx context.Context, d *schema.ResourceData, m 
 	d.SetId(strings.Join(ips, ","))
 
 	log.Println("[DEBUG] End of Update method ", d.Id())
-	return append(diags, resourceDCNMInventroyRead(ctx, d, m)...)
+	return append(diags, resourceDCNMInventoryRead(ctx, d, m)...)
 }
 
-func resourceDCNMInventroyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventoryRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Read method ", d.Id())
 
 	diags := diag.Diagnostics{}
@@ -759,7 +759,7 @@ func resourceDCNMInventroyRead(ctx context.Context, d *schema.ResourceData, m in
 	return diags
 }
 
-func resourceDCNMInventroyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceDCNMInventoryDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Println("[DEBUG] Begining Delete method ", d.Id())
 	var diags diag.Diagnostics
 	dcnmClient := m.(*client.Client)
@@ -1010,7 +1010,7 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 	for time.Until(initTime) < (time.Duration(configTimeout) * time.Second) {
 		cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 		if err != nil {
-			log.Println("error at get call for switch in creation :", ip, err)
+			log.Println("Wrror at get call for switch in creation :", ip, err)
 			continue
 		}
 		serialNum = models.G(cont, "serialNumber")
@@ -1056,7 +1056,7 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("error at switch role assignment %s: %s", ip, err),
+			Summary:  fmt.Sprintf("Error at switch role assignment %s: %s", ip, err),
 		})
 	}
 
@@ -1064,7 +1064,7 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("error at switch deployment %s: %s", ip, err),
+			Summary:  fmt.Sprintf("Error at switch deployment %s: %s", ip, err),
 		})
 		prepareDiagsChan <- diags
 		return

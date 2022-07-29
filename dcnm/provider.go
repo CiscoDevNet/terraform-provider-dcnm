@@ -66,7 +66,7 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"dcnm_vrf":            resourceDCNMVRF(),
-			"dcnm_inventory":      resourceDCNMInventroy(),
+			"dcnm_inventory":      resourceDCNMInventory(),
 			"dcnm_network":        resourceDCNMNetwork(),
 			"dcnm_interface":      resourceDCNMInterface(),
 			"dcnm_rest":           resourceDCNMRest(),
