@@ -501,7 +501,7 @@ func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m 
 			}
 			_, err = dcnmClient.UpdateCred(durl, body)
 			if err != nil {
-				log.Printf("\nerror at updation of switch %s: %s", ip, err)
+				log.Printf("\nerror at credential update of switch %s: %s", ip, err)
 			}
 
 			ips = append(ips, ip)
