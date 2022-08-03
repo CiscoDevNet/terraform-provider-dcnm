@@ -15,7 +15,7 @@ func (c *Client) GetviaURL(endpoint string) (*container.Container, error) {
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c *Client) Save(endpoint string, obj models.Model) (*container.Container, 
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *Client) SaveDeploy(endpoint string, policyIds string) (*container.Conta
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c *Client) ValidateTemplateContent(endpoint string, content string) (*cont
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "text/plain")
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *Client) SaveForAttachment(endpoint string, obj models.Model) (*containe
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c *Client) UpdateCred(endpoint string, body []byte) (*container.Container,
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (c *Client) GetSegID(endpoint string) (*container.Container, error) {
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c *Client) Update(endpoint string, obj models.Model) (*container.Container
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (c *Client) Delete(endpoint string) (*container.Container, error) {
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (c *Client) DeleteWithPayload(endpoint string, obj models.Model) (*containe
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (c *Client) SaveAndDeploy(endpoint string) (*container.Container, error) {
 		return nil, err
 	}
 
-	cont, resp, err := c.Do(req)
+	cont, resp, err := c.Do(req, false)
 	if err != nil {
 		return nil, err
 	}

@@ -844,12 +844,13 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(intfConfig.InterfaceName)
 
 	//Deployment of interface
-	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) == true {
+	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
 		log.Println("[DEBUG] Begining Deployment ", d.Id())
 
 		intfDeploy := models.InterfaceDelete{}
 		intfDeploy.SerialNumber = intfConfig.SerialNumber
 		intfDeploy.Name = intfConfig.InterfaceName
+
 		cont, err = dcnmClient.SaveForAttachment("/rest/interface/deploy", &intfDeploy)
 		if err != nil {
 			errorMsg, flag := checkIntfErrors(cont)
@@ -1250,6 +1251,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 		intfDeploy := models.InterfaceDelete{}
 		intfDeploy.SerialNumber = intfConfig.SerialNumber
 		intfDeploy.Name = intfConfig.InterfaceName
+
 		cont, err = dcnmClient.SaveForAttachment("/rest/interface/deploy", &intfDeploy)
 		if err != nil {
 			errorMsg, flag := checkIntfErrors(cont)
@@ -1325,6 +1327,7 @@ func resourceDCNMInterfaceDelete(d *schema.ResourceData, m interface{}) error {
 	intfDel := models.InterfaceDelete{}
 	intfDel.SerialNumber = serialNum
 	intfDel.Name = dn
+
 	cont, err := dcnmClient.DeleteWithPayload("/rest/interface", &intfDel)
 	if err != nil {
 		if cont != nil {

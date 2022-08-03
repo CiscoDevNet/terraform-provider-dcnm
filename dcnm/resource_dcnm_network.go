@@ -384,7 +384,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("description", stripQuotes(cont.S("intfDescription").String()))
 		}
 		if cont.Exists("mtu") && stripQuotes(cont.S("mtu").String()) != "" {
-			if mtu := stripQuotes(cont.S("mtu").String()); err == nil {
+			if mtu, err := strconv.Atoi(stripQuotes(cont.S("mtu").String())); err == nil {
 				d.Set("mtu", mtu)
 			}
 		}
@@ -436,7 +436,7 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			d.Set("dhcp_vrf_3", stripQuotes(cont.S("vrfDhcp3").String()))
 		}
 		if cont.Exists("loopbackId") && stripQuotes(cont.S("loopbackId").String()) != "" {
-			if loopback := stripQuotes(cont.S("loopbackId").String()); err == nil {
+			if loopback, err := strconv.Atoi(stripQuotes(cont.S("loopbackId").String())); err == nil {
 				d.Set("loopback_id", loopback)
 			}
 		}
@@ -631,7 +631,16 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	if ir, ok := d.GetOk("ir_enable_flag"); ok {
 		networkProfile.IRFlag = ir.(bool)
 	}
+
+	fabricType, err := getFabricType(dcnmClient, fabricName)
+	if err != nil {
+		log.Printf("[DEBUG] error retrieving fabric type of %s", fabricName)
+	}
+
 	if mcast, ok := d.GetOk("mcast_group"); ok {
+		if fabricType == "MFD" {
+			return fmt.Errorf("mcast_group is not allowed if fabric type is %s", fabricType)
+		}
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
@@ -928,7 +937,15 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	if ir, ok := d.GetOk("ir_enable_flag"); ok {
 		networkProfile.IRFlag = ir.(bool)
 	}
+	fabricType, err := getFabricType(dcnmClient, fabricName)
+	if err != nil {
+		log.Printf("[DEBUG] error retrieving fabric type of %s", fabricName)
+	}
+
 	if mcast, ok := d.GetOk("mcast_group"); ok {
+		if fabricType == "MFD" {
+			return fmt.Errorf("mcast_group is not allowed if fabric type is %s", fabricType)
+		}
 		networkProfile.McastGroup = mcast.(string)
 	} else {
 		if dcnmClient.GetPlatform() == "nd" {
@@ -1402,4 +1419,12 @@ func getNetworkDeploymentStatus(client *client.Client, fabricName, vrfName strin
 		}
 	}
 	return flag, nil
+}
+
+func getFabricType(dcnmClient *client.Client, fabricName string) (string, error) {
+	cont, err := dcnmClient.GetviaURL("/rest/control/fabrics/" + fabricName)
+	if err != nil {
+		return "", fmt.Errorf("policy is created but failed to deploy with error : %s", err)
+	}
+	return models.G(cont, "fabricType"), nil
 }
