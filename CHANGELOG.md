@@ -1,3 +1,9 @@
+## 1.2.3 (August 3, 2022)
+BUG FIXES:
+- Fix free_form_config typo issue (#90)
+- Fix dcnm_network removal issue by setting DHCP attributes to non-computed (#88)
+- Fix dcnm_policy destroy issue and dcnm_inventory issue (#85)
+
 ## 1.2.2 (April 20, 2022)
 BUG FIXES:
 - Add M1 MacOS support.
