@@ -846,9 +846,9 @@ func waitUntilFabricConfig(client *client.Client, fabric, serialNum string, conf
 
 	// Step 1 switch configuration
 	configDone := false
-	timeLeft := configTime
 	durl := fmt.Sprintf("rest/control/fabrics/%s/config-preview", fabric)
-	for timeLeft > 0 {
+	initTime := time.Now()
+	for time.Until(initTime) < (time.Duration(configTime) * time.Second) {
 		cont, err := client.GetviaURL(durl)
 		if err != nil {
 			return err
@@ -873,8 +873,7 @@ func waitUntilFabricConfig(client *client.Client, fabric, serialNum string, conf
 			break
 		}
 
-		timeLeft = timeLeft / 2
-		time.Sleep(time.Duration(timeLeft) * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 	if !configDone {
 		return fmt.Errorf("timeout occurs before completion of switch configuration")
