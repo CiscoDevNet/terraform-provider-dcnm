@@ -202,6 +202,12 @@ func resourceDCNMTemplateCreate(d *schema.ResourceData, m interface{}) error {
 	templateSubType=%s;
 	##`, name, propertyMap["description"], propertyMap["tags"], propertyMap["supported_platforms"], propertyMap["template_content_type"], propertyMap["template_type"], propertyMap["template_sub_type"])
 	fileContent = fmt.Sprintf("%s \n %s", content, fileContent)
+	if !(strings.Contains(fileContent, "##template variables")) {
+		fileContent = fmt.Sprintf("%s \n %s \n %s", fileContent, "##template variables", "##")
+	}
+	if !(strings.Contains(fileContent, "##template content")) {
+		fileContent = fmt.Sprintf("%s \n %s \n %s", fileContent, "##template content", "##")
+	}
 	temp.Content = fileContent
 	cont, err := dcnmClient.ValidateTemplateContent(TemplateURLS[dcnmClient.GetPlatform()]["Validate"], fileContent)
 
@@ -315,6 +321,12 @@ func resourceDCNMTemplateUpdate(d *schema.ResourceData, m interface{}) error {
 	fileContent = strings.Replace(fileContent, "\n", `\n`, -1)
 	fileContent = strings.Replace(fileContent, "\\n\\n", "\r\n", -1)
 	fileContent = strings.Replace(fileContent, "\\\"", "\"", -1)
+	if !(strings.Contains(fileContent, "##template variables")) {
+		fileContent = fmt.Sprintf("%s \n %s \n %s", fileContent, "##template variables", "##")
+	}
+	if !(strings.Contains(fileContent, "##template content")) {
+		fileContent = fmt.Sprintf("%s \n %s \n %s", fileContent, "##template content", "##")
+	}
 	cont, err := dcnmClient.ValidateTemplateContent(TemplateURLS[dcnmClient.GetPlatform()]["Validate"], fileContent)
 
 	if err != nil {
