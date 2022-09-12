@@ -819,12 +819,7 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 
 	}
 
-	if state, ok := d.GetOk("admin_state"); ok {
-		nvPairMap["ADMIN_STATE"] = state.(bool)
-	} else {
-		nvPairMap["ADMIN_STATE"] = ""
-	}
-
+	nvPairMap["ADMIN_STATE"] = d.Get("admin_state").(bool)
 	intfModel := models.NewInterface(&intf, &intfConfig, nvPairMap)
 
 	cont, err := dcnmClient.Save("/rest/interface", intfModel)
@@ -1216,12 +1211,7 @@ func resourceDCNMInterfaceUpdate(d *schema.ResourceData, m interface{}) error {
 
 	}
 
-	if state, ok := d.GetOk("admin_state"); ok {
-		nvPairMap["ADMIN_STATE"] = state.(bool)
-	} else {
-		nvPairMap["ADMIN_STATE"] = ""
-	}
-
+	nvPairMap["ADMIN_STATE"] = d.Get("admin_state").(bool)
 	intfModel := models.NewInterface(&intf, &intfConfig, nvPairMap)
 
 	cont, err := dcnmClient.Update("/rest/interface", intfModel)
