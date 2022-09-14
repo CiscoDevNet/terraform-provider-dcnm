@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/ciscoecosystem/dcnm-go-client/client"
 	"github.com/ciscoecosystem/dcnm-go-client/container"
@@ -16,8 +18,17 @@ import (
 )
 
 const POLICY_PREFIX string = "POLICY-"
+const MAX_RETRY_CREATE int = 10
+const MAX_RETRY_DEL int = 4
 
 var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
+var policyURLs = map[string]string{
+	"Create":       "/rest/control/policies",
+	"PolicyDeploy": "/rest/control/policies/deploy",
+	"MarkDelete":   "/rest/control/policies/%s/mark-delete",
+	"IntentConfig": "/rest/control/policies/%s/intent-config",
+	"Delete":       "/rest/control/policies/%s",
+}
 
 func resourceDCNMPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -88,6 +99,11 @@ func resourceDCNMPolicy() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"deploy_timeout": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  60,
+			},
 		},
 	}
 }
@@ -139,7 +155,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 	serialNumber := d.Get("serial_number").(string)
 	templateName := d.Get("template_name").(string)
 	nvPairMap := d.Get("template_props").(map[string]interface{})
-
+	deployTimeout := d.Get("deploy_timeout").(int)
 	policy := models.Policy{}
 
 	policy.SerialNumber = serialNumber
@@ -163,44 +179,25 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 	if templateContentType, ok := d.GetOk("template_content_type"); ok {
 		policy.TemplateContentType = templateContentType.(string)
 	}
-	if dcnmClient.GetPlatform() == "nd" {
-		cont, err := dcnmClient.Save("/rest/control/policies", &policy)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		Id := models.G(cont, "id")
-		policy.PolicyId = POLICY_PREFIX + Id
-		d.SetId(Id)
 
-	} else {
-
-		cont, err := dcnmClient.Save("/rest/control/policies/bulk-create", &policy)
-		if err != nil {
-			if cont != nil {
-				return diag.Errorf(cont.String())
-			}
-			return diag.FromErr(err)
-		}
-		// Get the id from resource
-		response := models.G(cont, "successList")
-		var info []map[string]interface{}
-		_ = json.Unmarshal([]byte(response), &info)
-		message := info[0]["message"].(string)
-		Id := GetID(message)
-		policy.PolicyId = POLICY_PREFIX + Id
-		d.SetId(Id)
+	cont, err := dcnmClient.Save(policyURLs["Create"], &policy)
+	if err != nil {
+		return diag.FromErr(err)
 	}
+	Id := models.G(cont, "id")
+	policy.PolicyId = POLICY_PREFIX + Id
+	d.SetId(Id)
 
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
-		err := deployPolicy(dcnmClient, policy.PolicyId, serialNumber)
+		err := deployPolicyWithTimeout(dcnmClient, policy.PolicyId, serialNumber, deployTimeout)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.FromErr(err)
 		}
 	}
-	return resourceDCNMPolicyRead(ctx, d, m)
 
+	return resourceDCNMPolicyRead(ctx, d, m)
 }
 
 func getAllPolicy(client *client.Client, policyId string) (*container.Container, error) {
@@ -294,6 +291,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	serialNumber := d.Get("serial_number").(string)
 	templateName := d.Get("template_name").(string)
 	nvPairMap := d.Get("template_props").(map[string]interface{})
+	deployTimeout := d.Get("deploy_timeout").(int)
 
 	policy := models.Policy{}
 
@@ -331,7 +329,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 	}
 	// Deploy the policy
 	if deploy, ok := d.GetOk("deploy"); ok && deploy.(bool) {
-		err := deployPolicy(dcnmClient, policy.PolicyId, serialNumber)
+		err := deployPolicyWithTimeout(dcnmClient, policy.PolicyId, serialNumber, deployTimeout)
 		if err != nil {
 			d.Set("deploy", false)
 			return diag.FromErr(err)
@@ -346,7 +344,6 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	log.Println("[DEBUG] Beginning Delete method ", d.Id())
 	dcnmClient := m.(*client.Client)
 	serialNumber := d.Get("serial_number").(string)
-	policyId := POLICY_PREFIX + d.Id()
 
 	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
 	cont, err := dcnmClient.GetviaURL(url)
@@ -355,13 +352,40 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 	fabric := models.G(cont, "fabricName")
 
-	dUrl := fmt.Sprintf("/rest/control/policies/%s", policyId)
-	cont, err = dcnmClient.Delete(dUrl)
+	deleteFlag := false
+
+	//Mark delete policy
+	url = fmt.Sprintf(policyURLs["MarkDelete"], d.Id())
+	cont, err = deletePolicy(url, dcnmClient)
 	if err != nil {
 		if cont != nil {
 			return diag.Errorf(cont.String())
 		}
-		return diag.Errorf("error while destroying policy %v", err)
+		return diag.FromErr(err)
+	}
+
+	//Intent-config checking
+	url = fmt.Sprintf(policyURLs["IntentConfig"], d.Id())
+	cont, err = dcnmClient.GetviaURL(url)
+	if err != nil {
+		if err.Error() == fmt.Sprintf("Policy %s does not exist", d.Id()) {
+			deleteFlag = true
+		} else {
+			return diag.Errorf("error deletion policy: %s", err)
+		}
+	}
+
+	markDeleteConfig := models.G(cont, "markDeletedConfig")
+
+	if markDeleteConfig == "No config is available" && !deleteFlag {
+		dUrl := fmt.Sprintf(policyURLs["Delete"], d.Id())
+		cont, err = dcnmClient.Delete(dUrl)
+		if err != nil && err.Error() != fmt.Sprintf("Policy %s does not exist", d.Id()) {
+			if cont != nil {
+				return diag.Errorf(cont.String())
+			}
+			return diag.Errorf("error while destroying policy %v", err)
+		}
 	}
 
 	if _, ok := switchDeployMutexMap[serialNumber]; !ok {
@@ -369,54 +393,88 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	switchDeployMutexMap[serialNumber].Lock()
-	isDeployed, err := checkDeploy(dcnmClient, fabric, serialNumber)
-	if err != nil {
-		return diag.Errorf("error deploying fabric after policy deletion: %w", err)
+	defer switchDeployMutexMap[serialNumber].Unlock()
+	for count := 1; count <= MAX_RETRY_DEL; count++ {
+
+		isDeployed, err := checkDeploy(dcnmClient, fabric, serialNumber)
+		if err != nil {
+			return diag.Errorf("error deploying fabric after policy deletion: %w", err)
+		}
+		if isDeployed {
+			break
+		}
+
+		err = deployswitch(dcnmClient, fabric, serialNumber)
+		if err == nil {
+			break
+		}
+		if count == MAX_RETRY_DEL {
+			return diag.Errorf("error deploying fabric after policy deletion: %s", err)
+		}
+		time.Sleep(time.Millisecond * 1000)
 	}
-	if !isDeployed {
-		recurSwitchDeployment(dcnmClient, serialNumber)
-	}
-	switchDeployMutexMap[serialNumber].Unlock()
 
 	d.SetId("")
 	log.Println("[DEBUG] End of Delete method ", d.Id())
 	return nil
 }
 
-func deploySwitchFabric(dcnmClient *client.Client, serialNumber string) error {
-	log.Println("[DEBUG] deploying switch: ", serialNumber)
-	// get fabric by switch serial number
-	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
-	cont, err := dcnmClient.GetviaURL(url)
-	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
-	}
+func deployPolicyWithTimeout(dcnmClient *client.Client, policyId, serialNumber string, timeout int) error {
+	log.Println("[DEBUG] Beginning Deployment for Create ", policyId)
 
-	fabric := models.G(cont, "fabricName")
-
-	// deploy fabric
-	err = deployswitch(dcnmClient, fabric, serialNumber)
-	if err != nil {
-		return fmt.Errorf("error deploying fabric after policy deletion: %w", err)
-	}
-
-	return nil
-}
-
-func recurSwitchDeployment(dcnmClient *client.Client, serialNumber string) {
-	err := deploySwitchFabric(dcnmClient, serialNumber)
-	if err != nil {
-		recurSwitchDeployment(dcnmClient, serialNumber)
-	}
-}
-
-func deployPolicy(dcnmClient *client.Client, policyId, serialNumber string) error {
-	log.Println("[DEBUG] Beginning Deployment ", policyId)
-
-	_, err := dcnmClient.SaveDeploy("/rest/control/policies/deploy", policyId)
-	if err != nil {
-		return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
+	for count := 1; count <= MAX_RETRY_CREATE; count++ {
+		cont, err := saveDeployWithTimeout(dcnmClient, policyURLs["PolicyDeploy"], policyId, timeout)
+		if err != nil {
+			return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
+		}
+		idFailed := models.G(cont.Index(0), "failedPTIList")
+		idSuccess := models.G(cont.Index(0), "successPTIList")
+		if idFailed == policyId && count == MAX_RETRY_CREATE {
+			return fmt.Errorf("policy is created but failed to deploy policy with id: %s", policyId)
+		}
+		if idSuccess == policyId {
+			break
+		}
+		time.Sleep(time.Second * 5)
 	}
 	log.Println("[DEBUG] End of Deployment ", policyId)
 	return nil
+}
+func saveDeployWithTimeout(dcnmClient *client.Client, url, policyId string, timeout int) (*container.Container, error) {
+	cont := make(chan *container.Container, 1)
+	result := make(chan error, 1)
+	go func() {
+		container, err := dcnmClient.SaveDeploy(url, policyId)
+		cont <- container
+		result <- err
+	}()
+	// Wait until timeout occurs or a response is received
+	select {
+	case <-time.After(time.Duration(timeout) * time.Second):
+		log.Println("[DEBUG] Retry Deployment timeout :", policyId)
+		return nil, nil
+	case container := <-cont:
+		return container, nil
+	case res := <-result:
+		return nil, res
+	}
+}
+
+func deletePolicy(url string, dcnmClient *client.Client) (*container.Container, error) {
+
+	req, err := dcnmClient.MakeRequest("PUT", url, nil, true)
+	if err != nil {
+		return nil, err
+	}
+
+	cont, resp, err := dcnmClient.Do(req, false)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return cont, nil
+	}
+
+	return cont, fmt.Errorf("%d Error : %s", resp.StatusCode, cont.S("message").String())
 }
