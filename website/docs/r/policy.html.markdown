@@ -35,12 +35,14 @@ resource "dcnm_policy" "second" {
 * `template_name` - (Required)  A unique name identifying the template. Please note that a template name can be used by multiple policies and hence a template name does not identify a policy uniquely.
 * `template_props` - (Required) Properties of the templates related to template name.
 * `template_content_type` - (Optional) Content type of the specified template.
-* `priority` - (Optional) Priority of the policy.Default value is 500.
+* `priority` - (Optional) Priority of the policy. Default value is 500.
 * `source` - (Optional) The source of the policy.
-* `description`- (Optional) Description of the policy. The description may include the details regarding the policy.Default value is "".
-* `entity_name`- (Optional) Name of the entity.i.e."SWITCH".
-* `entity_type`- (Optional) Type of the entity.i.e."SWITCH".
+* `description`- (Optional) Description of the policy. The description may include the details regarding the policy. Default value is "".
+* `entity_name`- (Optional) Name of the entity. i.e. "SWITCH".
+* `entity_type`- (Optional) Type of the entity. i.e. "SWITCH".
 * `template_content_type`- (Optional) Template content type of the policy.
+* `deploy`- (Optional) Deploy status of the policy. Default value is true.
+* `deploy_timeout`- (Optional) Deployment timeout for the policy in seconds. Default value is 60.
 
 #### `Note`: Destroying Policy will re-deploy the switch.
 

@@ -23,11 +23,12 @@ const MAX_RETRY_DEL int = 4
 
 var switchDeployMutexMap = make(map[string]*sync.Mutex, 0)
 var policyURLs = map[string]string{
-	"Create":       "/rest/control/policies",
-	"PolicyDeploy": "/rest/control/policies/deploy",
-	"MarkDelete":   "/rest/control/policies/%s/mark-delete",
-	"IntentConfig": "/rest/control/policies/%s/intent-config",
-	"Delete":       "/rest/control/policies/%s",
+	"Create":        "/rest/control/policies",
+	"PolicyDeploy":  "/rest/control/policies/deploy",
+	"MarkDelete":    "/rest/control/policies/%s/mark-delete",
+	"IntentConfig":  "/rest/control/policies/%s/intent-config",
+	"Common":        "/rest/control/policies/%s",
+	"GetFabricName": "/rest/control/switches/%s/fabric-name",
 }
 
 func resourceDCNMPolicy() *schema.Resource {
@@ -99,7 +100,7 @@ func resourceDCNMPolicy() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"deploy_timeout": &schema.Schema{
+			"deploy_timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
@@ -124,7 +125,7 @@ func IsEmpty() schema.SchemaValidateFunc {
 }
 
 func resourceDCNMPolicyImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	log.Println("[DEBUG] Begining Importer ", d.Id())
+	log.Println("[DEBUG] Beginning Importer ", d.Id())
 	dcnmClient := m.(*client.Client)
 	importInfo := strings.Split(d.Id(), ":")
 	if len(importInfo) != 1 {
@@ -148,7 +149,7 @@ func GetID(description string) string {
 }
 
 func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	log.Println("[DEBUG] Begining Create method")
+	log.Println("[DEBUG] Beginning Create method")
 
 	dcnmClient := m.(*client.Client)
 
@@ -201,7 +202,7 @@ func resourceDCNMPolicyCreate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func getAllPolicy(client *client.Client, policyId string) (*container.Container, error) {
-	duro := fmt.Sprintf("/rest/control/policies/%s", policyId)
+	duro := fmt.Sprintf(policyURLs["Common"], policyId)
 	cont, err := client.GetviaURL(duro)
 	if err != nil {
 		return cont, err
@@ -258,7 +259,7 @@ func setPolicyAttributes(d *schema.ResourceData, cont *container.Container) *sch
 }
 
 func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	log.Println("[DEBUG] Begining Read Method ", d.Id())
+	log.Println("[DEBUG] Beginning Read Method ", d.Id())
 
 	dcnmClient := m.(*client.Client)
 
@@ -319,7 +320,7 @@ func resourceDCNMPolicyUpdate(ctx context.Context, d *schema.ResourceData, m int
 		policy.TemplateContentType = templateContentType.(string)
 	}
 	policy.Id = d.Id()
-	dUrl := fmt.Sprintf("/rest/control/policies/%s", policy.PolicyId)
+	dUrl := fmt.Sprintf(policyURLs["Common"], policy.PolicyId)
 	cont, err := dcnmClient.Update(dUrl, &policy)
 	if err != nil {
 		if cont != nil {
@@ -345,7 +346,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	dcnmClient := m.(*client.Client)
 	serialNumber := d.Get("serial_number").(string)
 
-	url := fmt.Sprintf("/rest/control/switches/%s/fabric-name", serialNumber)
+	url := fmt.Sprintf(policyURLs["GetFabricName"], serialNumber)
 	cont, err := dcnmClient.GetviaURL(url)
 	if err != nil {
 		return diag.Errorf("error deploying fabric after policy deletion: %w", err)
@@ -378,7 +379,7 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 	markDeleteConfig := models.G(cont, "markDeletedConfig")
 
 	if markDeleteConfig == "No config is available" && !deleteFlag {
-		dUrl := fmt.Sprintf(policyURLs["Delete"], d.Id())
+		dUrl := fmt.Sprintf(policyURLs["Common"], d.Id())
 		cont, err = dcnmClient.Delete(dUrl)
 		if err != nil && err.Error() != fmt.Sprintf("Policy %s does not exist", d.Id()) {
 			if cont != nil {
