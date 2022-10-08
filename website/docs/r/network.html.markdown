@@ -109,12 +109,12 @@ resource "dcnm_network" "first" {
 * `deploy` - (Optional) deploy flag, used to deploy the network. Default value is "true".
 * `deploy_timeout` - (Optional) deployment timeout, used as the limiter for the deployment status check for network resource. It is in the unit of seconds and default value is "300".
 
-* `attachments` - (Optional) attachment block, have information regarding the switches which should be attached or detached to/from network. If `deploy` is "true", then atleast one attachment must be configured.
+* `attachments` - (Optional) attachment block, have information regarding the switches which should be attached or detached to/from network. If `deploy` is "true", then at least one attachment must be configured.
 * `attachments.serial_number` - (Required) serial number of the switch.
 * `attachments.vlan_id` - (Optional) vlan ID for the switch associated with network. If not mentioned then network's default vlan id will be used for attachment.
 * `attachments.attach` - (Optional) attach flag for switch. Default value is "true".
 * `attachments.dot1_qvlan` - (Optional) dot1 qvlan for switch attachment.
-* `attachments.switch_ports` - (Optional) list of port name(i.e. interface names) for switch attachment.
+* `attachments.switch_ports` - (Optional) list of port names (i.e. interface names) for switch attachment.
 * `attachments.untagged` - (Optional) untagged flag for switch attachment.
 * `attachments.free_form_config` - (Optional) free form configuration for the switch attachment.
 * `attachments.extension_values` - (Optional) extension values for switch attachment.

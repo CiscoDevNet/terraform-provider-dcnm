@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM network
 ---
 
-# dcnm_network #
+# dcnm_network
+
 Data source for DCNM network
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -20,12 +21,10 @@ data "dcnm_vrf" "check" {
 
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `name` - (Required) name of network object.
 * `fabric_name` - (Required) fabric name under which network exists.
-
 
 ## Attribute Reference
 
@@ -33,7 +32,7 @@ data "dcnm_vrf" "check" {
 * `display_name` -  display name for the network object.
 * `description` -  description for the network.
 * `vrf_name` -  name of the vrf which should be associated with the network.
-* `l2_only_flag` -  layer 2 only flag for the network. 
+* `l2_only_flag` -  layer 2 only flag for the network.
 * `vlan_id` -  vlan number for the network.
 * `vlan_name` -  vlan name for the network.
 * `ipv4_gateway` -  ipv4 address of gateway for the network.
@@ -51,14 +50,12 @@ data "dcnm_vrf" "check" {
 * `loopback_id` -  loopback id for the network.
 * `rt_both_flag` -  l2 VNI route-target both enable flag for the network.
 * `trm_enable_flag` -  TRM enable flag for the network.
-* `l3_gateway_flag` -  enable L3 gateway on border flag for the network. 
+* `l3_gateway_flag` -  enable L3 gateway on border flag for the network.
 * `template` -  template name for the network. Default is "Default_VRF_Universal".
 * `extension_template` -  extension Template name for the network. Default is "Default_Network_Extension_Universal".
 * `service_template` -  service template name for the network.
 * `source` -  source for the network.
-
 * `deploy` - deploy flag, used to deploy the network.
-
 * `attachments` - attachment block, have information regarding the switches which should be attached or detached to/from network.
 * `attachments.serial_number` - serial number of the switch.
 * `attachments.vlan_id` - vlan ID for the switch associated with network.

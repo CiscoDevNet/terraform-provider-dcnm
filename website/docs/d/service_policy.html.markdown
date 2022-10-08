@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM Service Policy
 ---
 
-# dcnm_vrf #
+# dcnm_vrf
+
 Data source for DCNM Service Policy
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -22,15 +23,15 @@ data "dcnm_service_policy" "example" {
 
 ```
 
-## Argument Reference ##
+## Argument Reference
 
 * `policy_name` - (Required) Name of Object Service Policy.
 * `service_fabric` - (Required) Fabric name under which Service Policy should be created.
 * `attached_fabric` - (Required) Attached Fabric name of the Service Policy.
 * `service_node_name` - (Required) Node name of the Service Policy.
 
+## Attribute Reference
 
-## Attribute Reference 
 * `dest_network` - Destination network of the Service Policy.
 * `dest_vrf_name` - Destination VRF name of the Service Policy.
 * `next_hop_ip` - Next hop IP of the Service Policy.

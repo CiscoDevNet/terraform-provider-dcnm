@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM Policy
 ---
 
-# dcnm_policy #
+# dcnm_policy
+
 Data source for DCNM Policy
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -19,12 +20,10 @@ data "dcnm_policy" "example" {
 
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `policy_id` - (Required) A unique ID identifying a policy.
    NOTE: User can specify only empty string value.
-
 
 ## Attribute Reference
 

@@ -6,13 +6,13 @@ description: |-
   Manages DCNM inventory modules
 ---
 
-# dcnm_inventory #
+# dcnm_inventory
+
 Manages DCNM inventory modules
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
-
 resource "dcnm_inventory" "first" {
   fabric_name   = "fab2"
   username      = "username for DCNM switches"
@@ -34,11 +34,9 @@ resource "dcnm_inventory" "first" {
     role = "leaf"
   }
 }
-
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `fabric_name` - (Required) Fabric name under which inventory should be created.
 * `username` - (Required) Username for the the switch.
@@ -67,11 +65,10 @@ resource "dcnm_inventory" "first" {
 * `switch_config.model` - Model name of the switch.
 * `switch_config.mode` - Mode of the switch.
 
-## Importing ##
+## Importing
 
 An existing switch inventory can be [imported][docs-import] into this resource via its fabric and name, using the following command:
 [docs-import]: https://www.terraform.io/docs/import/index.html
-
 
 ```
 terraform import dcnm_inventory.example <fabric_name>:<switch_name>
