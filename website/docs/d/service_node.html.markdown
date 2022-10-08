@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM Service Node
 ---
 
-# dcnm_service_node #
+# dcnm_service_node
+
 Data source for DCNM Service Node
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -20,14 +21,13 @@ data "dcnm_service_node" "example" {
 
 ```
 
-
-## Argument Reference ##
+## Argument Reference 
 
 * `name` - (Required) Name of Object Service Node.
-* `service_fabric` - (Required) Name of external fabric where the service node is located. 
-
+* `service_fabric` - (Required) Name of external fabric where the service node is located.
 
 ## Attribute Reference
+
 * `id` - Attribute id is set to the name of the Service Node.
 * `admin_state` - Admin state for the Service Node.
 * `allowed_vlans` - Allowed vlan names of the Service.
@@ -48,7 +48,6 @@ data "dcnm_service_node" "example" {
 * `policy_id` - ID of the attached policy.
 * `porttype_fast_enabled` - Port-type-fast flag of the service node.
 * `priority` - Priority of the service node.
-
 * `source_fabric_name` - Source fabric name of the service node.
 * `source_if_name` - Source interface name of the service node.
 * `source_serial_number` - Source serial number of the service node.

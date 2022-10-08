@@ -38,7 +38,7 @@ resource "dcnm_service_node" "example" {
 ## Argument Reference
 
 - `name` - (Required) Name of Object Service Node.
-- `node_type` - (Required) Name of the service node type. Aloowed values are "Firewall", "ADC" and "VNF".
+- `node_type` - (Required) Name of the service node type. Allowed values are "Firewall", "ADC" and "VNF".
 - `service_fabric` - (Required) Name of external fabric where the service node is located.
 - `attached_fabric` - (Required) Name of attached easy fabric to which service node is attached.
 - `attached_switch_interface_name` - (Required) Switch interfaces where the service node will be attached.
@@ -46,8 +46,8 @@ resource "dcnm_service_node" "example" {
 - `link_template_name` - (Optional) Link template name of the service node.
 - `switches` - (Required) List of serial Numbers of the switch where service node will be added.
 - `admin_state` - (Optional) Admin state for the Service Node. Allowed values are true and false. Default value is true.
-- `allowed_vlans` - (Optional) Allowed vlan names of the Service. Default value is "none".
-- `bpdu_guard_flag` - (Optional) BPDU flag for the service node. Allowed values are "true" ,"false" and "no". Default value is "no".
+- `allowed_vlans` - (Optional) Allowed VLAN names of the Service. Default value is "none".
+- `bpdu_guard_flag` - (Optional) BPDU flag for the service node. Allowed values are "true", "false" and "no". Default value is "no".
 - `form_factor` - (Optional) Form factor of the service node. Allowed values are "Physical" and "Virtual". Default value is "Virtual".
 - `mtu` - (Optional) MTU of the service node. Default value is "jumbo".
 - `policy_description` - (Optional) Description of the attached policy.

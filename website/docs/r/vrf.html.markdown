@@ -64,8 +64,8 @@ resource "dcnm_vrf" "first" {
 
 <strong>Note: </strong> For auto-generation of segment-id while creating multiple VRFs in the same plan, Use the depends on functionality of terraform to avoid any segment-id conflicts.
 
-- `vlan` - (Optional) Vlan Id for the VRF.
-- `vlan_name` - (Optional) Vlan name for the VRF.
+- `vlan` - (Optional) VLAN Id for the VRF.
+- `vlan_name` - (Optional) VLAN name for the VRF.
 - `description` - (Optional) Description for the VRF.
 - `intf_description` - (Optional) Intf description for the VRF.
 - `tag` - (Optional) Tag for the VRF. Ranging from 0 to 4294967295.
@@ -77,7 +77,7 @@ resource "dcnm_vrf" "first" {
 - `loopback_id` - (Optional) Loopback ip address for the VRF. Ranging from 0 to 1023.
 - `mutlicast_group` - (Optional) Multicast group address for the VRF. Ranging from 224.0.0.0/4 to 239.255.255.255/4.
 - `mutlicast_address` - (Optional) Multicast address for the VRF.
-- `ipv6_link_local_flag` - (Optional) Ipv6 link local enable flag for the VRF. Allowed values are "true" and "false".
+- `ipv6_link_local_flag` - (Optional) IPv6 link local enable flag for the VRF. Allowed values are "true" and "false".
 - `trm_bgw_msite_flag` - (Optional) Trm bgw multisite enable flag for the VRF. Allowed values are "true" and "false".
 - `advertise_host_route` - (Optional) Advertise host route enable flag for the VRF. Allowed values are "true" and "false".
 - `advertise_default_route` - (Optional) Advertise default route enable flag for the VRF. Allowed values are "true" and "false".
@@ -91,15 +91,15 @@ resource "dcnm_vrf" "first" {
 - `deploy` - (Optional) Deploy flag, used to deploy the VRF. Default value is "true".
 - `deploy_timeout` - (Optional) Deployment timeout, used as the limiter for the deployment status check for VRF resource. It is in the unit of seconds and default value is "300".
 
-- `attachments` - (Optional) Attachment Block, have information regarding the switches which should be attached or detached to/from VRF. If `deploy` is "true", then atleast one attachment must be configured.
+- `attachments` - (Optional) Attachment Block, have information regarding the switches which should be attached or detached to/from VRF. If `deploy` is "true", then at least one attachment must be configured.
 - `attachments.serial_number` - (Required) Serial number of the switch.
-- `attachments.vlan_id` - (Optional) Vlan ID for the switch associated with VRF. If not mentioned then VRF's default vlan id will be used for attachment.
+- `attachments.vlan_id` - (Optional) VLAN ID for the switch associated with VRF. If not mentioned then VRF's default vlan id will be used for attachment.
 - `attachments.attach` - (Optional) Attach flag for switch. Default value is "true".
 - `attachments.free_form_config` - (Optional) Free form configuration for the switch attachment.
 - `attachments.extension_values` - (Optional) Extension values for switch attachment.
 - `attachments.loopback_id` - (Optional) Loopback id for the switch attachment.
-- `attachments.loopback_ipv4` - (Optional) Loopback ipv4 address for the switch attachment.
-- `attachments.loopback_ipv6` - (Optional) Loopback ipv6 address for the switch attachment.
+- `attachments.loopback_ipv4` - (Optional) Loopback IPv4 address for the switch attachment.
+- `attachments.loopback_ipv6` - (Optional) Loopback IPv6 address for the switch attachment.
 - `attachments.vrf_lite` - (Optional) VRF lite for the switch attachment.
 - `attachments.vrf_lite.peer_vrf_name` - (Required) Name of vrf lite for the switch attachment.
 - `attachments.vrf_lite.interface_name` - (Required) Interface name of external edge router for the switch attachment.
@@ -107,8 +107,8 @@ resource "dcnm_vrf" "first" {
 - `attachments.vrf_lite.ip_mask` - (Optional) Ip mask of vrf lite for the switch attachment.
 - `attachments.vrf_lite.neighbor_ip` - (Optional) Neighbor ip of vrf lite for the switch attachment.
 - `attachments.vrf_lite.neighbor_asn` - (Optional) Neighbor asn of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_mask` - (Optional) Ipv6 mask of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_neighbor` - (Optional) Ipv6 neighbor of vrf lite for the switch attachment.
+- `attachments.vrf_lite.ipv6_mask` - (Optional) IPv6 mask of vrf lite for the switch attachment.
+- `attachments.vrf_lite.ipv6_neighbor` - (Optional) IPv6 neighbor of vrf lite for the switch attachment.
 - `attachments.vrf_lite.auto_vrf_lite_flag` - (Optional) Auto vrf lite flag of vrf lite for the switch attachment.
 
 ## Attribute Reference

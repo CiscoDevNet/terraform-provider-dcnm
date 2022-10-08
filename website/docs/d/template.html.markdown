@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM Template
 ---
 
-# dcnm_template #
+# dcnm_template
+
 Data source for DCNM Template
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -19,8 +20,7 @@ data "dcnm_template" "ex"{
 
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `name` - (Required) name of Template.
 * `content` - (Optional) File name or file content.
@@ -30,5 +30,3 @@ data "dcnm_template" "ex"{
 * `template_content_type` - (Optional) Content type of template.
 * `tags` - (Optional) Tag of template.
 * `template_sub_type` - (Optional) Sub type of template.
-
-

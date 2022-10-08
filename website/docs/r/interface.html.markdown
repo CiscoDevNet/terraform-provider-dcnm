@@ -158,13 +158,13 @@ resource "dcnm_interface" "second" {
 
 ## Argument Reference for sub-interface Interface ##
 
-* `subinterface_vlan` - (Optional) vlan for the sub-interface.
-* `vrf` - (Optional) vrf for the sub-interface.
-* `ipv4` - (Optional) ipv4 address for the sub-interface.
-* `ipv6` - (Optional) ipv6 address for the sub-interface.
-* `ipv6_prefix` - (Optional) ipv6 prefic for the sub-interface.
-* `ipv4_prefix` - (Optional) ipv4 prefix for the sub-interface.
-* `subinterface_mtu` - (Optional) mtu for the sub-interface.
+* `subinterface_vlan` - (Optional) VLAN for the sub-interface.
+* `vrf` - (Optional) VRF for the sub-interface.
+* `ipv4` - (Optional) IPv4 address for the sub-interface.
+* `ipv6` - (Optional) IPv6 address for the sub-interface.
+* `ipv6_prefix` - (Optional) IPv6 prefix for the sub-interface.
+* `ipv4_prefix` - (Optional) IPv4 prefix for the sub-interface.
+* `subinterface_mtu` - (Optional) MTU for the sub-interface.
 * `configuration` - (Optional) configuration for the sub-interface.
 * `description` - (Optional) description for the sub-interface.
 

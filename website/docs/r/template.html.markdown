@@ -6,10 +6,11 @@ description: |-
   Manages DCNM Template
 ---
 
-# dcnm_template #
+# dcnm_template
+
 Manages DCNM Template
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -63,12 +64,9 @@ template_content_type="TEMPLATE_CLI"
 tags="tag1"
 template_sub_type="VXLAN"
 }
-
-
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `name` - (Required) Name of Template.
 * `content` - (Required) Content of file or file name.
@@ -79,8 +77,6 @@ template_sub_type="VXLAN"
 * `tags` - (Optional) Tag of template.
 * `template_sub_type` - (Optional) Sub type of template.
 
-
-
 ## Attribute Reference
 
 The only attribute that this resource exports is the `id`, which is set to the
@@ -90,7 +86,6 @@ Dn of the template.
 
 An existing Template can be [imported][docs-import] into this resource via template name, using the following command:
 [docs-import]: https://www.terraform.io/docs/import/index.html
-
 
 ```
 terraform import dcnm_template.example <template_name>

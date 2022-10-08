@@ -6,10 +6,11 @@ description: |-
   Data source for DCNM inventory module
 ---
 
-# dcnm_inventory #
+# dcnm_inventory
+
 Data source for DCNM inventory module
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
 
@@ -20,12 +21,10 @@ data "dcnm_inventory" "check" {
 
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `fabric_name` - (Required) fabric name under which inventory should be created.
 * `switch_name` - (Required) name of switch.
-
 
 ## Attribute Reference
 

@@ -6,13 +6,13 @@ description: |-
   Manages DCNM rest modules
 ---
 
-# dcnm_rest #
+# dcnm_rest
+
 Manages DCNM rest modules
 
-## Example Usage ##
+## Example Usage
 
 ```hcl
-
 resource "dcnm_rest" "first" {
   path    = "/rest/top-down/fabrics/fab2/networks/import"
   payload = <<EOF
@@ -35,11 +35,9 @@ resource "dcnm_rest" "template_validate" {
   payload = file("payload.txt")
   payload_type = "text"
 }
-
 ```
 
-
-## Argument Reference ##
+## Argument Reference
 
 * `path` - (Required) DCNM REST endpoint, where the data is being sent.
 * `method` - (Optional) HTTP method. Allowed values are "GET", "PUT", "POST", "DELETE".
