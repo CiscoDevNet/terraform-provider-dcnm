@@ -7,7 +7,7 @@ BUG FIXES:
 ## 1.2.2 (April 20, 2022)
 BUG FIXES:
 - Add M1 MacOS support.
-- Fix dcnm_policy resource destroy and deployement issue when modifying multiple policies.
+- Fix dcnm_policy resource destroy and deployment issue when modifying multiple policies.
 
 ## 1.2.1 (April 6, 2022)
 BUG FIXES:
