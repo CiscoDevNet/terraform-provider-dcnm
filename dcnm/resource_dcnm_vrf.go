@@ -1003,8 +1003,19 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 							return err
 						}
 						extensionProtValues := cont.Index(0).S("switchDetailsList").Index(0).S("extensionPrototypeValues")
-						ifName := stripQuotes(extensionProtValues.S("interfaceName").String())
-						extensionValueString := stripQuotes(extensionProtValues.S("extensionValues").String())
+						var ifName string
+						if extensionProtValues.Exists("interfaceName") {
+							ifName = stripQuotes(extensionProtValues.S("interfaceName").String())
+						} else {
+							ifName = stripQuotes(extensionProtValues.Index(0).S("interfaceName").String())
+						}
+
+						var extensionValueString string
+						if extensionProtValues.Exists("extensionValues") {
+							extensionValueString = stripQuotes(extensionProtValues.S("extensionValues").String())
+						} else {
+							extensionValueString = stripQuotes(extensionProtValues.Index(0).S("extensionValues").String())
+						}
 
 						var extensionValues map[string]interface{}
 						extensionValueString = strings.Replace(extensionValueString, "\\", "", -1)
