@@ -447,8 +447,6 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			if trm, err := strconv.ParseBool(stripQuotes(cont.S("trmEnabled").String())); err == nil {
 				d.Set("trm_enable_flag", trm)
 			}
-		} else {
-			d.Set("trm_enable_flag", false)
 		}
 		if cont.Exists("rtBothAuto") && stripQuotes(cont.S("rtBothAuto").String()) != "" {
 			if rt, err := strconv.ParseBool(stripQuotes(cont.S("rtBothAuto").String())); err == nil {
@@ -461,8 +459,6 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 			if l3, err := strconv.ParseBool(stripQuotes(cont.S("enableL3OnBorder").String())); err == nil {
 				d.Set("l3_gateway_flag", l3)
 			}
-		} else {
-			d.Set("l3_gateway_flag", false)
 		}
 		if cont.Exists("ENABLE_NETFLOW") && stripQuotes(cont.S("ENABLE_NETFLOW").String()) != "" {
 			if l3, err := strconv.ParseBool(stripQuotes(cont.S("ENABLE_NETFLOW").String())); err == nil {
