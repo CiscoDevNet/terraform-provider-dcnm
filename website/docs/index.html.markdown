@@ -22,6 +22,7 @@ To learn more about the DCNM/NDFC, visit the [Cisco Nexus Dashboard Fabric Contr
 terraform {
   required_providers {
     dcnm = {
+      # The CiscoDevNet/dcnm provider supports both NDFC and DCNM
       source = "CiscoDevNet/dcnm"
     }
   }
