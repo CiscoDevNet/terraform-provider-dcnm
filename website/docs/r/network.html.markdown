@@ -73,26 +73,26 @@ resource "dcnm_network" "first" {
 
 * `display_name` - (Optional) display name for the network object. If not mentioned, then `name` will be considered as `display_name`.
 * `description` - (Optional) description for the network.
-* `vrf_name` - (Optional) name of the vrf which should be associated with the network. If not given then will be configured as "NA" with `l2_only_flag` as "true".
-* `vlan_id` - (Optional) vlan number for the network.
-* `vlan_name` - (Optional) vlan name for the network.
-* `ipv4_gateway` - (Optional) ipv4 address of gateway for the network.
-* `ipv6_gateway` - (Optional) ipv6 address of gateway for the network.
-* `mtu` - (Optional) mtu value for the network. Ranging from 68 to 9216.
+* `vrf_name` - (Optional) name of the VRF which should be associated with the network. If not given then will be configured as "NA" with `l2_only_flag` as "true".
+* `vlan_id` - (Optional) VLAN number for the network.
+* `vlan_name` - (Optional) VLAN name for the network.
+* `ipv4_gateway` - (Optional) IPv4 address of gateway for the network.
+* `ipv6_gateway` - (Optional) IPv6 address of gateway for the network.
+* `mtu` - (Optional) MTU value for the network. Ranging from 68 to 9216.
 * `tag` - (Optional) tag for the Network. Ranging from 0 to 4294967295.
-* `secondary_gw_1` - (Optional) ipv4 secondary gateway 1 for the network.
-* `secondary_gw_2` - (Optional) ipv4 secondary gateway 2 for the network.
-* `secondary_gw_3` - (Optional) ipv4 secondary gateway 3 for the network.
-* `secondary_gw_4` - (Optional) ipv4 secondary gateway 4 for the network.
-* `arp_supp_flag` - (Optional) arp suppression flag for the network.
+* `secondary_gw_1` - (Optional) IPv4 secondary gateway 1 for the network.
+* `secondary_gw_2` - (Optional) IPv4 secondary gateway 2 for the network.
+* `secondary_gw_3` - (Optional) IPv4 secondary gateway 3 for the network.
+* `secondary_gw_4` - (Optional) IPv4 secondary gateway 4 for the network.
+* `arp_supp_flag` - (Optional) ARP suppression flag for the network.
 * `ir_enable_flag` - (Optional) ingress replication flag for the network.
 * `mcast_group` - (Optional) multicast group address for the network (not applicable for fabrics of type MFD).
-* `dhcp_1` - (Optional) ipv4 address of DHCP server 1 for the network.
-* `dhcp_2` - (Optional) ipv4 address of DHCP server 2 for the network.
-* `dhcp_3` - (Optional) ipv4 address of DHCP server 3 for the network.
-* `dhcp_vrf` - (Optional) vrf name of DHCP server for the network.
-* `dhcp_vrf_2` - (Optional) vrf name of DHCP server 2 for the network.
-* `dhcp_vrf_3` - (Optional) vrf name of DHCP server 3 for the network.
+* `dhcp_1` - (Optional) IPv4 address of DHCP server 1 for the network.
+* `dhcp_2` - (Optional) IPv4 address of DHCP server 2 for the network.
+* `dhcp_3` - (Optional) IPv4 address of DHCP server 3 for the network.
+* `dhcp_vrf` - (Optional) VRF name of DHCP server for the network.
+* `dhcp_vrf_2` - (Optional) VRF name of DHCP server 2 for the network.
+* `dhcp_vrf_3` - (Optional) VRF name of DHCP server 3 for the network.
 * `loopback_id` - (Optional) loopback id for the network. Ranging from 0 to 1023.
 * `rt_both_flag` - (Optional) l2 VNI route-target both enable flag for the network.
 * `trm_enable_flag` - (Optional) TRM enable flag for the network.
@@ -111,9 +111,9 @@ resource "dcnm_network" "first" {
 
 * `attachments` - (Optional) attachment block, have information regarding the switches which should be attached or detached to/from network. If `deploy` is "true", then at least one attachment must be configured.
 * `attachments.serial_number` - (Required) serial number of the switch.
-* `attachments.vlan_id` - (Optional) vlan ID for the switch associated with network. If not mentioned then network's default vlan id will be used for attachment.
+* `attachments.vlan_id` - (Optional) VLAN ID for the switch associated with network. If not mentioned then network's default VLAN ID will be used for attachment.
 * `attachments.attach` - (Optional) attach flag for switch. Default value is "true".
-* `attachments.dot1_qvlan` - (Optional) dot1 qvlan for switch attachment.
+* `attachments.dot1_qvlan` - (Optional) dot1q VLAN for switch attachment.
 * `attachments.switch_ports` - (Optional) list of port names (i.e. interface names) for switch attachment.
 * `attachments.untagged` - (Optional) untagged flag for switch attachment.
 * `attachments.free_form_config` - (Optional) free form configuration for the switch attachment.
