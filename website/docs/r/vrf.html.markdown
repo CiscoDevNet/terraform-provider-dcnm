@@ -64,7 +64,7 @@ resource "dcnm_vrf" "first" {
 
 <strong>Note: </strong> For auto-generation of segment-id while creating multiple VRFs in the same plan, Use the depends on functionality of terraform to avoid any segment-id conflicts.
 
-- `vlan` - (Optional) VLAN Id for the VRF.
+- `vlan` - (Optional) VLAN ID for the VRF.
 - `vlan_name` - (Optional) VLAN name for the VRF.
 - `description` - (Optional) Description for the VRF.
 - `intf_description` - (Optional) Intf description for the VRF.
@@ -83,7 +83,7 @@ resource "dcnm_vrf" "first" {
 - `advertise_default_route` - (Optional) Advertise default route enable flag for the VRF. Allowed values are "true" and "false".
 - `static_default_route` - (Optional) Configure static default route enable flag for the VRF. Allowed values are "true" and "false".
 - `template` - (Optional) Template name for the VRF. Values allowed "Default_VRF_Universal". Default is "Default_VRF_Universal".
-- `mtu` - (Optional) Mtu value for the VRF. Ranging from 68 to 9216.
+- `mtu` - (Optional) MTU value for the VRF. Ranging from 68 to 9216.
 - `extension_template` - (Optional) Extension Template name for the VRF. Values allowed are "Default_VRF_Extension_Universal". Default is "Default_VRF_Extension_Universal".
 - `service_template` - (Optional) Service template name for the VRF.
 - `source` - (Optional) Source for the VRF.
@@ -93,7 +93,7 @@ resource "dcnm_vrf" "first" {
 
 - `attachments` - (Optional) Attachment Block, have information regarding the switches which should be attached or detached to/from VRF. If `deploy` is "true", then at least one attachment must be configured.
 - `attachments.serial_number` - (Required) Serial number of the switch.
-- `attachments.vlan_id` - (Optional) VLAN ID for the switch associated with VRF. If not mentioned then VRF's default vlan id will be used for attachment.
+- `attachments.vlan_id` - (Optional) VLAN ID for the switch associated with VRF. If not mentioned then VRF's default VLAN ID will be used for attachment.
 - `attachments.attach` - (Optional) Attach flag for switch. Default value is "true".
 - `attachments.free_form_config` - (Optional) Free form configuration for the switch attachment.
 - `attachments.extension_values` - (Optional) Extension values for switch attachment.
@@ -101,15 +101,15 @@ resource "dcnm_vrf" "first" {
 - `attachments.loopback_ipv4` - (Optional) Loopback IPv4 address for the switch attachment.
 - `attachments.loopback_ipv6` - (Optional) Loopback IPv6 address for the switch attachment.
 - `attachments.vrf_lite` - (Optional) VRF lite for the switch attachment.
-- `attachments.vrf_lite.peer_vrf_name` - (Required) Name of vrf lite for the switch attachment.
+- `attachments.vrf_lite.peer_vrf_name` - (Required) Name of VRF lite for the switch attachment.
 - `attachments.vrf_lite.interface_name` - (Required) Interface name of external edge router for the switch attachment.
-- `attachments.vrf_lite.dotq_id` - (Optional) Dotq id of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ip_mask` - (Optional) Ip mask of vrf lite for the switch attachment.
-- `attachments.vrf_lite.neighbor_ip` - (Optional) Neighbor ip of vrf lite for the switch attachment.
-- `attachments.vrf_lite.neighbor_asn` - (Optional) Neighbor asn of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_mask` - (Optional) IPv6 mask of vrf lite for the switch attachment.
-- `attachments.vrf_lite.ipv6_neighbor` - (Optional) IPv6 neighbor of vrf lite for the switch attachment.
-- `attachments.vrf_lite.auto_vrf_lite_flag` - (Optional) Auto vrf lite flag of vrf lite for the switch attachment.
+- `attachments.vrf_lite.dotq_id` - (Optional) Dotq id of VRF lite for the switch attachment.
+- `attachments.vrf_lite.ip_mask` - (Optional) Ip mask of VRF lite for the switch attachment.
+- `attachments.vrf_lite.neighbor_ip` - (Optional) Neighbor ip of VRF lite for the switch attachment.
+- `attachments.vrf_lite.neighbor_asn` - (Optional) Neighbor asn of VRF lite for the switch attachment.
+- `attachments.vrf_lite.ipv6_mask` - (Optional) IPv6 mask of VRF lite for the switch attachment.
+- `attachments.vrf_lite.ipv6_neighbor` - (Optional) IPv6 neighbor of VRF lite for the switch attachment.
+- `attachments.vrf_lite.auto_vrf_lite_flag` - (Optional) Auto VRF lite flag of VRF lite for the switch attachment.
 
 ## Attribute Reference
 

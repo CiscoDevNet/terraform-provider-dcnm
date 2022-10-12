@@ -40,9 +40,9 @@ data "dcnm_interface" "check" {
 
 ## Attribute Reference for loopback Interface
 
-* `vrf` - vrf name for the loopback interface.
-* `ipv4` - ipv4 address for the loopback interface.
-* `ipv6` - ipv6 address for the loopback interface.
+* `vrf` - VRF name for the loopback interface.
+* `ipv4` - IPv4 address for the loopback interface.
+* `ipv6` - IPv6 address for the loopback interface.
 * `loopback_tag` - tag for the loopback interface.
 * `loopback_routing_tag` - routing tag for the loopback interface.
 * `loopback_ls_routing` - link state routing protocol for the loopback interface.
@@ -58,7 +58,7 @@ data "dcnm_interface" "check" {
 * `mode` - mode for the port-channel interface.
 * `bpdu_guard_flag` - BPDU flag for the port-channel interface.
 * `port_fast_flag` - port type fast flag for the port-channel interface.
-* `mtu` - mtu for the port-channel interface.
+* `mtu` - MTU for the port-channel interface.
 * `allowed_vlans` - allowed vlans for the port-channel interface.
 * `configuration` - configuration for the port-channel interface.
 * `description` - description for the port-channel interface.
@@ -73,7 +73,7 @@ data "dcnm_interface" "check" {
 * `mode` - mode for the vPC interface.
 * `bpdu_guard_flag` - BPDU flag for the vPC interface.
 * `port_fast_flag` - port type fast flag for the vPC interface.
-* `mtu` - mtu for the vPC interface.
+* `mtu` - MTU for the vPC interface.
 * `vpc_peer1_allowed_vlans` - peer1 allowed vlans for the vPC interface.
 * `vpc_peer2_allowed_vlans` - peer2 allowed vlans for the vPC interface.
 * `vpc_peer1_access_vlans` - peer1 access vlans for the vPC interface.
@@ -85,28 +85,28 @@ data "dcnm_interface" "check" {
 
 ## Attribute Reference for sub-interface Interface
 
-* `subinterface_vlan` - vlan for the sub-interface.
-* `vrf` - vrf for the sub-interface.
-* `ipv4` - ipv4 address for the sub-interface.
-* `ipv6` - ipv6 address for the sub-interface.
-* `ipv6_prefix` - ipv6 prefix for the sub-interface.
-* `ipv4_prefix` - ipv4 prefix for the sub-interface.
-* `subinterface_mtu` - mtu for the sub-interface.
+* `subinterface_vlan` - VLAN for the sub-interface.
+* `vrf` - VRF for the sub-interface.
+* `ipv4` - IPv4 address for the sub-interface.
+* `ipv6` - IPv6 address for the sub-interface.
+* `ipv6_prefix` - IPv6 prefix for the sub-interface.
+* `ipv4_prefix` - IPv4 prefix for the sub-interface.
+* `subinterface_mtu` - MTU for the sub-interface.
 * `configuration` - configuration for the sub-interface.
 * `description` - description for the sub-interface.
 
 ## Attribute Reference for ethernet Interface
 
-* `vrf` - vrf name for the ethernet interface.
+* `vrf` - VRF name for the ethernet interface.
 * `bpdu_guard_flag` - BPDU flag for the ethernet interface.
 * `port_fast_flag` - port type fast flag for the ethernet interface.
-* `mtu` - mtu for the ethernet interface.
+* `mtu` - MTU for the ethernet interface.
 * `ethernet_speed` - speed of the ethernet.
 * `allowed_vlans` - allowed vlans for the ethernet interface.
 * `configuration` - configuration for the ethernet.
 * `description` - description for the ethernet.
-* `ipv4` - ipv4 address for the ethernet.
-* `ipv6` - ipv6 address for the ethernet.
-* `ipv6_prefix` - ipv6 prefix for the ethernet.
-* `ipv4_prefix` - ipv4 prefix for the ethernet.
+* `ipv4` - IPv4 address for the ethernet.
+* `ipv6` - IPv6 address for the ethernet.
+* `ipv6_prefix` - IPv6 prefix for the ethernet.
+* `ipv4_prefix` - IPv4 prefix for the ethernet.
 * `access_vlans` -  access vlans for the ethernet interface.

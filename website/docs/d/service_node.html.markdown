@@ -30,7 +30,7 @@ data "dcnm_service_node" "example" {
 
 * `id` - Attribute id is set to the name of the Service Node.
 * `admin_state` - Admin state for the Service Node.
-* `allowed_vlans` - Allowed vlan names of the Service.
+* `allowed_vlans` - Allowed VLAN names of the Service.
 * `attached_fabric` - Name of attached easy fabric to which service node is attached.
 * `attached_switch_interface_name` - Switch interfaces where the service node will be attached.
 * `bpdu_guard_flag` - BPDU flag for the service node.

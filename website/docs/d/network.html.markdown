@@ -31,22 +31,22 @@ data "dcnm_vrf" "check" {
 * `id` - Attribute id set to the Dn of the network.
 * `display_name` -  display name for the network object.
 * `description` -  description for the network.
-* `vrf_name` -  name of the vrf which should be associated with the network.
+* `vrf_name` -  name of the VRF which should be associated with the network.
 * `l2_only_flag` -  layer 2 only flag for the network.
-* `vlan_id` -  vlan number for the network.
-* `vlan_name` -  vlan name for the network.
-* `ipv4_gateway` -  ipv4 address of gateway for the network.
-* `ipv6_gateway` -  ipv6 address of gateway for the network.
-* `mtu` -  mtu value for the network.
+* `vlan_id` -  VLAN ID for the network.
+* `vlan_name` -  VLAN name for the network.
+* `ipv4_gateway` -  IPv4 address of gateway for the network.
+* `ipv6_gateway` -  IPv6 address of gateway for the network.
+* `mtu` -  MTU value for the network.
 * `tag` -  tag for the Network.
-* `secondary_gw_1` -  ipv4 secondary gateway 1 for the network.
-* `secondary_gw_2` -  ipv4 secondary gateway 2 for the network.
-* `arp_supp_flag` -  arp suppression flag for the network.
+* `secondary_gw_1` -  IPv4 secondary gateway 1 for the network.
+* `secondary_gw_2` -  IPv4 secondary gateway 2 for the network.
+* `arp_supp_flag` -  ARP suppression flag for the network.
 * `ir_enable_flag` -  ingress replication flag for the network.
 * `mcast_group` -  multicast group address for the network.
-* `dhcp_1` -  ipv4 address of DHCP server 1 for the network.
-* `dhcp_2` -  ipv4 address of DHCP server 2 for the network.
-* `dhcp_vrf` -  vrf name of DHCP server for the network.
+* `dhcp_1` -  IPv4 address of DHCP server 1 for the network.
+* `dhcp_2` -  IPv4 address of DHCP server 2 for the network.
+* `dhcp_vrf` -  VRF name of DHCP server for the network.
 * `loopback_id` -  loopback id for the network.
 * `rt_both_flag` -  l2 VNI route-target both enable flag for the network.
 * `trm_enable_flag` -  TRM enable flag for the network.
@@ -58,7 +58,7 @@ data "dcnm_vrf" "check" {
 * `deploy` - deploy flag, used to deploy the network.
 * `attachments` - attachment block, have information regarding the switches which should be attached or detached to/from network.
 * `attachments.serial_number` - serial number of the switch.
-* `attachments.vlan_id` - vlan ID for the switch associated with network.
+* `attachments.vlan_id` - VLAN ID for the switch associated with network.
 * `attachments.attach` - attach flag for switch.
 * `attachments.switch_ports` - list of port name(i.e. interface names) for switch attachment.
 * `attachments.untagged` -  untagged flag for switch attachment.
