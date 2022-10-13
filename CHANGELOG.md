@@ -1,3 +1,11 @@
+## 1.2.4 (Oct 12, 2022)
+BUG FIXES:
+- Fix waiting logic for switch config save in inventory
+- Fix dcnm_template has missing parameters required for the HTTP request (#95)
+- Fix dcnm_interface admin_state = false cause error (#94)
+- Fix config removal triggered by destroy of the policy (#93)
+- Improvement to documentation
+
 ## 1.2.3 (August 3, 2022)
 BUG FIXES:
 - Fix free_form_config typo issue (#90)
