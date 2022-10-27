@@ -1,3 +1,7 @@
+## 1.2.5 (Oct 27, 2022)
+BUG FIXES:
+- Fix dcnm_network l3_gateway_flag not set correctly for Multi-Site Domain (MSD) fabrics (#99)
+
 ## 1.2.4 (Oct 12, 2022)
 BUG FIXES:
 - Fix waiting logic for switch config save in inventory
