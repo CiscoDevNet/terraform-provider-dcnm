@@ -1,8 +1,12 @@
-## 1.2.5 (Oct 27, 2022)
+## 1.2.6 (November 18, 2022)
+BUG FIXES:
+- Fix issue when VRF Attachments with VRF Lite peering enabled are not idempotent (#98)
+
+## 1.2.5 (October 27, 2022)
 BUG FIXES:
 - Fix dcnm_network l3_gateway_flag not set correctly for Multi-Site Domain (MSD) fabrics (#99)
 
-## 1.2.4 (Oct 12, 2022)
+## 1.2.4 (October 12, 2022)
 BUG FIXES:
 - Fix waiting logic for switch config save in inventory
 - Fix dcnm_template has missing parameters required for the HTTP request (#95)
