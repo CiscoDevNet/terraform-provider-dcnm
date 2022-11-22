@@ -50,6 +50,7 @@ resource "dcnm_policy" "second" {
 
 *  `policy_id` - (Optional) A unique ID identifying a policy.
     NOTE: User can specify only empty string value.
+*  `child_policies` - (Computed) A list containing unique IDs of child policies.
 
 ## Importing ##
 

@@ -29,6 +29,7 @@ var policyURLs = map[string]string{
 	"IntentConfig":  "/rest/control/policies/%s/intent-config",
 	"Common":        "/rest/control/policies/%s",
 	"GetFabricName": "/rest/control/switches/%s/fabric-name",
+	"GetPolicy":     "/rest/control/policies/switches/%s?source=POLICY-%s",
 }
 
 func resourceDCNMPolicy() *schema.Resource {
@@ -104,6 +105,13 @@ func resourceDCNMPolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  60,
+			},
+			"child_policies": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -279,6 +287,24 @@ func resourceDCNMPolicyRead(ctx context.Context, d *schema.ResourceData, m inter
 	}
 	setPolicyAttributes(d, cont)
 	d.SetId(models.G(cont, "id"))
+
+	childPolicyUrl := fmt.Sprintf(policyURLs["GetPolicy"], d.Get("serial_number"), d.Id())
+	cont, err = dcnmClient.GetviaURL(childPolicyUrl)
+	if err != nil {
+		return diag.Errorf("error child policy deletion: %w", err)
+	}
+	childPolicies := []interface{}{}
+	json.Unmarshal(cont.Bytes(), &childPolicies)
+
+	var childPolicyList []string
+	if len(childPolicies) > 0 {
+		for _, val := range childPolicies {
+			policy := val.(map[string]interface{})
+			childPolicyList = append(childPolicyList, fmt.Sprintf("%v", policy["id"]))
+		}
+	}
+	d.Set("child_policies", childPolicyList)
+
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil
 
@@ -355,30 +381,8 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 
 	deleteFlag := false
 
-	//Mark delete policy
-	url = fmt.Sprintf(policyURLs["MarkDelete"], d.Id())
-	cont, err = deletePolicy(url, dcnmClient)
-	if err != nil {
-		if cont != nil {
-			return diag.Errorf(cont.String())
-		}
-		return diag.FromErr(err)
-	}
-
-	//Intent-config checking
-	url = fmt.Sprintf(policyURLs["IntentConfig"], d.Id())
-	cont, err = dcnmClient.GetviaURL(url)
-	if err != nil {
-		if err.Error() == fmt.Sprintf("Policy %s does not exist", d.Id()) {
-			deleteFlag = true
-		} else {
-			return diag.Errorf("error deletion policy: %s", err)
-		}
-	}
-
-	markDeleteConfig := models.G(cont, "markDeletedConfig")
-
-	if markDeleteConfig == "No config is available" && !deleteFlag {
+	// if policy contains source policies
+	if len(d.Get("child_policies").([]interface{})) > 0 {
 		dUrl := fmt.Sprintf(policyURLs["Common"], d.Id())
 		cont, err = dcnmClient.Delete(dUrl)
 		if err != nil && err.Error() != fmt.Sprintf("Policy %s does not exist", d.Id()) {
@@ -386,6 +390,44 @@ func resourceDCNMPolicyDelete(ctx context.Context, d *schema.ResourceData, m int
 				return diag.Errorf(cont.String())
 			}
 			return diag.Errorf("error while destroying policy %v", err)
+		}
+		deleteFlag = true
+	}
+
+	if !deleteFlag {
+
+		//Mark delete policy
+		url = fmt.Sprintf(policyURLs["MarkDelete"], d.Id())
+		cont, err = deletePolicy(url, dcnmClient)
+		if err != nil {
+			if cont != nil {
+				return diag.Errorf(cont.String())
+			}
+			return diag.FromErr(err)
+		}
+
+		//Intent-config checking
+		url = fmt.Sprintf(policyURLs["IntentConfig"], d.Id())
+		cont, err = dcnmClient.GetviaURL(url)
+		if err != nil {
+			if err.Error() == fmt.Sprintf("Policy %s does not exist", d.Id()) {
+				deleteFlag = true
+			} else {
+				return diag.Errorf("error deletion policy: %s", err)
+			}
+		}
+
+		markDeleteConfig := models.G(cont, "markDeletedConfig")
+
+		if markDeleteConfig == "No config is available" && !deleteFlag {
+			dUrl := fmt.Sprintf(policyURLs["Common"], d.Id())
+			cont, err = dcnmClient.Delete(dUrl)
+			if err != nil && err.Error() != fmt.Sprintf("Policy %s does not exist", d.Id()) {
+				if cont != nil {
+					return diag.Errorf(cont.String())
+				}
+				return diag.Errorf("error while destroying policy %v", err)
+			}
 		}
 	}
 
@@ -428,9 +470,11 @@ func deployPolicyWithTimeout(dcnmClient *client.Client, policyId, serialNumber s
 		if err != nil {
 			return fmt.Errorf("policy is created but failed to deploy with error : %s", err)
 		}
+
+		errorMsg := models.G(cont, "error")
 		idFailed := models.G(cont.Index(0), "failedPTIList")
 		idSuccess := models.G(cont.Index(0), "successPTIList")
-		if idFailed == policyId && count == MAX_RETRY_CREATE {
+		if (idFailed == policyId && count == MAX_RETRY_CREATE) || (strings.Contains(errorMsg, "Internal Server Error") && count == MAX_RETRY_CREATE) {
 			return fmt.Errorf("policy is created but failed to deploy policy with id: %s", policyId)
 		}
 		if idSuccess == policyId {
