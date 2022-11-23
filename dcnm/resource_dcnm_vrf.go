@@ -716,7 +716,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 										vrfLiteMap["NEIGHBOR_IP"] = extensionValues["NEIGHBOR_IP"].(string)
 									}
 
-									if vrfLite["neighbor_ip"] != "" {
+									if vrfLite["neighbor_asn"] != "" {
 										vrfLiteMap["NEIGHBOR_ASN"] = vrfLite["neighbor_asn"].(string)
 									} else if extensionValues["NEIGHBOR_ASN"] != nil {
 										vrfLiteMap["NEIGHBOR_ASN"] = extensionValues["NEIGHBOR_ASN"].(string)
@@ -1264,11 +1264,11 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 								if extensionValues["PEER_VRF_NAME"] != nil {
 									vrfLiteMap["peer_vrf_name"] = extensionValues["PEER_VRF_NAME"].(string)
 								}
-						
+
 								if extensionValues["IF_NAME"] != nil {
 									vrfLiteMap["interface_name"] = extensionValues["IF_NAME"].(string)
 								}
-						
+
 								if len(extensionValues) != 0 {
 
 									if vrfLite["dot1q_id"] != "" {
@@ -1276,6 +1276,9 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 									}
 									if vrfLite["neighbor_ip"] != "" {
 										vrfLiteMap["neighbor_ip"] = extensionValues["NEIGHBOR_IP"].(string)
+									}
+									if vrfLite["ip_mask"] != "" {
+										vrfLiteMap["ip_mask"] = extensionValues["IP_MASK"].(string)
 									}
 
 									if vrfLite["neighbor_asn"] != "" {
