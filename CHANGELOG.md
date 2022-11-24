@@ -1,3 +1,8 @@
+## 1.2.7 (November 25, 2022)
+BUG FIXES:
+- Fix idempotency of VRF Attachments with VRF Lite peering enabled (#108)
+- Mark Child policies to be deleted when deleting source policy (#107)
+
 ## 1.2.6 (November 18, 2022)
 BUG FIXES:
 - Fix issue when VRF Attachments with VRF Lite peering enabled are not idempotent (#98)
