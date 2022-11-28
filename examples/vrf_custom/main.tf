@@ -7,11 +7,10 @@ terraform {
 }
 
 provider "dcnm" {
-  username = "admin"
-  password = "c1sco123"
-  url      = "https://10.122.18.70"
-  insecure = true
-  platform = "nd"
+  username = ""
+  password = ""
+  url      = ""
+  # expiry   = 900000
 }
 
 resource "dcnm_vrf_custom" "my_vrf" {
