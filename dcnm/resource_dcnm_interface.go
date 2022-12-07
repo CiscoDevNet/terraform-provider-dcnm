@@ -815,8 +815,7 @@ func resourceDCNMInterfaceCreate(d *schema.ResourceData, m interface{}) error {
 		}
 
 	} else if intfType == "ethernet" {
-		return fmt.Errorf("Ethernet interface can only be modified")
-
+		return resourceDCNMInterfaceUpdate(d, m)
 	}
 
 	nvPairMap["ADMIN_STATE"] = d.Get("admin_state").(bool)
