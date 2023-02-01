@@ -160,7 +160,11 @@ func datasourceDCNMVRF() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -214,7 +218,12 @@ func datasourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	setVRFAttributes(d, cont)
+
+	if _, ok := d.GetOk("template_props"); ok {
+		setVRFCustomTemplateAttributes(d, cont)
+	} else {
+		setVRFAttributes(d, cont)
+	}
 
 	flag, err := checkvrfDeploy(dcnmClient, fabricName, dn)
 	if err != nil {
