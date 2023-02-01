@@ -219,7 +219,7 @@ func datasourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if _, ok := d.GetOk("template_props"); ok {
+	if stripQuotes(cont.S("vrfTemplate").String()) != "Default_VRF_Universal" {
 		setVRFCustomTemplateAttributes(d, cont)
 	} else {
 		setVRFAttributes(d, cont)
