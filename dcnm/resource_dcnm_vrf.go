@@ -511,8 +511,6 @@ func resourceDCNMVRFImporter(d *schema.ResourceData, m interface{}) ([]*schema.R
 	d.Set("deploy", flag)
 
 	var stateImport *schema.ResourceData
-	log.Printf("[DEBUG_DEV] Schema %s", d)
-
 	if stripQuotes(cont.S("vrfTemplate").String()) != "Default_VRF_Universal" {
 		stateImport = setVRFCustomTemplateAttributes(d, cont)
 	} else {
