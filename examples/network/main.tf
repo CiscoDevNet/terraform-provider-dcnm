@@ -62,3 +62,38 @@ resource "dcnm_network" "first" {
     "Ethernet1/2"]
   }
 }
+
+resource "dcnm_network" "second" {
+  fabric_name        = "fab3"
+  name               = "second"
+  network_id         = "1235"
+  display_name       = "second"
+  vrf_name           = "VRF1012"
+  template           = "Template_Universal"
+  extension_template = "Template_Extension_Universal"
+  template_props = {
+    "suppressArp" : "true"
+    "gatewayIpAddress" : "10.0.4.1/24"
+    "enableL3OnBorder" : "false"
+    "vlanName" : "first"
+    "enableIR" : "false"
+    "mtu" : "1500"
+    "rtBothAuto" : "false"
+    "isLayer2Only" : "false"
+    "mcastGroup" : "225.0.0.1"
+    "vrfDhcp2" : "VRF1000"
+    "dhcpServerAddr1" : "10.1.1.1"
+    "dhcpServerAddr2" : "10.1.1.2"
+    "vrfDhcp" : "VRF1000"
+    "tag" : ""
+    "vlanId" : "2303"
+    "networkName" : "second"
+    "segmentId" : "1235"
+    "vrfName" : "VRF1012"
+  }
+  deploy = true
+  attachments {
+    serial_number = dcnm_inventory.example3.serial_number
+    switch_ports  = ["Ethernet1/22"]
+  }
+}
