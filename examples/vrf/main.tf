@@ -103,6 +103,8 @@ resource "dcnm_vrf" "third" {
     "trmEnabled" : "false"
     "asn" : "4201020601"
     "vrfIntfDescription" : ""
+    "vrfSegmentId" : "50050"
+    "vrfName" : "check3"
   }
   attachments {
     serial_number = "9ZGMF8CBZK5"
