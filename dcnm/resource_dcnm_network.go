@@ -217,6 +217,12 @@ func resourceDCNMNetwork() *schema.Resource {
 				Computed: true,
 			},
 
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -483,6 +489,52 @@ func setNetworkAttributes(d *schema.ResourceData, cont *container.Container) *sc
 	return d
 }
 
+func setNetworkCustomTemplateAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+	if cont.Exists("fabric") {
+		d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	}
+	d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	d.Set("name", stripQuotes(cont.S("networkName").String()))
+	d.Set("network_id", stripQuotes(cont.S("networkId").String()))
+	d.Set("template", stripQuotes(cont.S("networkTemplate").String()))
+	d.Set("extension_template", stripQuotes(cont.S("networkExtensionTemplate").String()))
+	d.Set("vrf_name", stripQuotes(cont.S("vrf").String()))
+
+	if cont.Exists("displayName") {
+		d.Set("display_name", stripQuotes(cont.S("displayName").String()))
+	}
+	if cont.Exists("serviceNetworkTemplate") && stripQuotes(cont.S("serviceNetworkTemplate").String()) != "null" {
+		d.Set("service_template", stripQuotes(cont.S("serviceNetworkTemplate").String()))
+	}
+	if cont.Exists("source") && stripQuotes(cont.S("source").String()) != "null" {
+		d.Set("source", stripQuotes(cont.S("source").String()))
+	}
+
+	var strByte []byte
+	if cont.Exists("networkTemplateConfig") {
+		strJson := models.G(cont, "networkTemplateConfig")
+		strJson = strings.ReplaceAll(strJson, "\\", "")
+		strByte = []byte(strJson)
+		var networkTemplateConfig map[string]string
+		json.Unmarshal(strByte, &networkTemplateConfig)
+		props, ok := d.GetOk("template_props")
+
+		map2 := make(map[string]interface{})
+		for k := range props.(map[string]interface{}) {
+			map2[k] = networkTemplateConfig[k]
+		}
+		if !ok {
+			d.Set("template_props", networkTemplateConfig)
+		} else {
+
+			d.Set("template_props", map2)
+		}
+	}
+
+	d.SetId(stripQuotes(cont.S("networkName").String()))
+	return d
+}
+
 func resourceDCNMNetworkImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	log.Println("[DEBUG] Begining Importer ", d.Id())
 
@@ -499,7 +551,12 @@ func resourceDCNMNetworkImporter(d *schema.ResourceData, m interface{}) ([]*sche
 		return nil, err
 	}
 
-	stateImport := setNetworkAttributes(d, cont)
+	var stateImport *schema.ResourceData
+	if stripQuotes(cont.S("networkTemplate").String()) != "Default_Network_Universal" {
+		stateImport = setNetworkCustomTemplateAttributes(d, cont)
+	} else {
+		stateImport = setNetworkAttributes(d, cont)
+	}
 
 	deployed, err := checkNetworkDeploy(dcnmClient, fabricName, network)
 	if err != nil {
@@ -718,14 +775,26 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		networkProfile.NVEId = ""
 	}
-	networkProfile.NetworkName = name
-	networkProfile.SegmentID = segID
 
-	configStr, err := json.Marshal(networkProfile)
-	if err != nil {
-		return err
+	if networkConfig, ok := d.GetOk("template_props"); ok {
+		networkConfigMap := networkConfig.(map[string]interface{})
+		networkConfigMap["networkName"] = name
+		networkConfigMap["segmentId"] = segID
+		networkConfigMap["vrfName"] = network.VRF
+		confStr, err := json.Marshal(networkConfigMap)
+		if err != nil {
+			return err
+		}
+		network.Config = string(confStr)
+	} else {
+		networkProfile.NetworkName = network.Name
+		networkProfile.SegmentID = segID
+		confStr, err := json.Marshal(networkProfile)
+		if err != nil {
+			return err
+		}
+		network.Config = string(confStr)
 	}
-	network.Config = string(configStr)
 
 	durl := fmt.Sprintf("/rest/top-down/fabrics/%s/networks", fabricName)
 	_, err = dcnmClient.Save(durl, &network)
@@ -1023,14 +1092,25 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		networkProfile.NVEId = ""
 	}
-	networkProfile.NetworkName = name
-	networkProfile.SegmentID = segID
 
-	configStr, err := json.Marshal(networkProfile)
-	if err != nil {
-		return err
+	if networkConfig, ok := d.GetOk("template_props"); ok {
+		networkConfigMap := networkConfig.(map[string]interface{})
+		networkConfigMap["networkName"] = name
+		networkConfigMap["segmentId"] = segID
+		confStr, err := json.Marshal(networkConfigMap)
+		if err != nil {
+			return err
+		}
+		network.Config = string(confStr)
+	} else {
+		networkProfile.NetworkName = network.Name
+		networkProfile.SegmentID = segID
+		confStr, err := json.Marshal(networkProfile)
+		if err != nil {
+			return err
+		}
+		network.Config = string(confStr)
 	}
-	network.Config = string(configStr)
 
 	dn := d.Id()
 	durl := fmt.Sprintf("/rest/top-down/fabrics/%s/networks/%s", fabricName, dn)
@@ -1172,7 +1252,11 @@ func resourceDCNMNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setNetworkAttributes(d, cont)
+	if _, ok := d.GetOk("template_props"); ok {
+		setNetworkCustomTemplateAttributes(d, cont)
+	} else {
+		setNetworkAttributes(d, cont)
+	}
 
 	deployed, err := checkNetworkDeploy(dcnmClient, fabricName, dn)
 	if err != nil {
