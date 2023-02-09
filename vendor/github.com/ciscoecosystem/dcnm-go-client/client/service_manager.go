@@ -23,6 +23,7 @@ func (c *Client) GetviaURL(endpoint string) (*container.Container, error) {
 	if cont == nil {
 		return nil, errors.New("Empty response body")
 	}
+
 	return cont, checkforerrors(cont, resp)
 }
 

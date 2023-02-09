@@ -12,6 +12,7 @@ import (
 )
 
 func stripQuotes(word string) string {
+
 	if strings.HasPrefix(word, "\"") && strings.HasSuffix(word, "\"") {
 		return strings.TrimSuffix(strings.TrimPrefix(word, "\""), "\"")
 	}

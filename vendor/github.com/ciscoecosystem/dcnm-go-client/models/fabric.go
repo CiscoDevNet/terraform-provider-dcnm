@@ -29,14 +29,29 @@ type FabricConfig struct {
 	UnderlayVtepLoopbackId         string `json:"NVE_LB_ID"`
 	UnderlayRoutingProtocolTag     string `json:"LINK_STATE_ROUTING_TAG"`
 	OspfAreaId                     string `json:"OSPF_AREA_ID"`
+	BfdEnable                      string `json:"BFD_ENABLE"`
+	BfdOspf                        string `json:"BFD_OSPF_ENABLE"`
+	BfdAuthEnable                  string `json:"BFD_AUTH_ENABLE"`
+	BfdAuthKeyId                   string `json:"BFD_AUTH_KEY_ID"`
+	BfdAuthKey                     string `json:"BFD_AUTH_KEY"`
+	IbgpPeerTemplate               string `json:"IBGP_PEER_TEMPLATE"`
+	IbgpPeerTemplateLeaf           string `json:"IBGP_PEER_TEMPLATE_LEAF"`
+	IbgpOspf                       string `json:"BFD_IBGP_ENABLE"`
+	IsisOspf                       string `json:"BFD_ISIS_ENABLE"`
+	PimOspf                        string `json:"BFD_PIM_ENABLE"`
 	VrfTemplate                    string `json:"default_vrf"`
 	NetworkTemplate                string `json:"default_network"`
 	VrfExtensionTemplate           string `json:"vrf_extension_template"`
 	NetworkExtensionTemplate       string `json:"network_extension_template"`
+	OverlayModePrev                string `json:"OVERLAY_MODE_PREV"`
 	IntraFabricInterfaceMtu        string `json:"FABRIC_MTU"`
 	Layer2HostInterfaceMtu         string `json:"L2_HOST_INTF_MTU"`
 	PowerSupplyMode                string `json:"POWER_REDUNDANCY_MODE"`
 	CoppProfile                    string `json:"COPP_POLICY"`
+	EnableNgoam                    string `json:"ENABLE_NGOAM"`
+	EnableNxapi                    string `json:"ENABLE_NXAPI"`
+	EnableNxapiHttp                string `json:"ENABLE_NXAPI_HTTP"`
+	SnmpServerHostTrap             string `json:"SNMP_SERVER_HOST_TRAP"`
 	UnderlayRoutingLoopbackIpRange string `json:"LOOPBACK0_IP_RANGE"`
 	UnderlayVtepLoopbackIpRange    string `json:"LOOPBACK1_IP_RANGE"`
 	UnderlayRpLoopbackIpRange      string `json:"ANYCAST_RP_IP_RANGE"`
@@ -51,12 +66,11 @@ type FabricConfig struct {
 	VrfLiteSubnetMask              string `json:"DCI_SUBNET_TARGET_MASK"`
 	ServiceNetworkVlanRange        string `json:"SERVICE_NETWORK_VLAN_RANGE"`
 	RouteMapSequenceNumberRange    string `json:"ROUTE_MAP_SEQUENCE_NUMBER_RANGE"`
-	// Properties not exposed in the Terraform Resource
+	// Parameters not exposed in the Terraform resource
 	MsoSiteId                      string `json:"MSO_SITE_ID"`
 	PhantomRpLbId1                 string `json:"PHANTOM_RP_LB_ID1"`
 	PhantomRpLbId2                 string `json:"PHANTOM_RP_LB_ID2"`
 	PhantomRpLbId3                 string `json:"PHANTOM_RP_LB_ID3"`
-	IbgpPeerTemplate               string `json:"IBGP_PEER_TEMPLATE"`
 	PhantomRpLbId4                 string `json:"PHANTOM_RP_LB_ID4"`
 	AbstractOspf                   string `json:"abstract_ospf"`
 	FeaturePtp                     string `json:"FEATURE_PTP"`
@@ -64,13 +78,11 @@ type FabricConfig struct {
 	SspineCount                    string `json:"SSPINE_COUNT"`
 	AdvertisePipBgp                string `json:"ADVERTISE_PIP_BGP"`
 	FabricVpcQosPolicyName         string `json:"FABRIC_VPC_QOS_POLICY_NAME"`
-	BfdPimEnable                   bool   `json:"BFD_PIM_ENABLE"`
 	DhcpEnd                        string `json:"DHCP_END"`
 	UnderlayIsV6                   string `json:"UNDERLAY_IS_V6"`
 	FabricVpcDomainId              string `json:"FABRIC_VPC_DOMAIN_ID"`
 	SeedSwitchCoreInterfaces       string `json:"SEED_SWITCH_CORE_INTERFACES"`
 	FabricMtuPrev                  string `json:"FABRIC_MTU_PREV"`
-	BfdIsisEnable                  bool   `json:"BFD_ISIS_ENABLE"`
 	HdTime                         string `json:"HD_TIME"`
 	OspfAuthEnable                 string `json:"OSPF_AUTH_ENABLE"`
 	Loopback1Ipv6Range             string `json:"LOOPBACK1_IPV6_RANGE"`
@@ -100,16 +112,13 @@ type FabricConfig struct {
 	TempVpcPeerLink                string `json:"temp_vpc_peer_link"`
 	BrownfieldNetworkNameFormat    string `json:"BROWNFIELD_NETWORK_NAME_FORMAT"`
 	EnableFabricVpcDomainId        string `json:"ENABLE_FABRIC_VPC_DOMAIN_ID"`
-	IbgpPeerTemplateLeaf           string `json:"IBGP_PEER_TEMPLATE_LEAF"`
 	MgmtGwInternal                 string `json:"MGMT_GW_INTERNAL"`
-	EnableNxapi                    string `json:"ENABLE_NXAPI"`
 	GrfieldDebugFlag               string `json:"GRFIELD_DEBUG_FLAG"`
 	IsisAuthKeychainName           string `json:"ISIS_AUTH_KEYCHAIN_NAME"`
 	AbstractBgpNeighbor            string `json:"abstract_bgp_neighbor"`
 	OspfAuthKeyId                  string `json:"OSPF_AUTH_KEY_ID"`
 	PimHelloAuthEnable             string `json:"PIM_HELLO_AUTH_ENABLE"`
 	AbstractFeatureLeaf            string `json:"abstract_feature_leaf"`
-	BfdAuthEnable                  bool   `json:"BFD_AUTH_ENABLE"`
 	ExtraConfTor                   string `json:"EXTRA_CONF_TOR"`
 	AaaServerConf                  string `json:"AAA_SERVER_CONF"`
 	Enablerealtimebackup           string `json:"enableRealTimeBackup"`
@@ -121,7 +130,6 @@ type FabricConfig struct {
 	PmEnablePrev                   string `json:"PM_ENABLE_PREV"`
 	Enablescheduledbackup          string `json:"enableScheduledBackup"`
 	AbstractOspfInterface          string `json:"abstract_ospf_interface"`
-	BfdOspfEnable                  bool   `json:"BFD_OSPF_ENABLE"`
 	MacsecFallbackAlgorithm        string `json:"MACSEC_FALLBACK_ALGORITHM"`
 	UnnumDhcpEnd                   string `json:"UNNUM_DHCP_END"`
 	EnableAaa                      bool   `json:"ENABLE_AAA"`
@@ -140,7 +148,6 @@ type FabricConfig struct {
 	MplsLoopbackIpRange            string `json:"MPLS_LOOPBACK_IP_RANGE"`
 	LinkStateRoutingTagPrev        string `json:"LINK_STATE_ROUTING_TAG_PREV"`
 	DhcpEnable                     bool   `json:"DHCP_ENABLE"`
-	BfdAuthKeyId                   string `json:"BFD_AUTH_KEY_ID"`
 	MsoSiteGroupName               string `json:"MSO_SITE_GROUP_NAME"`
 	MgmtPrefixInternal             string `json:"MGMT_PREFIX_INTERNAL"`
 	DhcpIpv6EnableInternal         string `json:"DHCP_IPV6_ENABLE_INTERNAL"`
@@ -149,7 +156,6 @@ type FabricConfig struct {
 	BrfieldDebugFlag               string `json:"BRFIELD_DEBUG_FLAG"`
 	BootstrapMultisubnet           string `json:"BOOTSTRAP_MULTISUBNET"`
 	IsisP2PEnable                  bool   `json:"ISIS_P2P_ENABLE"`
-	EnableNgoam                    string `json:"ENABLE_NGOAM"`
 	CdpEnable                      string `json:"CDP_ENABLE"`
 	PtpLbId                        string `json:"PTP_LB_ID"`
 	DhcpIpv6Enable                 string `json:"DHCP_IPV6_ENABLE"`
@@ -160,7 +166,6 @@ type FabricConfig struct {
 	DhcpStart                      string `json:"DHCP_START"`
 	EnableTrm                      string `json:"ENABLE_TRM"`
 	FeaturePtpInternal             string `json:"FEATURE_PTP_INTERNAL"`
-	EnableNxapiHttp                string `json:"ENABLE_NXAPI_HTTP"`
 	AbstractIsis                   string `json:"abstract_isis"`
 	MplsLbId                       string `json:"MPLS_LB_ID"`
 	FabricVpcDomainIdPrev          string `json:"FABRIC_VPC_DOMAIN_ID_PREV"`
@@ -173,7 +178,6 @@ type FabricConfig struct {
 	StpVlanRange                   string `json:"STP_VLAN_RANGE"`
 	AnycastLbId                    string `json:"ANYCAST_LB_ID"`
 	MsoControlerId                 string `json:"MSO_CONTROLER_ID"`
-	BfdEnable                      string `json:"BFD_ENABLE"`
 	AbstractExtraConfigLeaf        string `json:"abstract_extra_config_leaf"`
 	AbstractDhcp                   string `json:"abstract_dhcp"`
 	ExtraConfSpine                 string `json:"EXTRA_CONF_SPINE"`
@@ -186,18 +190,15 @@ type FabricConfig struct {
 	DnsServerVrf                   string `json:"DNS_SERVER_VRF"`
 	EnableEvpn                     string `json:"ENABLE_EVPN"`
 	AbstractMulticast              string `json:"abstract_multicast"`
-	BfdAuthKey                     string `json:"BFD_AUTH_KEY"`
 	AgentIntf                      string `json:"AGENT_INTF"`
 	L3VniMcastGroup                string `json:"L3VNI_MCAST_GROUP"`
 	UnnumBootstrapLbId             string `json:"UNNUM_BOOTSTRAP_LB_ID"`
 	VpcDomainIdRange               string `json:"VPC_DOMAIN_ID_RANGE"`
 	HostIntfAdminState             string `json:"HOST_INTF_ADMIN_STATE"`
-	BfdIbgpEnable                  bool   `json:"BFD_IBGP_ENABLE"`
 	SyslogSev                      string `json:"SYSLOG_SEV"`
 	AbstractLoopbackInterface      string `json:"abstract_loopback_interface"`
 	SyslogServerVrf                string `json:"SYSLOG_SERVER_VRF"`
 	ExtraConfIntraLinks            string `json:"EXTRA_CONF_INTRA_LINKS"`
-	SnmpServerHostTrap             string `json:"SNMP_SERVER_HOST_TRAP"`
 	AbstractExtraConfigSpine       string `json:"abstract_extra_config_spine"`
 	PimHelloAuthKey                string `json:"PIM_HELLO_AUTH_KEY"`
 	TempVpcDomainMgmt              string `json:"temp_vpc_domain_mgmt"`
@@ -216,7 +217,6 @@ type FabricConfig struct {
 	AbstractPimInterface           string `json:"abstract_pim_interface"`
 	PmEnable                       string `json:"PM_ENABLE"`
 	Loopback0Ipv6Range             string `json:"LOOPBACK0_IPV6_RANGE"`
-	OverlayModePrev                string `json:"OVERLAY_MODE_PREV"`
 	EnableVpcPeerLinkNativeVlan    string `json:"ENABLE_VPC_PEER_LINK_NATIVE_VLAN"`
 	AbstractRouteMap               string `json:"abstract_route_map"`
 	InbandMgmtPrev                 string `json:"INBAND_MGMT_PREV"`
@@ -239,10 +239,10 @@ type FabricConfig struct {
 	DeafultQueuingPolicyCloudscale string `json:"DEAFULT_QUEUING_POLICY_CLOUDSCALE"`
 	FabricVpcQos                   string `json:"FABRIC_VPC_QOS"`
 	AaaRemoteIpEnabled             string `json:"AAA_REMOTE_IP_ENABLED"`
+	FabricTemplate                 string `json:"FF"`
+	FabricType                     string `json:"FABRIC_TYPE"`
 	SpineAddDelBedugFlag           string `json:"SSPINE_ADD_DEL_DEBUG_FLAG"`
 	ActiveMigration                string `json:"ACTIVE_MIGRATION"`
-	FabricTemplate                 string `json:"FF"` //TODO: Check variable name
-	FabricType                     string `json:"FABRIC_TYPE"`
 	SiteId                         string `json:"SITE_ID"`
 }
 
@@ -259,198 +259,193 @@ func (fabric *Fabric) ToMap() (map[string]interface{}, error) {
 	return fabricAttributeMap, nil
 }
 
-func (fabric *Fabric) SetConfigDefaults() {
-	fabric.Config.MsoSiteId = ""
-	fabric.Config.PhantomRpLbId1 = ""
-	fabric.Config.PhantomRpLbId2 = ""
-	fabric.Config.PhantomRpLbId3 = ""
-	fabric.Config.IbgpPeerTemplate = ""
-	fabric.Config.PhantomRpLbId4 = ""
-	fabric.Config.AbstractOspf = "base_ospf"
-	fabric.Config.FeaturePtp = "false"
-	fabric.Config.DhcpStartInternal = ""
-	fabric.Config.SspineCount = "0"
-	fabric.Config.AdvertisePipBgp = "false"
-	fabric.Config.FabricVpcQosPolicyName = ""
-	fabric.Config.BfdPimEnable = false
-	fabric.Config.DhcpEnd = ""
-	fabric.Config.UnderlayIsV6 = "false"
-	fabric.Config.FabricVpcDomainId = ""
-	fabric.Config.SeedSwitchCoreInterfaces = ""
-	fabric.Config.FabricMtuPrev = "9216"
-	fabric.Config.BfdIsisEnable = false
-	fabric.Config.HdTime = "180"
-	fabric.Config.OspfAuthEnable = "false"
-	fabric.Config.Loopback1Ipv6Range = ""
-	fabric.Config.RouterIdRange = ""
-	fabric.Config.MsoConnectivityDeployed = ""
-	fabric.Config.EnableMacsec = "false"
-	fabric.Config.DeafultQueuingPolicyOther = ""
-	fabric.Config.UnnumDhcpStartInternal = ""
-	fabric.Config.MacsecReportTimer = ""
-	fabric.Config.PremsoParentFabric = ""
-	fabric.Config.UnnumDhcpEndInternal = ""
-	fabric.Config.PtpDomainId = ""
-	fabric.Config.AutoSymmetricVrfLite = false
-	fabric.Config.UseLinkLocal = false
-	fabric.Config.BgpAsPrev = ""
-	fabric.Config.EnablePbr = "false"
-	fabric.Config.VpcPeerLinkPo = "500"
-	fabric.Config.VpcDelayRestoretime = "60"
-	fabric.Config.IsisAuthEnable = false
-	fabric.Config.VpcEnableIpv6NdSync = "true"
-	fabric.Config.AbstractIsisInterface = "isis_interface"
-	fabric.Config.TcamAllocation = "true"
-	fabric.Config.MacsecAlgorithm = ""
-	fabric.Config.IsisLevel = ""
-	fabric.Config.AbstractAnycastRp = "anycast_rp"
-	fabric.Config.EnableNetflow = "false"
-	fabric.Config.DeafultQueuingPolicyRSeries = ""
-	fabric.Config.TempVpcPeerLink = "int_vpc_peer_link_po"
-	fabric.Config.BrownfieldNetworkNameFormat = "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$"
-	fabric.Config.EnableFabricVpcDomainId = "false"
-	fabric.Config.IbgpPeerTemplateLeaf = ""
-	fabric.Config.MgmtGwInternal = ""
-	fabric.Config.EnableNxapi = "true"
-	fabric.Config.GrfieldDebugFlag = "Disable"
-	fabric.Config.IsisAuthKeychainName = ""
-	fabric.Config.AbstractBgpNeighbor = "evpn_bgp_rr_neighbor"
-	fabric.Config.OspfAuthKeyId = ""
-	fabric.Config.PimHelloAuthEnable = "false"
-	fabric.Config.AbstractFeatureLeaf = "base_feature_leaf_upg"
-	fabric.Config.BfdAuthEnable = false
-	fabric.Config.ExtraConfTor = ""
-	fabric.Config.AaaServerConf = ""
-	fabric.Config.Enablerealtimebackup = ""
-	fabric.Config.StrictCcMode = "false"
-	fabric.Config.V6SubnetTargetMask = ""
-	fabric.Config.AbstractTrunkHost = "int_trunk_host"
-	fabric.Config.MstInstanceRange = ""
-	fabric.Config.BgpAuthEnable = "false"
-	fabric.Config.PmEnablePrev = "false"
-	fabric.Config.Enablescheduledbackup = ""
-	fabric.Config.AbstractOspfInterface = "ospf_interface_11_1"
-	fabric.Config.BfdOspfEnable = false
-	fabric.Config.MacsecFallbackAlgorithm = ""
-	fabric.Config.UnnumDhcpEnd = ""
-	fabric.Config.EnableAaa = false
-	fabric.Config.DeploymentFreeze = "false"
-	fabric.Config.L2HostIntfMtuPrev = "9216"
-	fabric.Config.NetflowMonitorList = ""
-	fabric.Config.EnableAgent = "false"
-	fabric.Config.NtpServerIpList = ""
-	fabric.Config.OverlayMode = "config-profile"
-	fabric.Config.MacsecFallbackKeyString = ""
-	fabric.Config.StpRootOption = "unmanaged"
-	fabric.Config.FabricType = "Switch_Fabric"
-	fabric.Config.IsisOverloadEnable = false
-	fabric.Config.NetflowRecordList = ""
-	fabric.Config.SpineCount = "0"
-	fabric.Config.AbstractExtraConfigBootstrap = "extra_config_bootstrap_11_1"
-	fabric.Config.MplsLoopbackIpRange = ""
-	fabric.Config.LinkStateRoutingTagPrev = ""
-	fabric.Config.DhcpEnable = false
-	fabric.Config.BfdAuthKeyId = ""
-	fabric.Config.MsoSiteGroupName = ""
-	fabric.Config.MgmtPrefixInternal = ""
-	fabric.Config.DhcpIpv6EnableInternal = ""
-	fabric.Config.BgpAuthKeyType = ""
-	fabric.Config.SiteId = ""
-	fabric.Config.TempAnycastGateway = "anycast_gateway"
-	fabric.Config.BrfieldDebugFlag = "Disable"
-	fabric.Config.BootstrapMultisubnet = ""
-	fabric.Config.IsisP2PEnable = false
-	fabric.Config.EnableNgoam = "true"
-	fabric.Config.CdpEnable = "false"
-	fabric.Config.PtpLbId = ""
-	fabric.Config.DhcpIpv6Enable = ""
-	fabric.Config.MacsecKeyString = ""
-	fabric.Config.OspfAuthKey = ""
-	fabric.Config.EnableFabricVpcDomainIdPrev = ""
-	fabric.Config.ExtraConfLeaf = ""
-	fabric.Config.DhcpStart = ""
-	fabric.Config.EnableTrm = "false"
-	fabric.Config.FeaturePtpInternal = "false"
-	fabric.Config.EnableNxapiHttp = "true"
-	fabric.Config.AbstractIsis = "base_isis_level2"
-	fabric.Config.MplsLbId = ""
-	fabric.Config.FabricVpcDomainIdPrev = ""
-	fabric.Config.StaticUnderlayIpAlloc = "false"
-	fabric.Config.MgmtV6PrefixInternal = ""
-	fabric.Config.MplsHandoff = "false"
-	fabric.Config.StpBridgePriority = ""
-	fabric.Config.Scheduledtime = ""
-	fabric.Config.MacsecCipherSuite = ""
-	fabric.Config.StpVlanRange = ""
-	fabric.Config.AnycastLbId = ""
-	fabric.Config.MsoControlerId = ""
-	fabric.Config.BfdEnable = "false"
-	fabric.Config.AbstractExtraConfigLeaf = "extra_config_leaf"
-	fabric.Config.AbstractDhcp = "base_dhcp"
-	fabric.Config.ExtraConfSpine = ""
-	fabric.Config.NtpServerVrf = ""
-	fabric.Config.SpineSwitchCoreInterfaces = ""
-	fabric.Config.IsisOverloadElapseTime = ""
-	fabric.Config.BootstrapConf = ""
-	fabric.Config.IsisAuthKey = ""
-	fabric.Config.DnsServerIpList = ""
-	fabric.Config.DnsServerVrf = ""
-	fabric.Config.EnableEvpn = "true"
-	fabric.Config.AbstractMulticast = "base_multicast_11_1"
-	fabric.Config.BfdAuthKey = ""
-	fabric.Config.AgentIntf = "eth0"
-	fabric.Config.L3VniMcastGroup = ""
-	fabric.Config.UnnumBootstrapLbId = ""
-	fabric.Config.VpcDomainIdRange = "1-1000"
-	fabric.Config.HostIntfAdminState = "true"
-	fabric.Config.BfdIbgpEnable = false
-	fabric.Config.SyslogSev = ""
-	fabric.Config.AbstractLoopbackInterface = "int_fabric_loopback_11_1"
-	fabric.Config.SyslogServerVrf = ""
-	fabric.Config.ExtraConfIntraLinks = ""
-	fabric.Config.SnmpServerHostTrap = "true"
-	fabric.Config.AbstractExtraConfigSpine = "extra_config_spine"
-	fabric.Config.PimHelloAuthKey = ""
-	fabric.Config.TempVpcDomainMgmt = "vpc_domain_mgmt"
-	fabric.Config.V6SubnetRange = ""
-	fabric.Config.AbstractRoutedHost = "int_routed_host"
-	fabric.Config.BgpAuthKey = ""
-	fabric.Config.InbandDhcpServers = ""
-	fabric.Config.IsisAuthKeychainKeyId = ""
-	fabric.Config.MgmtV6Prefix = "64"
-	fabric.Config.AbstractFeatureSpine = "base_feature_spine_upg"
-	fabric.Config.EnableDefaultQueuingPolicy = "false"
-	fabric.Config.AnycastBgwAdvertisePip = "false"
-	fabric.Config.NetflowExporterList = ""
-	fabric.Config.AbstractVlanInterface = "int_fabric_vlan_11_1"
-	fabric.Config.AbstractPimInterface = "pim_interface"
-	fabric.Config.PmEnable = "false"
-	fabric.Config.Loopback0Ipv6Range = ""
-	fabric.Config.OverlayModePrev = ""
-	fabric.Config.EnableVpcPeerLinkNativeVlan = "false"
-	fabric.Config.AbstractRouteMap = "route_map"
-	fabric.Config.InbandMgmtPrev = "false"
-	fabric.Config.AbstractVpcDomain = "base_vpc_domain_11_1"
-	fabric.Config.ActiveMigration = "false"
-	fabric.Config.DhcpEndInternal = ""
-	fabric.Config.BootstrapEnable = "false"
-	fabric.Config.AbstractExtraConfigTor = "extra_config_tor"
-	fabric.Config.SyslogServerIpList = ""
-	fabric.Config.BootstrapEnablePrev = "false"
-	fabric.Config.EnableTenantDhcp = "true"
-	fabric.Config.AnycastRpIpRangeInternal = ""
-	fabric.Config.BootstrapMultisubnetInternal = ""
-	fabric.Config.MgmtGw = ""
-	fabric.Config.UnnumDhcpStart = ""
-	fabric.Config.MgmtPrefix = ""
-	fabric.Config.AbstractBgpRr = "evpn_bgp_rr"
-	fabric.Config.InbandMgmt = "false"
-	fabric.Config.AbstractBgp = "base_bgp"
-	fabric.Config.EnableNetflowPrev = ""
-	fabric.Config.DeafultQueuingPolicyCloudscale = ""
-	fabric.Config.FabricVpcQos = "false"
-	fabric.Config.AaaRemoteIpEnabled = "false"
-	fabric.Config.SpineAddDelBedugFlag = "Disable"
-	fabric.Config.ActiveMigration = "false"
-	fabric.Config.FabricType = "Switch_Fabric"
+func (config *FabricConfig) SetConfigDefaults() {
+	config.MsoSiteId = ""
+	config.PhantomRpLbId1 = ""
+	config.PhantomRpLbId2 = ""
+	config.PhantomRpLbId3 = ""
+	config.IbgpPeerTemplate = ""
+	config.PhantomRpLbId4 = ""
+	config.AbstractOspf = "base_ospf"
+	config.FeaturePtp = "false"
+	config.DhcpStartInternal = ""
+	config.SspineCount = "0"
+	config.AdvertisePipBgp = "false"
+	config.FabricVpcQosPolicyName = ""
+	config.DhcpEnd = ""
+	config.UnderlayIsV6 = "false"
+	config.FabricVpcDomainId = ""
+	config.SeedSwitchCoreInterfaces = ""
+	config.FabricMtuPrev = "9216"
+	config.HdTime = "180"
+	config.OspfAuthEnable = "false"
+	config.Loopback1Ipv6Range = ""
+	config.RouterIdRange = ""
+	config.MsoConnectivityDeployed = ""
+	config.EnableMacsec = "false"
+	config.DeafultQueuingPolicyOther = ""
+	config.UnnumDhcpStartInternal = ""
+	config.MacsecReportTimer = ""
+	config.PremsoParentFabric = ""
+	config.UnnumDhcpEndInternal = ""
+	config.PtpDomainId = ""
+	config.AutoSymmetricVrfLite = false
+	config.UseLinkLocal = false
+	config.BgpAsPrev = ""
+	config.EnablePbr = "false"
+	config.VpcPeerLinkPo = "500"
+	config.VpcDelayRestoretime = "60"
+	config.IsisAuthEnable = false
+	config.VpcEnableIpv6NdSync = "true"
+	config.AbstractIsisInterface = "isis_interface"
+	config.TcamAllocation = "true"
+	config.MacsecAlgorithm = ""
+	config.IsisLevel = ""
+	config.AbstractAnycastRp = "anycast_rp"
+	config.EnableNetflow = "false"
+	config.DeafultQueuingPolicyRSeries = ""
+	config.TempVpcPeerLink = "int_vpc_peer_link_po"
+	config.BrownfieldNetworkNameFormat = "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$"
+	config.EnableFabricVpcDomainId = "false"
+	config.IbgpPeerTemplateLeaf = ""
+	config.MgmtGwInternal = ""
+	config.EnableNxapi = "true"
+	config.GrfieldDebugFlag = "Disable"
+	config.IsisAuthKeychainName = ""
+	config.AbstractBgpNeighbor = "evpn_bgp_rr_neighbor"
+	config.OspfAuthKeyId = ""
+	config.PimHelloAuthEnable = "false"
+	config.AbstractFeatureLeaf = "base_feature_leaf_upg"
+	config.BfdAuthEnable = "false"
+	config.ExtraConfTor = ""
+	config.AaaServerConf = ""
+	config.Enablerealtimebackup = ""
+	config.StrictCcMode = "false"
+	config.V6SubnetTargetMask = ""
+	config.AbstractTrunkHost = "int_trunk_host"
+	config.MstInstanceRange = ""
+	config.BgpAuthEnable = "false"
+	config.PmEnablePrev = "false"
+	config.Enablescheduledbackup = ""
+	config.AbstractOspfInterface = "ospf_interface_11_1"
+	config.MacsecFallbackAlgorithm = ""
+	config.UnnumDhcpEnd = ""
+	config.EnableAaa = false
+	config.DeploymentFreeze = "false"
+	config.L2HostIntfMtuPrev = "9216"
+	config.NetflowMonitorList = ""
+	config.EnableAgent = "false"
+	config.NtpServerIpList = ""
+	config.OverlayMode = "config-profile"
+	config.MacsecFallbackKeyString = ""
+	config.StpRootOption = "unmanaged"
+	config.FabricType = "Switch_Fabric"
+	config.IsisOverloadEnable = false
+	config.NetflowRecordList = ""
+	config.SpineCount = "0"
+	config.AbstractExtraConfigBootstrap = "extra_config_bootstrap_11_1"
+	config.MplsLoopbackIpRange = ""
+	config.LinkStateRoutingTagPrev = ""
+	config.DhcpEnable = false
+	config.MsoSiteGroupName = ""
+	config.MgmtPrefixInternal = ""
+	config.DhcpIpv6EnableInternal = ""
+	config.BgpAuthKeyType = ""
+	config.SiteId = ""
+	config.TempAnycastGateway = "anycast_gateway"
+	config.BrfieldDebugFlag = "Disable"
+	config.BootstrapMultisubnet = ""
+	config.IsisP2PEnable = false
+	config.EnableNgoam = "true"
+	config.CdpEnable = "false"
+	config.PtpLbId = ""
+	config.DhcpIpv6Enable = ""
+	config.MacsecKeyString = ""
+	config.OspfAuthKey = ""
+	config.EnableFabricVpcDomainIdPrev = ""
+	config.ExtraConfLeaf = ""
+	config.DhcpStart = ""
+	config.EnableTrm = "false"
+	config.FeaturePtpInternal = "false"
+	config.EnableNxapiHttp = "true"
+	config.AbstractIsis = "base_isis_level2"
+	config.MplsLbId = ""
+	config.FabricVpcDomainIdPrev = ""
+	config.StaticUnderlayIpAlloc = "false"
+	config.MgmtV6PrefixInternal = ""
+	config.MplsHandoff = "false"
+	config.StpBridgePriority = ""
+	config.Scheduledtime = ""
+	config.MacsecCipherSuite = ""
+	config.StpVlanRange = ""
+	config.AnycastLbId = ""
+	config.MsoControlerId = ""
+	config.AbstractExtraConfigLeaf = "extra_config_leaf"
+	config.AbstractDhcp = "base_dhcp"
+	config.ExtraConfSpine = ""
+	config.NtpServerVrf = ""
+	config.SpineSwitchCoreInterfaces = ""
+	config.IsisOverloadElapseTime = ""
+	config.BootstrapConf = ""
+	config.IsisAuthKey = ""
+	config.DnsServerIpList = ""
+	config.DnsServerVrf = ""
+	config.EnableEvpn = "true"
+	config.AbstractMulticast = "base_multicast_11_1"
+	config.AgentIntf = "eth0"
+	config.L3VniMcastGroup = ""
+	config.UnnumBootstrapLbId = ""
+	config.VpcDomainIdRange = "1-1000"
+	config.HostIntfAdminState = "true"
+	config.SyslogSev = ""
+	config.AbstractLoopbackInterface = "int_fabric_loopback_11_1"
+	config.SyslogServerVrf = ""
+	config.ExtraConfIntraLinks = ""
+	config.SnmpServerHostTrap = "true"
+	config.AbstractExtraConfigSpine = "extra_config_spine"
+	config.PimHelloAuthKey = ""
+	config.TempVpcDomainMgmt = "vpc_domain_mgmt"
+	config.V6SubnetRange = ""
+	config.AbstractRoutedHost = "int_routed_host"
+	config.BgpAuthKey = ""
+	config.InbandDhcpServers = ""
+	config.IsisAuthKeychainKeyId = ""
+	config.MgmtV6Prefix = "64"
+	config.AbstractFeatureSpine = "base_feature_spine_upg"
+	config.EnableDefaultQueuingPolicy = "false"
+	config.AnycastBgwAdvertisePip = "false"
+	config.NetflowExporterList = ""
+	config.AbstractVlanInterface = "int_fabric_vlan_11_1"
+	config.AbstractPimInterface = "pim_interface"
+	config.PmEnable = "false"
+	config.Loopback0Ipv6Range = ""
+	config.OverlayModePrev = ""
+	config.EnableVpcPeerLinkNativeVlan = "false"
+	config.AbstractRouteMap = "route_map"
+	config.InbandMgmtPrev = "false"
+	config.AbstractVpcDomain = "base_vpc_domain_11_1"
+	config.ActiveMigration = "false"
+	config.DhcpEndInternal = ""
+	config.BootstrapEnable = "false"
+	config.AbstractExtraConfigTor = "extra_config_tor"
+	config.SyslogServerIpList = ""
+	config.BootstrapEnablePrev = "false"
+	config.EnableTenantDhcp = "true"
+	config.AnycastRpIpRangeInternal = ""
+	config.BootstrapMultisubnetInternal = ""
+	config.MgmtGw = ""
+	config.UnnumDhcpStart = ""
+	config.MgmtPrefix = ""
+	config.AbstractBgpRr = "evpn_bgp_rr"
+	config.InbandMgmt = "false"
+	config.AbstractBgp = "base_bgp"
+	config.EnableNetflowPrev = ""
+	config.DeafultQueuingPolicyCloudscale = ""
+	config.FabricVpcQos = "false"
+	config.AaaRemoteIpEnabled = "false"
+	config.FabricType = "Switch_Fabric"
+	config.SpineAddDelBedugFlag = "Disable"
+	config.ActiveMigration = "false"
+	config.BfdEnable = "false"
+
 }

@@ -19,11 +19,11 @@ func resourceDCNMFabric() *schema.Resource {
 		Update: resourceDCNMFabricUpdate,
 		Delete: resourceDCNMFabricDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: resourceDCNMFabricImporter,
+		},
+
 		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -43,8 +43,9 @@ func resourceDCNMFabric() *schema.Resource {
 			},
 
 			"asn": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 4294967295),
 			},
 
 			"underlay_interface_numbering": &schema.Schema{
@@ -58,10 +59,10 @@ func resourceDCNMFabric() *schema.Resource {
 			},
 
 			"underlay_subnet_mask": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "30",
-				//TODO: Range validation
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      30,
+				ValidateFunc: validation.IntBetween(30, 31),
 			},
 
 			"underlay_routing_protocol": &schema.Schema{
@@ -75,13 +76,13 @@ func resourceDCNMFabric() *schema.Resource {
 			},
 
 			"route_reflectors_count": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  "2",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2",
-					"4",
-				}, false),
+				Default:  2,
+				ValidateFunc: validation.IntInSlice([]int{
+					2,
+					4,
+				}),
 			},
 
 			"anycast_mac": &schema.Schema{
@@ -109,13 +110,13 @@ func resourceDCNMFabric() *schema.Resource {
 			},
 
 			"rendevous_point_count": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  "2",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2",
-					"4",
-				}, false),
+				Default:  2,
+				ValidateFunc: validation.IntInSlice([]int{
+					2,
+					4,
+				}),
 			},
 
 			"rendevous_point_mode": &schema.Schema{
@@ -192,6 +193,53 @@ func resourceDCNMFabric() *schema.Resource {
 				Default:  "0.0.0.0",
 			},
 
+			"ospf_bfd": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"ibgp_bfd": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"isis_bfd": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"pim_bfd": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"bfd_authentication_key_id": &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
+			},
+
+			"bfd_authentication_key": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"ibgp_peer_template_config": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"leaf_ibgp_peer_template_config": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
 			"vrf_template": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -214,6 +262,16 @@ func resourceDCNMFabric() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Default_Network_Extension_Universal",
+			},
+
+			"overlay_mode": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "config-profile",
+				ValidateFunc: validation.StringInSlice([]string{
+					"config-profile",
+					"cli",
+				}, false),
 			},
 
 			"intra_fabric_interface_mtu": &schema.Schema{
@@ -252,6 +310,30 @@ func resourceDCNMFabric() *schema.Resource {
 					"moderate",
 					"manual",
 				}, false),
+			},
+
+			"enable_vxlan_oam": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			"enable_nx_api": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			"enable_nx_api_on_http": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			"enable_ndfc_as_trap_host": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 
 			"underlay_routing_loopback_ip_range": &schema.Schema{
@@ -364,163 +446,270 @@ func setFabricAttributes(d *schema.ResourceData, cont *container.Container) *sch
 	d.Set("name", stripQuotes(cont.S("fabricName").String()))
 	d.Set("fabric_id", stripQuotes(cont.S("fabricId").String()))
 	d.Set("template", stripQuotes(cont.S("templateName").String()))
+	d.SetId(stripQuotes(cont.S("id").String()))
 
-	cont, err := cleanJsonString(stripQuotes(cont.S("nvPairs").String()))
-	if err == nil {
-		if cont.Exists("BGP_AS") {
-			d.Set("asn", stripQuotes(cont.S("BGP_AS").String()))
+	cont = cont.S("nvPairs")
+
+	if cont.Exists("BGP_AS") && stripQuotes(cont.S("BGP_AS").String()) != "" {
+		bgpAsn := stripQuotes(cont.S("BGP_AS").String())
+		bgpAsnInt, _ := strconv.Atoi(bgpAsn)
+		d.Set("asn", bgpAsnInt)
+
+	}
+	if cont.Exists("FABRIC_INTERFACE_TYPE") {
+		d.Set("underlay_interface_numbering", stripQuotes(cont.S("FABRIC_INTERFACE_TYPE").String()))
+	}
+	if cont.Exists("SUBNET_TARGET_MASK") && stripQuotes(cont.S("SUBNET_TARGET_MASK").String()) != "" {
+		subnetMask := stripQuotes(cont.S("SUBNET_TARGET_MASK").String())
+		subnetMaskInt, _ := strconv.Atoi(subnetMask)
+		d.Set("underlay_subnet_mask", subnetMaskInt)
+
+	}
+	if cont.Exists("LINK_STATE_ROUTING") {
+		d.Set("underlay_routing_protocol", stripQuotes(cont.S("LINK_STATE_ROUTING").String()))
+	}
+	if cont.Exists("RR_COUNT") && stripQuotes(cont.S("RR_COUNT").String()) != "" {
+		rrCount := stripQuotes(cont.S("RR_COUNT").String())
+		rrCountInt, _ := strconv.Atoi(rrCount)
+		d.Set("route_reflectors_count", rrCountInt)
+
+	}
+	if cont.Exists("ANYCAST_GW_MAC") {
+		d.Set("anycast_mac", stripQuotes(cont.S("ANYCAST_GW_MAC").String()))
+	}
+	if cont.Exists("REPLICATION_MODE") {
+		d.Set("replication_mode", stripQuotes(cont.S("REPLICATION_MODE").String()))
+	}
+	if cont.Exists("MULTICAST_GROUP_SUBNET") {
+		d.Set("multicast_group_subnet", stripQuotes(cont.S("MULTICAST_GROUP_SUBNET").String()))
+	}
+	if cont.Exists("RP_COUNT") && stripQuotes(cont.S("RP_COUNT").String()) != "" {
+		rpCount := stripQuotes(cont.S("RP_COUNT").String())
+		rpCountInt, _ := strconv.Atoi(rpCount)
+		d.Set("rendevous_point_count", rpCountInt)
+
+	}
+	if cont.Exists("RP_MODE") {
+		d.Set("rendevous_point_mode", stripQuotes(cont.S("RP_MODE").String()))
+	}
+	if cont.Exists("RP_LB_ID") && stripQuotes(cont.S("RP_LB_ID").String()) != "" {
+		rpLbId := stripQuotes(cont.S("RP_LB_ID").String())
+		rpLbIdInt, _ := strconv.Atoi(rpLbId)
+		d.Set("rendevous_loopback_id", rpLbIdInt)
+
+	}
+	if cont.Exists("VPC_PEER_LINK_VLAN") && stripQuotes(cont.S("VPC_PEER_LINK_VLAN").String()) != "" {
+		vpcPeerVlan := stripQuotes(cont.S("VPC_PEER_LINK_VLAN").String())
+		vpcPeerVlanInt, _ := strconv.Atoi(vpcPeerVlan)
+		d.Set("vpc_peer_link_vlan", vpcPeerVlanInt)
+
+	}
+	if cont.Exists("VPC_PEER_KEEP_ALIVE_OPTION") {
+		d.Set("vpc_peer_keep_alive_option", stripQuotes(cont.S("VPC_PEER_KEEP_ALIVE_OPTION").String()))
+	}
+	if cont.Exists("VPC_AUTO_RECOVERY_TIME") && stripQuotes(cont.S("VPC_AUTO_RECOVERY_TIME").String()) != "" {
+		vpcRecoveryTime := stripQuotes(cont.S("VPC_AUTO_RECOVERY_TIME").String())
+		vpcRecoveryTimeInt, _ := strconv.Atoi(vpcRecoveryTime)
+		d.Set("vpc_auto_recovery_time", vpcRecoveryTimeInt)
+
+	}
+	if cont.Exists("VPC_DELAY_RESTORE") && stripQuotes(cont.S("VPC_DELAY_RESTORE").String()) != "" {
+		vpcRestoreTime := stripQuotes(cont.S("VPC_DELAY_RESTORE").String())
+		vpcRestoreTimeInt, _ := strconv.Atoi(vpcRestoreTime)
+		d.Set("vpc_delay_restore_time", vpcRestoreTimeInt)
+
+	}
+	if cont.Exists("BGP_LB_ID") && stripQuotes(cont.S("BGP_LB_ID").String()) != "" {
+		bgpLbId := stripQuotes(cont.S("BGP_LB_ID").String())
+		bgpLbIdInt, _ := strconv.Atoi(bgpLbId)
+		d.Set("underlay_routing_loopback_id", bgpLbIdInt)
+
+	}
+	if cont.Exists("NVE_LB_ID") && stripQuotes(cont.S("NVE_LB_ID").String()) != "" {
+		nveLbId := stripQuotes(cont.S("NVE_LB_ID").String())
+		nveLbIdInt, _ := strconv.Atoi(nveLbId)
+		d.Set("underlay_vtep_loopback_id", nveLbIdInt)
+
+	}
+	if cont.Exists("LINK_STATE_ROUTING_TAG") {
+		d.Set("underlay_routing_protocol_tag", stripQuotes(cont.S("LINK_STATE_ROUTING_TAG").String()))
+	}
+	if cont.Exists("OSPF_AREA_ID") {
+		d.Set("ospf_area_id", stripQuotes(cont.S("OSPF_AREA_ID").String()))
+	}
+	if cont.Exists("BFD_OSPF_ENABLE") {
+		if stripQuotes(cont.S("BFD_OSPF_ENABLE").String()) == "true" {
+			d.Set("ospf_bfd", true)
+		} else {
+			d.Set("ospf_bfd", false)
 		}
-		if cont.Exists("FABRIC_INTERFACE_TYPE") {
-			d.Set("underlay_interface_numbering", stripQuotes(cont.S("FABRIC_INTERFACE_TYPE").String()))
+	}
+	if cont.Exists("BFD_IBGP_ENABLE") {
+		if stripQuotes(cont.S("BFD_IBGP_ENABLE").String()) == "true" {
+			d.Set("ibgp_bfd", true)
+		} else {
+			d.Set("ibgp_bfd", false)
 		}
-		if cont.Exists("SUBNET_TARGET_MASK") {
-			d.Set("underlay_subnet_mask", stripQuotes(cont.S("SUBNET_TARGET_MASK").String()))
+	}
+	if cont.Exists("BFD_ISIS_ENABLE") {
+		if stripQuotes(cont.S("BFD_ISIS_ENABLE").String()) == "true" {
+			d.Set("isis_bfd", true)
+		} else {
+			d.Set("isis_bfd", false)
 		}
-		if cont.Exists("LINK_STATE_ROUTING") {
-			d.Set("underlay_routing_protocol", stripQuotes(cont.S("LINK_STATE_ROUTING").String()))
+	}
+	if cont.Exists("BFD_PIM_ENABLE") {
+		if stripQuotes(cont.S("BFD_PIM_ENABLE").String()) == "true" {
+			d.Set("pim_bfd", true)
+		} else {
+			d.Set("pim_bfd", false)
 		}
-		if cont.Exists("RR_COUNT") {
-			d.Set("route_reflectors_count", stripQuotes(cont.S("RR_COUNT").String()))
+	}
+	if cont.Exists("BFD_AUTH_KEY_ID") && stripQuotes(cont.S("BFD_AUTH_KEY_ID").String()) != "" {
+		bfdAuthKeyId := stripQuotes(cont.S("BFD_AUTH_KEY_ID").String())
+		bfdAuthKeyIdInt, _ := strconv.Atoi(bfdAuthKeyId)
+		d.Set("bfd_authentication_key_id", bfdAuthKeyIdInt)
+
+	}
+	if cont.Exists("BFD_AUTH_KEY") && stripQuotes(cont.S("BFD_AUTH_KEY").String()) != "" {
+		bfdAuthKey := stripQuotes(cont.S("BFD_AUTH_KEY").String())
+		bfdAuthKeyInt, _ := strconv.Atoi(bfdAuthKey)
+		d.Set("bfd_authentication_key", bfdAuthKeyInt)
+
+	}
+
+	if cont.Exists("IBGP_PEER_TEMPLATE") {
+		d.Set("ibgp_peer_template_config", stripQuotes(cont.S("IBGP_PEER_TEMPLATE").String()))
+	}
+	if cont.Exists("IBGP_PEER_TEMPLATE_LEAF") {
+		d.Set("leaf_ibgp_peer_template_config", stripQuotes(cont.S("IBGP_PEER_TEMPLATE_LEAF").String()))
+	}
+	if cont.Exists("default_vrf") {
+		d.Set("vrf_template", stripQuotes(cont.S("default_vrf").String()))
+	}
+	if cont.Exists("default_network") {
+		d.Set("network_template", stripQuotes(cont.S("default_network").String()))
+	}
+	if cont.Exists("vrf_extension_template") {
+		d.Set("vrf_extension_template", stripQuotes(cont.S("vrf_extension_template").String()))
+	}
+	if cont.Exists("network_extension_template") {
+		d.Set("network_extension_template", stripQuotes(cont.S("network_extension_template").String()))
+	}
+	if cont.Exists("OVERLAY_MODE_PREV") {
+		d.Set("overlay_mode", stripQuotes(cont.S("OVERLAY_MODE_PREV").String()))
+	}
+	if cont.Exists("FABRIC_MTU") && stripQuotes(cont.S("FABRIC_MTU").String()) != "" {
+		fabricMtu := stripQuotes(cont.S("FABRIC_MTU").String())
+		fabricMtuInt, _ := strconv.Atoi(fabricMtu)
+		d.Set("intra_fabric_interface_mtu", fabricMtuInt)
+
+	}
+	if cont.Exists("L2_HOST_INTF_MTU") && stripQuotes(cont.S("L2_HOST_INTF_MTU").String()) != "" {
+		hostMtu := stripQuotes(cont.S("L2_HOST_INTF_MTU").String())
+		hostMtuInt, _ := strconv.Atoi(hostMtu)
+		d.Set("layer_2_host_interface_mtu", hostMtuInt)
+
+	}
+	if cont.Exists("POWER_REDUNDANCY_MODE") {
+		d.Set("power_supply_mode", stripQuotes(cont.S("POWER_REDUNDANCY_MODE").String()))
+	}
+	if cont.Exists("COPP_POLICY") {
+		d.Set("copp_profile", stripQuotes(cont.S("COPP_POLICY").String()))
+	}
+	if cont.Exists("ENABLE_NGOAM") {
+		if stripQuotes(cont.S("ENABLE_NGOAM").String()) == "true" {
+			d.Set("enable_vxlan_oam", true)
+		} else {
+			d.Set("enable_vxlan_oam", false)
 		}
-		if cont.Exists("ANYCAST_GW_MAC") {
-			d.Set("anycast_mac", stripQuotes(cont.S("ANYCAST_GW_MAC").String()))
+	}
+	if cont.Exists("ENABLE_NXAPI") {
+		if stripQuotes(cont.S("ENABLE_NXAPI").String()) == "true" {
+			d.Set("enable_nx_api", true)
+		} else {
+			d.Set("enable_nx_api", false)
 		}
-		if cont.Exists("REPLICATION_MODE") {
-			d.Set("replication_mode", stripQuotes(cont.S("REPLICATION_MODE").String()))
+	}
+	if cont.Exists("ENABLE_NXAPI_HTTP") {
+		if stripQuotes(cont.S("ENABLE_NXAPI_HTTP").String()) == "true" {
+			d.Set("enable_nx_api_on_http", true)
+		} else {
+			d.Set("enable_nx_api_on_http", false)
 		}
-		if cont.Exists("MULTICAST_GROUP_SUBNET") {
-			d.Set("multicast_group_subnet", stripQuotes(cont.S("MULTICAST_GROUP_SUBNET").String()))
-		}
-		if cont.Exists("RP_COUNT") {
-			d.Set("rendevous_point_count", stripQuotes(cont.S("RP_COUNT").String()))
-		}
-		if cont.Exists("RP_MODE") {
-			d.Set("rendevous_point_mode", stripQuotes(cont.S("RP_MODE").String()))
-		}
-		if cont.Exists("RP_LB_ID") && stripQuotes(cont.S("RP_LB_ID").String()) != "" {
-			if rpLbId := stripQuotes(cont.S("RP_LB_ID").String()); err == nil {
-				rpLbIdInt, _ := strconv.Atoi(rpLbId)
-				d.Set("rendevous_loopback_id", rpLbIdInt)
-			}
-		}
-		if cont.Exists("VPC_PEER_LINK_VLAN") && stripQuotes(cont.S("VPC_PEER_LINK_VLAN").String()) != "" {
-			if vpcPeerVlan := stripQuotes(cont.S("VPC_PEER_LINK_VLAN").String()); err == nil {
-				vpcPeerVlanInt, _ := strconv.Atoi(vpcPeerVlan)
-				d.Set("vpc_peer_link_vlan", vpcPeerVlanInt)
-			}
-		}
-		if cont.Exists("VPC_PEER_KEEP_ALIVE_OPTION") {
-			d.Set("vpc_peer_keep_alive_option", stripQuotes(cont.S("VPC_PEER_KEEP_ALIVE_OPTION").String()))
-		}
-		if cont.Exists("VPC_AUTO_RECOVERY_TIME") && stripQuotes(cont.S("VPC_AUTO_RECOVERY_TIME").String()) != "" {
-			if vpcRecoveryTime := stripQuotes(cont.S("VPC_AUTO_RECOVERY_TIME").String()); err == nil {
-				vpcRecoveryTimeInt, _ := strconv.Atoi(vpcRecoveryTime)
-				d.Set("vpc_auto_recovery_time", vpcRecoveryTimeInt)
-			}
-		}
-		if cont.Exists("VPC_DELAY_RESTORE") && stripQuotes(cont.S("VPC_DELAY_RESTORE").String()) != "" {
-			if vpcRestoreTime := stripQuotes(cont.S("VPC_DELAY_RESTORE").String()); err == nil {
-				vpcRestoreTimeInt, _ := strconv.Atoi(vpcRestoreTime)
-				d.Set("vpc_delay_restore_time", vpcRestoreTimeInt)
-			}
-		}
-		if cont.Exists("BGP_LB_ID") && stripQuotes(cont.S("BGP_LB_ID").String()) != "" {
-			if bgpLbId := stripQuotes(cont.S("BGP_LB_ID").String()); err == nil {
-				bgpLbIdInt, _ := strconv.Atoi(bgpLbId)
-				d.Set("underlay_routing_loopback_id", bgpLbIdInt)
-			}
-		}
-		if cont.Exists("NVE_LB_ID") && stripQuotes(cont.S("NVE_LB_ID").String()) != "" {
-			if nveLbId := stripQuotes(cont.S("NVE_LB_ID").String()); err == nil {
-				nveLbIdInt, _ := strconv.Atoi(nveLbId)
-				d.Set("underlay_vtep_loopback_id", nveLbIdInt)
-			}
-		}
-		if cont.Exists("LINK_STATE_ROUTING_TAG") {
-			d.Set("underlay_routing_protocol_tag", stripQuotes(cont.S("LINK_STATE_ROUTING_TAG").String()))
-		}
-		if cont.Exists("OSPF_AREA_ID") {
-			d.Set("ospf_area_id", stripQuotes(cont.S("OSPF_AREA_ID").String()))
-		}
-		if cont.Exists("default_vrf") {
-			d.Set("vrf_template", stripQuotes(cont.S("default_vrf").String()))
-		}
-		if cont.Exists("default_network") {
-			d.Set("network_template", stripQuotes(cont.S("default_network").String()))
-		}
-		if cont.Exists("vrf_extension_template") {
-			d.Set("vrf_extension_template", stripQuotes(cont.S("vrf_extension_template").String()))
-		}
-		if cont.Exists("network_extension_template") {
-			d.Set("network_extension_template", stripQuotes(cont.S("network_extension_template").String()))
-		}
-		if cont.Exists("FABRIC_MTU") && stripQuotes(cont.S("FABRIC_MTU").String()) != "" {
-			if fabricMtu := stripQuotes(cont.S("FABRIC_MTU").String()); err == nil {
-				fabricMtuInt, _ := strconv.Atoi(fabricMtu)
-				d.Set("intra_fabric_interface_mtu", fabricMtuInt)
-			}
-		}
-		if cont.Exists("L2_HOST_INTF_MTU") && stripQuotes(cont.S("L2_HOST_INTF_MTU").String()) != "" {
-			if hostMtu := stripQuotes(cont.S("L2_HOST_INTF_MTU").String()); err == nil {
-				hostMtuInt, _ := strconv.Atoi(hostMtu)
-				d.Set("layer_2_host_interface_mtu", hostMtuInt)
-			}
-		}
-		if cont.Exists("POWER_REDUNDANCY_MODE") {
-			d.Set("power_supply_mode", stripQuotes(cont.S("POWER_REDUNDANCY_MODE").String()))
-		}
-		if cont.Exists("COPP_POLICY") {
-			d.Set("copp_profile", stripQuotes(cont.S("COPP_POLICY").String()))
-		}
-		if cont.Exists("LOOPBACK0_IP_RANGE") {
-			d.Set("underlay_routing_loopback_ip_range", stripQuotes(cont.S("LOOPBACK0_IP_RANGE").String()))
-		}
-		if cont.Exists("LOOPBACK1_IP_RANGE") {
-			d.Set("underlay_vtep_loopback_ip_range", stripQuotes(cont.S("LOOPBACK1_IP_RANGE").String()))
-		}
-		if cont.Exists("RP_MODANYCAST_RP_IP_RANGEE") {
-			d.Set("underlay_rp_loopback_ip_range", stripQuotes(cont.S("ANYCAST_RP_IP_RANGE").String()))
-		}
-		if cont.Exists("SUBNET_RANGE") {
-			d.Set("underlay_subnet_ip_range", stripQuotes(cont.S("SUBNET_RANGE").String()))
-		}
-		if cont.Exists("L2_SEGMENT_ID_RANGE") {
-			d.Set("layer_2_vxlan_vni_range", stripQuotes(cont.S("L2_SEGMENT_ID_RANGE").String()))
-		}
-		if cont.Exists("L3_PARTITION_ID_RANGE") {
-			d.Set("layer_3_vxlan_vni_range", stripQuotes(cont.S("L3_PARTITION_ID_RANGE").String()))
-		}
-		if cont.Exists("NETWORK_VLAN_RANGE") {
-			d.Set("network_vlan_range", stripQuotes(cont.S("NETWORK_VLAN_RANGE").String()))
-		}
-		if cont.Exists("VRF_VLAN_RANGE") {
-			d.Set("vrf_vlan_range", stripQuotes(cont.S("VRF_VLAN_RANGE").String()))
-		}
-		if cont.Exists("SUBINTERFACE_RANGE") {
-			d.Set("subinterface_dot1q_range", stripQuotes(cont.S("SUBINTERFACE_RANGE").String()))
-		}
-		if cont.Exists("VRF_LITE_AUTOCONFIG") {
-			d.Set("vrf_lite_deployment", stripQuotes(cont.S("VRF_LITE_AUTOCONFIG").String()))
-		}
-		if cont.Exists("DCI_SUBNET_RANGE") {
-			d.Set("vrf_lite_subnet_ip_range", stripQuotes(cont.S("DCI_SUBNET_RANGE").String()))
-		}
-		if cont.Exists("DCI_SUBNET_TARGET_MASK") && stripQuotes(cont.S("DCI_SUBNET_TARGET_MASK").String()) != "" {
-			if vrfLiteSubnetMask := stripQuotes(cont.S("DCI_SUBNET_TARGET_MASK").String()); err == nil {
-				vrfLiteSubnetMaskInt, _ := strconv.Atoi(vrfLiteSubnetMask)
-				d.Set("vrf_lite_subnet_mask", vrfLiteSubnetMaskInt)
-			}
-		}
-		if cont.Exists("SERVICE_NETWORK_VLAN_RANGE") {
-			d.Set("service_network_vlan_range", stripQuotes(cont.S("SERVICE_NETWORK_VLAN_RANGE").String()))
-		}
-		if cont.Exists("ROUTE_MAP_SEQUENCE_NUMBER_RANGE") {
-			d.Set("route_map_sequence_number_range", stripQuotes(cont.S("ROUTE_MAP_SEQUENCE_NUMBER_RANGE").String()))
+	}
+	if cont.Exists("SNMP_SERVER_HOST_TRAP") {
+		if stripQuotes(cont.S("SNMP_SERVER_HOST_TRAP").String()) == "true" {
+			d.Set("enable_ndfc_as_trap_host", true)
+		} else {
+			d.Set("enable_ndfc_as_trap_host", false)
 		}
 	}
 
-	d.Set("id", stripQuotes(cont.S("id").String()))
+	if cont.Exists("LOOPBACK0_IP_RANGE") {
+		d.Set("underlay_routing_loopback_ip_range", stripQuotes(cont.S("LOOPBACK0_IP_RANGE").String()))
+	}
+	if cont.Exists("LOOPBACK1_IP_RANGE") {
+		d.Set("underlay_vtep_loopback_ip_range", stripQuotes(cont.S("LOOPBACK1_IP_RANGE").String()))
+	}
+	if cont.Exists("ANYCAST_RP_IP_RANGE") {
+		d.Set("underlay_rp_loopback_ip_range", stripQuotes(cont.S("ANYCAST_RP_IP_RANGE").String()))
+	}
+	if cont.Exists("SUBNET_RANGE") {
+		d.Set("underlay_subnet_ip_range", stripQuotes(cont.S("SUBNET_RANGE").String()))
+	}
+	if cont.Exists("L2_SEGMENT_ID_RANGE") {
+		d.Set("layer_2_vxlan_vni_range", stripQuotes(cont.S("L2_SEGMENT_ID_RANGE").String()))
+	}
+	if cont.Exists("L3_PARTITION_ID_RANGE") {
+		d.Set("layer_3_vxlan_vni_range", stripQuotes(cont.S("L3_PARTITION_ID_RANGE").String()))
+	}
+	if cont.Exists("NETWORK_VLAN_RANGE") {
+		d.Set("network_vlan_range", stripQuotes(cont.S("NETWORK_VLAN_RANGE").String()))
+	}
+	if cont.Exists("VRF_VLAN_RANGE") {
+		d.Set("vrf_vlan_range", stripQuotes(cont.S("VRF_VLAN_RANGE").String()))
+	}
+	if cont.Exists("SUBINTERFACE_RANGE") {
+		d.Set("subinterface_dot1q_range", stripQuotes(cont.S("SUBINTERFACE_RANGE").String()))
+	}
+	if cont.Exists("VRF_LITE_AUTOCONFIG") {
+		d.Set("vrf_lite_deployment", stripQuotes(cont.S("VRF_LITE_AUTOCONFIG").String()))
+	}
+	if cont.Exists("DCI_SUBNET_RANGE") {
+		d.Set("vrf_lite_subnet_ip_range", stripQuotes(cont.S("DCI_SUBNET_RANGE").String()))
+	}
+	if cont.Exists("DCI_SUBNET_TARGET_MASK") && stripQuotes(cont.S("DCI_SUBNET_TARGET_MASK").String()) != "" {
+		vrfLiteSubnetMask := stripQuotes(cont.S("DCI_SUBNET_TARGET_MASK").String())
+		vrfLiteSubnetMaskInt, _ := strconv.Atoi(vrfLiteSubnetMask)
+		d.Set("vrf_lite_subnet_mask", vrfLiteSubnetMaskInt)
+	}
+	if cont.Exists("SERVICE_NETWORK_VLAN_RANGE") {
+		d.Set("service_network_vlan_range", stripQuotes(cont.S("SERVICE_NETWORK_VLAN_RANGE").String()))
+	}
+	if cont.Exists("ROUTE_MAP_SEQUENCE_NUMBER_RANGE") {
+		d.Set("route_map_sequence_number_range", stripQuotes(cont.S("ROUTE_MAP_SEQUENCE_NUMBER_RANGE").String()))
+	}
+
 	return d
+}
+
+func resourceDCNMFabricImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	log.Println("[DEBUG] Begining Importer ", d.Id())
+
+	dcnmClient := m.(*client.Client)
+
+	fabricName := d.Id()
+
+	cont, err := getRemoteFabric(dcnmClient, fabricName)
+	if err != nil {
+		return nil, err
+	}
+
+	stateImport := setFabricAttributes(d, cont)
+
+	log.Println("[DEBUG] End of Importer ", d.Id())
+	return []*schema.ResourceData{stateImport}, nil
 }
 
 func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
@@ -533,21 +722,22 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 	fabric.Template = d.Get("template").(string)
 
 	configMap := models.FabricConfig{}
+	configMap.SetConfigDefaults()
 
 	if asn, ok := d.GetOk("asn"); ok {
-		configMap.Asn = asn.(string)
+		configMap.Asn = strconv.Itoa(asn.(int))
 	}
 	if underlayRoutingNumbering, ok := d.GetOk("underlay_interface_numbering"); ok {
 		configMap.UnderlayInterfaceNumbering = underlayRoutingNumbering.(string)
 	}
 	if underlaySubnetMask, ok := d.GetOk("underlay_subnet_mask"); ok {
-		configMap.UnderlaySubnetMask = underlaySubnetMask.(string)
+		configMap.UnderlaySubnetMask = strconv.Itoa(underlaySubnetMask.(int))
 	}
 	if uderlayRoutingProtocol, ok := d.GetOk("underlay_routing_protocol"); ok {
 		configMap.UnderlayRoutingProcotol = uderlayRoutingProtocol.(string)
 	}
 	if rrCount, ok := d.GetOk("route_reflectors_count"); ok {
-		configMap.RouteReflectorCount = rrCount.(string)
+		configMap.RouteReflectorCount = strconv.Itoa(rrCount.(int))
 	}
 	if anycastMac, ok := d.GetOk("anycast_mac"); ok {
 		configMap.AnycastMac = anycastMac.(string)
@@ -559,7 +749,7 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 		configMap.MulticastGroupSubnet = multicastGroupSubnet.(string)
 	}
 	if rpCount, ok := d.GetOk("rendevous_point_count"); ok {
-		configMap.RendevouzPointCount = rpCount.(string)
+		configMap.RendevouzPointCount = strconv.Itoa(rpCount.(int))
 	}
 	if rpMode, ok := d.GetOk("rendevous_point_mode"); ok {
 		configMap.RendevouzPointMode = rpMode.(string)
@@ -593,6 +783,59 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 	if ospfAreaId, ok := d.GetOk("ospf_area_id"); ok {
 		configMap.OspfAreaId = ospfAreaId.(string)
 	}
+	if ospfBfpEnable, ok := d.GetOk("ospf_bfd"); ok {
+		if ospfBfpEnable.(bool) {
+			configMap.BfdOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.BfdOspf = "false"
+		}
+	} else {
+		configMap.BfdOspf = "false"
+	}
+	if ibgpOspfEnable, ok := d.GetOk("ibgp_bfd"); ok {
+		if ibgpOspfEnable.(bool) {
+			configMap.IbgpOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.IbgpOspf = "false"
+		}
+	} else {
+		configMap.IbgpOspf = "false"
+	}
+	if isisBfpEnable, ok := d.GetOk("isis_bfd"); ok {
+		if isisBfpEnable.(bool) {
+			configMap.IsisOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.IsisOspf = "false"
+		}
+	} else {
+		configMap.IsisOspf = "false"
+	}
+	if pimBfpEnable, ok := d.GetOk("pim_bfd"); ok {
+		if pimBfpEnable.(bool) {
+			configMap.PimOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.PimOspf = "false"
+		}
+	} else {
+		configMap.PimOspf = "false"
+	}
+	if bfd_authentication_key_id, ok := d.GetOk("bfd_authentication_key_id"); ok {
+		configMap.BfdAuthKeyId = strconv.Itoa(bfd_authentication_key_id.(int))
+		configMap.BfdAuthEnable = "true"
+	}
+	if bfd_authentication_key, ok := d.GetOk("bfd_authentication_key"); ok {
+		configMap.BfdAuthKey = bfd_authentication_key.(string)
+	}
+	if ibgpPeerTempConf, ok := d.GetOk("ibgp_peer_template_config"); ok {
+		configMap.IbgpPeerTemplate = ibgpPeerTempConf.(string)
+	}
+	if leafIbgpPeerTempConf, ok := d.GetOk("leaf_ibgp_peer_template_config"); ok {
+		configMap.IbgpPeerTemplateLeaf = leafIbgpPeerTempConf.(string)
+	}
 	if vrfTemp, ok := d.GetOk("vrf_template"); ok {
 		configMap.VrfTemplate = vrfTemp.(string)
 	}
@@ -605,6 +848,9 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 	if netExtTemp, ok := d.GetOk("network_extension_template"); ok {
 		configMap.NetworkExtensionTemplate = netExtTemp.(string)
 	}
+	if overlayMode, ok := d.GetOk("overlay_mode"); ok {
+		configMap.OverlayMode = overlayMode.(string)
+	}
 	if fabMtu, ok := d.GetOk("intra_fabric_interface_mtu"); ok {
 		configMap.IntraFabricInterfaceMtu = strconv.Itoa(fabMtu.(int))
 	}
@@ -616,6 +862,42 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	if coppProf, ok := d.GetOk("copp_profile"); ok {
 		configMap.CoppProfile = coppProf.(string)
+	}
+	if enableVxlan, ok := d.GetOk("enable_vxlan_oam"); ok {
+		if enableVxlan.(bool) {
+			configMap.EnableNgoam = "true"
+		} else {
+			configMap.EnableNgoam = "false"
+		}
+	} else {
+		configMap.EnableNgoam = "false"
+	}
+	if enableNxApi, ok := d.GetOk("enable_nx_api"); ok {
+		if enableNxApi.(bool) {
+			configMap.EnableNxapi = "true"
+		} else {
+			configMap.EnableNxapi = "false"
+		}
+	} else {
+		configMap.EnableNxapi = "false"
+	}
+	if enableNxApiHttp, ok := d.GetOk("enable_nx_api_on_http"); ok {
+		if enableNxApiHttp.(bool) {
+			configMap.EnableNxapiHttp = "true"
+		} else {
+			configMap.EnableNxapiHttp = "false"
+		}
+	} else {
+		configMap.EnableNxapiHttp = "false"
+	}
+	if enableNdfcAsTrap, ok := d.GetOk("enable_ndfc_as_trap_host"); ok {
+		if enableNdfcAsTrap.(bool) {
+			configMap.SnmpServerHostTrap = "true"
+		} else {
+			configMap.SnmpServerHostTrap = "false"
+		}
+	} else {
+		configMap.SnmpServerHostTrap = "false"
 	}
 	if rtLooIpRange, ok := d.GetOk("underlay_routing_loopback_ip_range"); ok {
 		configMap.UnderlayRoutingLoopbackIpRange = rtLooIpRange.(string)
@@ -663,7 +945,6 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 	configMap.FabricTemplate = fabric.Template
 	configMap.FabricName = fabric.Name
 	fabric.Config = configMap
-	fabric.SetConfigDefaults()
 
 	durl := "/rest/control/fabrics"
 	cont, err := dcnmClient.Save(durl, &fabric)
@@ -688,21 +969,22 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	fabric.FabricId = d.Get("fabric_id").(string)
 
 	configMap := models.FabricConfig{}
+	configMap.SetConfigDefaults()
 
 	if asn, ok := d.GetOk("asn"); ok {
-		configMap.Asn = asn.(string)
+		configMap.Asn = strconv.Itoa(asn.(int))
 	}
 	if underlayRoutingNumbering, ok := d.GetOk("underlay_interface_numbering"); ok {
 		configMap.UnderlayInterfaceNumbering = underlayRoutingNumbering.(string)
 	}
 	if underlaySubnetMask, ok := d.GetOk("underlay_subnet_mask"); ok {
-		configMap.UnderlaySubnetMask = underlaySubnetMask.(string)
+		configMap.UnderlaySubnetMask = strconv.Itoa(underlaySubnetMask.(int))
 	}
 	if uderlayRoutingProtocol, ok := d.GetOk("underlay_routing_protocol"); ok {
 		configMap.UnderlayRoutingProcotol = uderlayRoutingProtocol.(string)
 	}
 	if rrCount, ok := d.GetOk("route_reflectors_count"); ok {
-		configMap.RouteReflectorCount = rrCount.(string)
+		configMap.RouteReflectorCount = strconv.Itoa(rrCount.(int))
 	}
 	if anycastMac, ok := d.GetOk("anycast_mac"); ok {
 		configMap.AnycastMac = anycastMac.(string)
@@ -714,7 +996,7 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 		configMap.MulticastGroupSubnet = multicastGroupSubnet.(string)
 	}
 	if rpCount, ok := d.GetOk("rendevous_point_count"); ok {
-		configMap.RendevouzPointCount = rpCount.(string)
+		configMap.RendevouzPointCount = strconv.Itoa(rpCount.(int))
 	}
 	if rpMode, ok := d.GetOk("rendevous_point_mode"); ok {
 		configMap.RendevouzPointMode = rpMode.(string)
@@ -748,6 +1030,60 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	if ospfAreaId, ok := d.GetOk("ospf_area_id"); ok {
 		configMap.OspfAreaId = ospfAreaId.(string)
 	}
+
+	if ospfBfpEnable, ok := d.GetOk("ospf_bfd"); ok {
+		if ospfBfpEnable.(bool) {
+			configMap.BfdOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.BfdOspf = "false"
+		}
+	} else {
+		configMap.BfdOspf = "false"
+	}
+	if ibgpOspfEnable, ok := d.GetOk("ibgp_bfd"); ok {
+		if ibgpOspfEnable.(bool) {
+			configMap.IbgpOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.IbgpOspf = "false"
+		}
+	} else {
+		configMap.IbgpOspf = "false"
+	}
+	if isisBfpEnable, ok := d.GetOk("isis_bfd"); ok {
+		if isisBfpEnable.(bool) {
+			configMap.IsisOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.IsisOspf = "false"
+		}
+	} else {
+		configMap.IsisOspf = "false"
+	}
+	if pimBfpEnable, ok := d.GetOk("pim_bfd"); ok {
+		if pimBfpEnable.(bool) {
+			configMap.PimOspf = "true"
+			configMap.BfdEnable = "true"
+		} else {
+			configMap.PimOspf = "false"
+		}
+	} else {
+		configMap.PimOspf = "false"
+	}
+	if bfd_authentication_key_id, ok := d.GetOk("bfd_authentication_key_id"); ok {
+		configMap.BfdAuthKeyId = strconv.Itoa(bfd_authentication_key_id.(int))
+		configMap.BfdAuthEnable = "true"
+	}
+	if bfd_authentication_key, ok := d.GetOk("bfd_authentication_key"); ok {
+		configMap.BfdAuthKey = bfd_authentication_key.(string)
+	}
+	if ibgpPeerTempConf, ok := d.GetOk("ibgp_peer_template_config"); ok {
+		configMap.IbgpPeerTemplate = ibgpPeerTempConf.(string)
+	}
+	if leafIbgpPeerTempConf, ok := d.GetOk("leaf_ibgp_peer_template_config"); ok {
+		configMap.IbgpPeerTemplateLeaf = leafIbgpPeerTempConf.(string)
+	}
 	if vrfTemp, ok := d.GetOk("vrf_template"); ok {
 		configMap.VrfTemplate = vrfTemp.(string)
 	}
@@ -760,6 +1096,9 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	if netExtTemp, ok := d.GetOk("network_extension_template"); ok {
 		configMap.NetworkExtensionTemplate = netExtTemp.(string)
 	}
+	if overlayMode, ok := d.GetOk("overlay_mode"); ok {
+		configMap.OverlayMode = overlayMode.(string)
+	}
 	if fabMtu, ok := d.GetOk("intra_fabric_interface_mtu"); ok {
 		configMap.IntraFabricInterfaceMtu = strconv.Itoa(fabMtu.(int))
 	}
@@ -771,6 +1110,42 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	if coppProf, ok := d.GetOk("copp_profile"); ok {
 		configMap.CoppProfile = coppProf.(string)
+	}
+	if enableVxlan, ok := d.GetOk("enable_vxlan_oam"); ok {
+		if enableVxlan.(bool) {
+			configMap.EnableNgoam = "true"
+		} else {
+			configMap.EnableNgoam = "false"
+		}
+	} else {
+		configMap.EnableNgoam = "false"
+	}
+	if enableNxApi, ok := d.GetOk("enable_nx_api"); ok {
+		if enableNxApi.(bool) {
+			configMap.EnableNxapi = "true"
+		} else {
+			configMap.EnableNxapi = "false"
+		}
+	} else {
+		configMap.EnableNxapi = "false"
+	}
+	if enableNxApiHttp, ok := d.GetOk("enable_nx_api_on_http"); ok {
+		if enableNxApiHttp.(bool) {
+			configMap.EnableNxapiHttp = "true"
+		} else {
+			configMap.EnableNxapiHttp = "false"
+		}
+	} else {
+		configMap.EnableNxapiHttp = "false"
+	}
+	if enableNdfcAsTrap, ok := d.GetOk("enable_ndfc_as_trap_host"); ok {
+		if enableNdfcAsTrap.(bool) {
+			configMap.SnmpServerHostTrap = "true"
+		} else {
+			configMap.SnmpServerHostTrap = "false"
+		}
+	} else {
+		configMap.SnmpServerHostTrap = "false"
 	}
 	if rtLooIpRange, ok := d.GetOk("underlay_routing_loopback_ip_range"); ok {
 		configMap.UnderlayRoutingLoopbackIpRange = rtLooIpRange.(string)
@@ -820,7 +1195,6 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	fabric.Config = configMap
 	idInt, _ := strconv.Atoi(d.Id())
 	fabric.Id = idInt
-	fabric.SetConfigDefaults()
 
 	dn := fabric.Name
 	durl := fmt.Sprintf("/rest/control/fabrics/%s", dn)

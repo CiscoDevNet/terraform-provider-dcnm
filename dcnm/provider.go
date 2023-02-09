@@ -88,6 +88,7 @@ func Provider() *schema.Provider {
 			"dcnm_route_peering":  datasourceDCNMRoutePeering(),
 			"dcnm_service_policy": datasourceDCNMServicePolicy(),
 			"dcnm_template":       datasourceDCNMTemplate(),
+			"dcnm_fabric":         datasourceDCNMFabric(),
 		},
 		ConfigureFunc: configClient,
 	}
