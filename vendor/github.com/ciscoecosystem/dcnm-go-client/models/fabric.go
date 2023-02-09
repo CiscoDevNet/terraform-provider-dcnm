@@ -1,11 +1,11 @@
 package models
 
 type Fabric struct {
-	Id       int          `json:",omitempty"`
-	Name     string       `json:",omitempty"`
-	FabricId string       `json:",omitempty"`
-	Template string       `json:",omitempty"`
-	Config   FabricConfig `json:",omitempty"`
+	Id       int         `json:",omitempty"`
+	Name     string      `json:",omitempty"`
+	FabricId string      `json:",omitempty"`
+	Template string      `json:",omitempty"`
+	Config   interface{} `json:",omitempty"`
 }
 
 type FabricConfig struct {
@@ -67,183 +67,190 @@ type FabricConfig struct {
 	ServiceNetworkVlanRange        string `json:"SERVICE_NETWORK_VLAN_RANGE"`
 	RouteMapSequenceNumberRange    string `json:"ROUTE_MAP_SEQUENCE_NUMBER_RANGE"`
 	// Parameters not exposed in the Terraform resource
-	MsoSiteId                      string `json:"MSO_SITE_ID"`
-	PhantomRpLbId1                 string `json:"PHANTOM_RP_LB_ID1"`
-	PhantomRpLbId2                 string `json:"PHANTOM_RP_LB_ID2"`
-	PhantomRpLbId3                 string `json:"PHANTOM_RP_LB_ID3"`
-	PhantomRpLbId4                 string `json:"PHANTOM_RP_LB_ID4"`
-	AbstractOspf                   string `json:"abstract_ospf"`
-	FeaturePtp                     string `json:"FEATURE_PTP"`
-	DhcpStartInternal              string `json:"DHCP_START_INTERNAL"`
-	SspineCount                    string `json:"SSPINE_COUNT"`
-	AdvertisePipBgp                string `json:"ADVERTISE_PIP_BGP"`
-	FabricVpcQosPolicyName         string `json:"FABRIC_VPC_QOS_POLICY_NAME"`
-	DhcpEnd                        string `json:"DHCP_END"`
-	UnderlayIsV6                   string `json:"UNDERLAY_IS_V6"`
-	FabricVpcDomainId              string `json:"FABRIC_VPC_DOMAIN_ID"`
-	SeedSwitchCoreInterfaces       string `json:"SEED_SWITCH_CORE_INTERFACES"`
-	FabricMtuPrev                  string `json:"FABRIC_MTU_PREV"`
-	HdTime                         string `json:"HD_TIME"`
-	OspfAuthEnable                 string `json:"OSPF_AUTH_ENABLE"`
-	Loopback1Ipv6Range             string `json:"LOOPBACK1_IPV6_RANGE"`
-	RouterIdRange                  string `json:"ROUTER_ID_RANGE"`
-	MsoConnectivityDeployed        string `json:"MSO_CONNECTIVITY_DEPLOYED"`
-	EnableMacsec                   string `json:"ENABLE_MACSEC"`
-	DeafultQueuingPolicyOther      string `json:"DEAFULT_QUEUING_POLICY_OTHER"`
-	UnnumDhcpStartInternal         string `json:"UNNUM_DHCP_START_INTERNAL"`
-	MacsecReportTimer              string `json:"MACSEC_REPORT_TIMER"`
-	PremsoParentFabric             string `json:"PREMSO_PARENT_FABRIC"`
-	UnnumDhcpEndInternal           string `json:"UNNUM_DHCP_END_INTERNAL"`
-	PtpDomainId                    string `json:"PTP_DOMAIN_ID"`
-	AutoSymmetricVrfLite           bool   `json:"AUTO_SYMMETRIC_VRF_LITE"`
-	UseLinkLocal                   bool   `json:"USE_LINK_LOCAL"`
-	BgpAsPrev                      string `json:"BGP_AS_PREV"`
-	EnablePbr                      string `json:"ENABLE_PBR"`
-	VpcPeerLinkPo                  string `json:"VPC_PEER_LINK_PO"`
-	IsisAuthEnable                 bool   `json:"ISIS_AUTH_ENABLE"`
-	VpcEnableIpv6NdSync            string `json:"VPC_ENABLE_IPv6_ND_SYNC"`
-	AbstractIsisInterface          string `json:"abstract_isis_interface"`
-	TcamAllocation                 string `json:"TCAM_ALLOCATION"`
-	MacsecAlgorithm                string `json:"MACSEC_ALGORITHM"`
-	IsisLevel                      string `json:"ISIS_LEVEL"`
-	AbstractAnycastRp              string `json:"abstract_anycast_rp"`
-	EnableNetflow                  string `json:"ENABLE_NETFLOW"`
-	DeafultQueuingPolicyRSeries    string `json:"DEAFULT_QUEUING_POLICY_R_SERIES"`
-	TempVpcPeerLink                string `json:"temp_vpc_peer_link"`
-	BrownfieldNetworkNameFormat    string `json:"BROWNFIELD_NETWORK_NAME_FORMAT"`
-	EnableFabricVpcDomainId        string `json:"ENABLE_FABRIC_VPC_DOMAIN_ID"`
-	MgmtGwInternal                 string `json:"MGMT_GW_INTERNAL"`
-	GrfieldDebugFlag               string `json:"GRFIELD_DEBUG_FLAG"`
-	IsisAuthKeychainName           string `json:"ISIS_AUTH_KEYCHAIN_NAME"`
-	AbstractBgpNeighbor            string `json:"abstract_bgp_neighbor"`
-	OspfAuthKeyId                  string `json:"OSPF_AUTH_KEY_ID"`
-	PimHelloAuthEnable             string `json:"PIM_HELLO_AUTH_ENABLE"`
-	AbstractFeatureLeaf            string `json:"abstract_feature_leaf"`
-	ExtraConfTor                   string `json:"EXTRA_CONF_TOR"`
-	AaaServerConf                  string `json:"AAA_SERVER_CONF"`
-	Enablerealtimebackup           string `json:"enableRealTimeBackup"`
-	StrictCcMode                   string `json:"STRICT_CC_MODE"`
-	V6SubnetTargetMask             string `json:"V6_SUBNET_TARGET_MASK"`
-	AbstractTrunkHost              string `json:"abstract_trunk_host"`
-	MstInstanceRange               string `json:"MST_INSTANCE_RANGE"`
-	BgpAuthEnable                  string `json:"BGP_AUTH_ENABLE"`
-	PmEnablePrev                   string `json:"PM_ENABLE_PREV"`
-	Enablescheduledbackup          string `json:"enableScheduledBackup"`
-	AbstractOspfInterface          string `json:"abstract_ospf_interface"`
-	MacsecFallbackAlgorithm        string `json:"MACSEC_FALLBACK_ALGORITHM"`
-	UnnumDhcpEnd                   string `json:"UNNUM_DHCP_END"`
-	EnableAaa                      bool   `json:"ENABLE_AAA"`
-	DeploymentFreeze               string `json:"DEPLOYMENT_FREEZE"`
-	L2HostIntfMtuPrev              string `json:"L2_HOST_INTF_MTU_PREV"`
-	NetflowMonitorList             string `json:"NETFLOW_MONITOR_LIST"`
-	EnableAgent                    string `json:"ENABLE_AGENT"`
-	NtpServerIpList                string `json:"NTP_SERVER_IP_LIST"`
-	OverlayMode                    string `json:"OVERLAY_MODE"`
-	MacsecFallbackKeyString        string `json:"MACSEC_FALLBACK_KEY_STRING"`
-	StpRootOption                  string `json:"STP_ROOT_OPTION"`
-	IsisOverloadEnable             bool   `json:"ISIS_OVERLOAD_ENABLE"`
-	NetflowRecordList              string `json:"NETFLOW_RECORD_LIST"`
-	SpineCount                     string `json:"SPINE_COUNT"`
-	AbstractExtraConfigBootstrap   string `json:"abstract_extra_config_bootstrap"`
-	MplsLoopbackIpRange            string `json:"MPLS_LOOPBACK_IP_RANGE"`
-	LinkStateRoutingTagPrev        string `json:"LINK_STATE_ROUTING_TAG_PREV"`
-	DhcpEnable                     bool   `json:"DHCP_ENABLE"`
-	MsoSiteGroupName               string `json:"MSO_SITE_GROUP_NAME"`
-	MgmtPrefixInternal             string `json:"MGMT_PREFIX_INTERNAL"`
-	DhcpIpv6EnableInternal         string `json:"DHCP_IPV6_ENABLE_INTERNAL"`
-	BgpAuthKeyType                 string `json:"BGP_AUTH_KEY_TYPE"`
-	TempAnycastGateway             string `json:"temp_anycast_gateway"`
-	BrfieldDebugFlag               string `json:"BRFIELD_DEBUG_FLAG"`
-	BootstrapMultisubnet           string `json:"BOOTSTRAP_MULTISUBNET"`
-	IsisP2PEnable                  bool   `json:"ISIS_P2P_ENABLE"`
-	CdpEnable                      string `json:"CDP_ENABLE"`
-	PtpLbId                        string `json:"PTP_LB_ID"`
-	DhcpIpv6Enable                 string `json:"DHCP_IPV6_ENABLE"`
-	MacsecKeyString                string `json:"MACSEC_KEY_STRING"`
-	OspfAuthKey                    string `json:"OSPF_AUTH_KEY"`
-	EnableFabricVpcDomainIdPrev    string `json:"ENABLE_FABRIC_VPC_DOMAIN_ID_PREV"`
-	ExtraConfLeaf                  string `json:"EXTRA_CONF_LEAF"`
-	DhcpStart                      string `json:"DHCP_START"`
-	EnableTrm                      string `json:"ENABLE_TRM"`
-	FeaturePtpInternal             string `json:"FEATURE_PTP_INTERNAL"`
-	AbstractIsis                   string `json:"abstract_isis"`
-	MplsLbId                       string `json:"MPLS_LB_ID"`
-	FabricVpcDomainIdPrev          string `json:"FABRIC_VPC_DOMAIN_ID_PREV"`
-	StaticUnderlayIpAlloc          string `json:"STATIC_UNDERLAY_IP_ALLOC"`
-	MgmtV6PrefixInternal           string `json:"MGMT_V6PREFIX_INTERNAL"`
-	MplsHandoff                    string `json:"MPLS_HANDOFF"`
-	StpBridgePriority              string `json:"STP_BRIDGE_PRIORITY"`
-	Scheduledtime                  string `json:"scheduledTime"`
-	MacsecCipherSuite              string `json:"MACSEC_CIPHER_SUITE"`
-	StpVlanRange                   string `json:"STP_VLAN_RANGE"`
-	AnycastLbId                    string `json:"ANYCAST_LB_ID"`
-	MsoControlerId                 string `json:"MSO_CONTROLER_ID"`
-	AbstractExtraConfigLeaf        string `json:"abstract_extra_config_leaf"`
-	AbstractDhcp                   string `json:"abstract_dhcp"`
-	ExtraConfSpine                 string `json:"EXTRA_CONF_SPINE"`
-	NtpServerVrf                   string `json:"NTP_SERVER_VRF"`
-	SpineSwitchCoreInterfaces      string `json:"SPINE_SWITCH_CORE_INTERFACES"`
-	IsisOverloadElapseTime         string `json:"ISIS_OVERLOAD_ELAPSE_TIME"`
-	BootstrapConf                  string `json:"BOOTSTRAP_CONF"`
-	IsisAuthKey                    string `json:"ISIS_AUTH_KEY"`
-	DnsServerIpList                string `json:"DNS_SERVER_IP_LIST"`
-	DnsServerVrf                   string `json:"DNS_SERVER_VRF"`
-	EnableEvpn                     string `json:"ENABLE_EVPN"`
-	AbstractMulticast              string `json:"abstract_multicast"`
-	AgentIntf                      string `json:"AGENT_INTF"`
-	L3VniMcastGroup                string `json:"L3VNI_MCAST_GROUP"`
-	UnnumBootstrapLbId             string `json:"UNNUM_BOOTSTRAP_LB_ID"`
-	VpcDomainIdRange               string `json:"VPC_DOMAIN_ID_RANGE"`
-	HostIntfAdminState             string `json:"HOST_INTF_ADMIN_STATE"`
-	SyslogSev                      string `json:"SYSLOG_SEV"`
-	AbstractLoopbackInterface      string `json:"abstract_loopback_interface"`
-	SyslogServerVrf                string `json:"SYSLOG_SERVER_VRF"`
-	ExtraConfIntraLinks            string `json:"EXTRA_CONF_INTRA_LINKS"`
-	AbstractExtraConfigSpine       string `json:"abstract_extra_config_spine"`
-	PimHelloAuthKey                string `json:"PIM_HELLO_AUTH_KEY"`
-	TempVpcDomainMgmt              string `json:"temp_vpc_domain_mgmt"`
-	V6SubnetRange                  string `json:"V6_SUBNET_RANGE"`
-	AbstractRoutedHost             string `json:"abstract_routed_host"`
-	BgpAuthKey                     string `json:"BGP_AUTH_KEY"`
-	InbandDhcpServers              string `json:"INBAND_DHCP_SERVERS"`
-	IsisAuthKeychainKeyId          string `json:"ISIS_AUTH_KEYCHAIN_KEY_ID"`
-	MgmtV6Prefix                   string `json:"MGMT_V6PREFIX"`
-	AbstractFeatureSpine           string `json:"abstract_feature_spine"`
-	EnableDefaultQueuingPolicy     string `json:"ENABLE_DEFAULT_QUEUING_POLICY"`
-	AnycastBgwAdvertisePip         string `json:"ANYCAST_BGW_ADVERTISE_PIP"`
-	NetflowExporterList            string `json:"NETFLOW_EXPORTER_LIST"`
-	AbstractVlanInterface          string `json:"abstract_vlan_interface"`
-	FabricName                     string `json:"FABRIC_NAME"`
-	AbstractPimInterface           string `json:"abstract_pim_interface"`
-	PmEnable                       string `json:"PM_ENABLE"`
-	Loopback0Ipv6Range             string `json:"LOOPBACK0_IPV6_RANGE"`
-	EnableVpcPeerLinkNativeVlan    string `json:"ENABLE_VPC_PEER_LINK_NATIVE_VLAN"`
-	AbstractRouteMap               string `json:"abstract_route_map"`
-	InbandMgmtPrev                 string `json:"INBAND_MGMT_PREV"`
-	AbstractVpcDomain              string `json:"abstract_vpc_domain"`
-	DhcpEndInternal                string `json:"DHCP_END_INTERNAL"`
-	BootstrapEnable                string `json:"BOOTSTRAP_ENABLE"`
-	AbstractExtraConfigTor         string `json:"abstract_extra_config_tor"`
-	SyslogServerIpList             string `json:"SYSLOG_SERVER_IP_LIST"`
-	BootstrapEnablePrev            string `json:"BOOTSTRAP_ENABLE_PREV"`
-	EnableTenantDhcp               string `json:"ENABLE_TENANT_DHCP"`
-	AnycastRpIpRangeInternal       string `json:"ANYCAST_RP_IP_RANGE_INTERNAL"`
-	BootstrapMultisubnetInternal   string `json:"BOOTSTRAP_MULTISUBNET_INTERNAL"`
-	MgmtGw                         string `json:"MGMT_GW"`
-	UnnumDhcpStart                 string `json:"UNNUM_DHCP_START"`
-	MgmtPrefix                     string `json:"MGMT_PREFIX"`
-	AbstractBgpRr                  string `json:"abstract_bgp_rr"`
-	InbandMgmt                     string `json:"INBAND_MGMT"`
-	AbstractBgp                    string `json:"abstract_bgp"`
-	EnableNetflowPrev              string `json:"ENABLE_NETFLOW_PREV"`
-	DeafultQueuingPolicyCloudscale string `json:"DEAFULT_QUEUING_POLICY_CLOUDSCALE"`
-	FabricVpcQos                   string `json:"FABRIC_VPC_QOS"`
-	AaaRemoteIpEnabled             string `json:"AAA_REMOTE_IP_ENABLED"`
-	FabricTemplate                 string `json:"FF"`
-	FabricType                     string `json:"FABRIC_TYPE"`
-	SpineAddDelBedugFlag           string `json:"SSPINE_ADD_DEL_DEBUG_FLAG"`
-	ActiveMigration                string `json:"ACTIVE_MIGRATION"`
-	SiteId                         string `json:"SITE_ID"`
+	MsoSiteId                               string `json:"MSO_SITE_ID"`
+	PhantomRpLbId1                          string `json:"PHANTOM_RP_LB_ID1"`
+	PhantomRpLbId2                          string `json:"PHANTOM_RP_LB_ID2"`
+	PhantomRpLbId3                          string `json:"PHANTOM_RP_LB_ID3"`
+	PhantomRpLbId4                          string `json:"PHANTOM_RP_LB_ID4"`
+	AbstractOspf                            string `json:"abstract_ospf"`
+	FeaturePtp                              string `json:"FEATURE_PTP"`
+	DhcpStartInternal                       string `json:"DHCP_START_INTERNAL"`
+	SspineCount                             string `json:"SSPINE_COUNT"`
+	AdvertisePipBgp                         string `json:"ADVERTISE_PIP_BGP"`
+	FabricVpcQosPolicyName                  string `json:"FABRIC_VPC_QOS_POLICY_NAME"`
+	DhcpEnd                                 string `json:"DHCP_END"`
+	UnderlayIsV6                            string `json:"UNDERLAY_IS_V6"`
+	FabricVpcDomainId                       string `json:"FABRIC_VPC_DOMAIN_ID"`
+	SeedSwitchCoreInterfaces                string `json:"SEED_SWITCH_CORE_INTERFACES"`
+	FabricMtuPrev                           string `json:"FABRIC_MTU_PREV"`
+	HdTime                                  string `json:"HD_TIME"`
+	OspfAuthEnable                          string `json:"OSPF_AUTH_ENABLE"`
+	Loopback1Ipv6Range                      string `json:"LOOPBACK1_IPV6_RANGE"`
+	RouterIdRange                           string `json:"ROUTER_ID_RANGE"`
+	MsoConnectivityDeployed                 string `json:"MSO_CONNECTIVITY_DEPLOYED"`
+	EnableMacsec                            string `json:"ENABLE_MACSEC"`
+	DeafultQueuingPolicyOther               string `json:"DEAFULT_QUEUING_POLICY_OTHER"`
+	UnnumDhcpStartInternal                  string `json:"UNNUM_DHCP_START_INTERNAL"`
+	MacsecReportTimer                       string `json:"MACSEC_REPORT_TIMER"`
+	PremsoParentFabric                      string `json:"PREMSO_PARENT_FABRIC"`
+	UnnumDhcpEndInternal                    string `json:"UNNUM_DHCP_END_INTERNAL"`
+	PtpDomainId                             string `json:"PTP_DOMAIN_ID"`
+	AutoSymmetricVrfLite                    string `json:"AUTO_SYMMETRIC_VRF_LITE"`
+	UseLinkLocal                            string `json:"USE_LINK_LOCAL"`
+	BgpAsPrev                               string `json:"BGP_AS_PREV"`
+	EnablePbr                               string `json:"ENABLE_PBR"`
+	VpcPeerLinkPo                           string `json:"VPC_PEER_LINK_PO"`
+	IsisAuthEnable                          string `json:"ISIS_AUTH_ENABLE"`
+	VpcEnableIpv6NdSync                     string `json:"VPC_ENABLE_IPv6_ND_SYNC"`
+	AbstractIsisInterface                   string `json:"abstract_isis_interface"`
+	TcamAllocation                          string `json:"TCAM_ALLOCATION"`
+	MacsecAlgorithm                         string `json:"MACSEC_ALGORITHM"`
+	IsisLevel                               string `json:"ISIS_LEVEL"`
+	AbstractAnycastRp                       string `json:"abstract_anycast_rp"`
+	EnableNetflow                           string `json:"ENABLE_NETFLOW"`
+	DeafultQueuingPolicyRSeries             string `json:"DEAFULT_QUEUING_POLICY_R_SERIES"`
+	TempVpcPeerLink                         string `json:"temp_vpc_peer_link"`
+	BrownfieldNetworkNameFormat             string `json:"BROWNFIELD_NETWORK_NAME_FORMAT"`
+	EnableFabricVpcDomainId                 string `json:"ENABLE_FABRIC_VPC_DOMAIN_ID"`
+	MgmtGwInternal                          string `json:"MGMT_GW_INTERNAL"`
+	GrfieldDebugFlag                        string `json:"GRFIELD_DEBUG_FLAG"`
+	IsisAuthKeychainName                    string `json:"ISIS_AUTH_KEYCHAIN_NAME"`
+	AbstractBgpNeighbor                     string `json:"abstract_bgp_neighbor"`
+	OspfAuthKeyId                           string `json:"OSPF_AUTH_KEY_ID"`
+	PimHelloAuthEnable                      string `json:"PIM_HELLO_AUTH_ENABLE"`
+	AbstractFeatureLeaf                     string `json:"abstract_feature_leaf"`
+	ExtraConfTor                            string `json:"EXTRA_CONF_TOR"`
+	AaaServerConf                           string `json:"AAA_SERVER_CONF"`
+	Enablerealtimebackup                    string `json:"enableRealTimeBackup"`
+	StrictCcMode                            string `json:"STRICT_CC_MODE"`
+	V6SubnetTargetMask                      string `json:"V6_SUBNET_TARGET_MASK"`
+	AbstractTrunkHost                       string `json:"abstract_trunk_host"`
+	MstInstanceRange                        string `json:"MST_INSTANCE_RANGE"`
+	BgpAuthEnable                           string `json:"BGP_AUTH_ENABLE"`
+	PmEnablePrev                            string `json:"PM_ENABLE_PREV"`
+	Enablescheduledbackup                   string `json:"enableScheduledBackup"`
+	AbstractOspfInterface                   string `json:"abstract_ospf_interface"`
+	MacsecFallbackAlgorithm                 string `json:"MACSEC_FALLBACK_ALGORITHM"`
+	UnnumDhcpEnd                            string `json:"UNNUM_DHCP_END"`
+	EnableAaa                               string `json:"ENABLE_AAA"`
+	DeploymentFreeze                        string `json:"DEPLOYMENT_FREEZE"`
+	L2HostIntfMtuPrev                       string `json:"L2_HOST_INTF_MTU_PREV"`
+	NetflowMonitorList                      string `json:"NETFLOW_MONITOR_LIST"`
+	EnableAgent                             string `json:"ENABLE_AGENT"`
+	NtpServerIpList                         string `json:"NTP_SERVER_IP_LIST"`
+	OverlayMode                             string `json:"OVERLAY_MODE"`
+	MacsecFallbackKeyString                 string `json:"MACSEC_FALLBACK_KEY_STRING"`
+	StpRootOption                           string `json:"STP_ROOT_OPTION"`
+	IsisOverloadEnable                      string `json:"ISIS_OVERLOAD_ENABLE"`
+	NetflowRecordList                       string `json:"NETFLOW_RECORD_LIST"`
+	SpineCount                              string `json:"SPINE_COUNT"`
+	AbstractExtraConfigBootstrap            string `json:"abstract_extra_config_bootstrap"`
+	MplsLoopbackIpRange                     string `json:"MPLS_LOOPBACK_IP_RANGE"`
+	LinkStateRoutingTagPrev                 string `json:"LINK_STATE_ROUTING_TAG_PREV"`
+	DhcpEnable                              string `json:"DHCP_ENABLE"`
+	MsoSiteGroupName                        string `json:"MSO_SITE_GROUP_NAME"`
+	MgmtPrefixInternal                      string `json:"MGMT_PREFIX_INTERNAL"`
+	DhcpIpv6EnableInternal                  string `json:"DHCP_IPV6_ENABLE_INTERNAL"`
+	BgpAuthKeyType                          string `json:"BGP_AUTH_KEY_TYPE"`
+	TempAnycastGateway                      string `json:"temp_anycast_gateway"`
+	BrfieldDebugFlag                        string `json:"BRFIELD_DEBUG_FLAG"`
+	BootstrapMultisubnet                    string `json:"BOOTSTRAP_MULTISUBNET"`
+	IsisP2PEnable                           string `json:"ISIS_P2P_ENABLE"`
+	CdpEnable                               string `json:"CDP_ENABLE"`
+	PtpLbId                                 string `json:"PTP_LB_ID"`
+	DhcpIpv6Enable                          string `json:"DHCP_IPV6_ENABLE"`
+	MacsecKeyString                         string `json:"MACSEC_KEY_STRING"`
+	OspfAuthKey                             string `json:"OSPF_AUTH_KEY"`
+	EnableFabricVpcDomainIdPrev             string `json:"ENABLE_FABRIC_VPC_DOMAIN_ID_PREV"`
+	ExtraConfLeaf                           string `json:"EXTRA_CONF_LEAF"`
+	DhcpStart                               string `json:"DHCP_START"`
+	EnableTrm                               string `json:"ENABLE_TRM"`
+	FeaturePtpInternal                      string `json:"FEATURE_PTP_INTERNAL"`
+	AbstractIsis                            string `json:"abstract_isis"`
+	MplsLbId                                string `json:"MPLS_LB_ID"`
+	FabricVpcDomainIdPrev                   string `json:"FABRIC_VPC_DOMAIN_ID_PREV"`
+	StaticUnderlayIpAlloc                   string `json:"STATIC_UNDERLAY_IP_ALLOC"`
+	MgmtV6PrefixInternal                    string `json:"MGMT_V6PREFIX_INTERNAL"`
+	MplsHandoff                             string `json:"MPLS_HANDOFF"`
+	StpBridgePriority                       string `json:"STP_BRIDGE_PRIORITY"`
+	Scheduledtime                           string `json:"scheduledTime"`
+	MacsecCipherSuite                       string `json:"MACSEC_CIPHER_SUITE"`
+	StpVlanRange                            string `json:"STP_VLAN_RANGE"`
+	AnycastLbId                             string `json:"ANYCAST_LB_ID"`
+	MsoControlerId                          string `json:"MSO_CONTROLER_ID"`
+	AbstractExtraConfigLeaf                 string `json:"abstract_extra_config_leaf"`
+	AbstractDhcp                            string `json:"abstract_dhcp"`
+	ExtraConfSpine                          string `json:"EXTRA_CONF_SPINE"`
+	NtpServerVrf                            string `json:"NTP_SERVER_VRF"`
+	SpineSwitchCoreInterfaces               string `json:"SPINE_SWITCH_CORE_INTERFACES"`
+	IsisOverloadElapseTime                  string `json:"ISIS_OVERLOAD_ELAPSE_TIME"`
+	BootstrapConf                           string `json:"BOOTSTRAP_CONF"`
+	IsisAuthKey                             string `json:"ISIS_AUTH_KEY"`
+	DnsServerIpList                         string `json:"DNS_SERVER_IP_LIST"`
+	DnsServerVrf                            string `json:"DNS_SERVER_VRF"`
+	EnableEvpn                              string `json:"ENABLE_EVPN"`
+	AbstractMulticast                       string `json:"abstract_multicast"`
+	AgentIntf                               string `json:"AGENT_INTF"`
+	L3VniMcastGroup                         string `json:"L3VNI_MCAST_GROUP"`
+	UnnumBootstrapLbId                      string `json:"UNNUM_BOOTSTRAP_LB_ID"`
+	VpcDomainIdRange                        string `json:"VPC_DOMAIN_ID_RANGE"`
+	HostIntfAdminState                      string `json:"HOST_INTF_ADMIN_STATE"`
+	SyslogSev                               string `json:"SYSLOG_SEV"`
+	AbstractLoopbackInterface               string `json:"abstract_loopback_interface"`
+	SyslogServerVrf                         string `json:"SYSLOG_SERVER_VRF"`
+	ExtraConfIntraLinks                     string `json:"EXTRA_CONF_INTRA_LINKS"`
+	AbstractExtraConfigSpine                string `json:"abstract_extra_config_spine"`
+	PimHelloAuthKey                         string `json:"PIM_HELLO_AUTH_KEY"`
+	TempVpcDomainMgmt                       string `json:"temp_vpc_domain_mgmt"`
+	V6SubnetRange                           string `json:"V6_SUBNET_RANGE"`
+	AbstractRoutedHost                      string `json:"abstract_routed_host"`
+	BgpAuthKey                              string `json:"BGP_AUTH_KEY"`
+	InbandDhcpServers                       string `json:"INBAND_DHCP_SERVERS"`
+	IsisAuthKeychainKeyId                   string `json:"ISIS_AUTH_KEYCHAIN_KEY_ID"`
+	MgmtV6Prefix                            string `json:"MGMT_V6PREFIX"`
+	AbstractFeatureSpine                    string `json:"abstract_feature_spine"`
+	EnableDefaultQueuingPolicy              string `json:"ENABLE_DEFAULT_QUEUING_POLICY"`
+	AnycastBgwAdvertisePip                  string `json:"ANYCAST_BGW_ADVERTISE_PIP"`
+	NetflowExporterList                     string `json:"NETFLOW_EXPORTER_LIST"`
+	AbstractVlanInterface                   string `json:"abstract_vlan_interface"`
+	FabricName                              string `json:"FABRIC_NAME"`
+	AbstractPimInterface                    string `json:"abstract_pim_interface"`
+	PmEnable                                string `json:"PM_ENABLE"`
+	Loopback0Ipv6Range                      string `json:"LOOPBACK0_IPV6_RANGE"`
+	EnableVpcPeerLinkNativeVlan             string `json:"ENABLE_VPC_PEER_LINK_NATIVE_VLAN"`
+	AbstractRouteMap                        string `json:"abstract_route_map"`
+	InbandMgmtPrev                          string `json:"INBAND_MGMT_PREV"`
+	AbstractVpcDomain                       string `json:"abstract_vpc_domain"`
+	DhcpEndInternal                         string `json:"DHCP_END_INTERNAL"`
+	BootstrapEnable                         string `json:"BOOTSTRAP_ENABLE"`
+	AbstractExtraConfigTor                  string `json:"abstract_extra_config_tor"`
+	SyslogServerIpList                      string `json:"SYSLOG_SERVER_IP_LIST"`
+	BootstrapEnablePrev                     string `json:"BOOTSTRAP_ENABLE_PREV"`
+	EnableTenantDhcp                        string `json:"ENABLE_TENANT_DHCP"`
+	AnycastRpIpRangeInternal                string `json:"ANYCAST_RP_IP_RANGE_INTERNAL"`
+	BootstrapMultisubnetInternal            string `json:"BOOTSTRAP_MULTISUBNET_INTERNAL"`
+	MgmtGw                                  string `json:"MGMT_GW"`
+	UnnumDhcpStart                          string `json:"UNNUM_DHCP_START"`
+	MgmtPrefix                              string `json:"MGMT_PREFIX"`
+	AbstractBgpRr                           string `json:"abstract_bgp_rr"`
+	InbandMgmt                              string `json:"INBAND_MGMT"`
+	AbstractBgp                             string `json:"abstract_bgp"`
+	EnableNetflowPrev                       string `json:"ENABLE_NETFLOW_PREV"`
+	DeafultQueuingPolicyCloudscale          string `json:"DEAFULT_QUEUING_POLICY_CLOUDSCALE"`
+	FabricVpcQos                            string `json:"FABRIC_VPC_QOS"`
+	AaaRemoteIpEnabled                      string `json:"AAA_REMOTE_IP_ENABLED"`
+	FabricTemplate                          string `json:"FF"`
+	FabricType                              string `json:"FABRIC_TYPE"`
+	SpineAddDelBedugFlag                    string `json:"SSPINE_ADD_DEL_DEBUG_FLAG"`
+	ActiveMigration                         string `json:"ACTIVE_MIGRATION"`
+	SiteId                                  string `json:"SITE_ID"`
+	EnablePVlan                             string `json:"ENABLE_PVLAN"`
+	AutoVrfLiteIfcDefaultVrf                string `json:"AUTO_VRFLITE_IFC_DEFAULT_VRF"`
+	AutoAsymetricDefaultVrf                 string `json:"AUTO_SYMMETRIC_DEFAULT_VRF"`
+	BrownfieldSkipOverlayNetworkAttachments string `json:"BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS"`
+	DefaultPvlanSecNetwork                  string `json:"default_pvlan_sec_network"`
+	DefaultVrfRedisBgpRmap                  string `json:"DEFAULT_VRF_REDIS_BGP_RMAP"`
+	EnablePVlanPrev                         string `json:"ENABLE_PVLAN_PREV"`
 }
 
 func (fabric *Fabric) ToMap() (map[string]interface{}, error) {
@@ -289,13 +296,13 @@ func (config *FabricConfig) SetConfigDefaults() {
 	config.PremsoParentFabric = ""
 	config.UnnumDhcpEndInternal = ""
 	config.PtpDomainId = ""
-	config.AutoSymmetricVrfLite = false
-	config.UseLinkLocal = false
+	config.AutoSymmetricVrfLite = "false"
+	config.UseLinkLocal = "false"
 	config.BgpAsPrev = ""
 	config.EnablePbr = "false"
 	config.VpcPeerLinkPo = "500"
 	config.VpcDelayRestoretime = "60"
-	config.IsisAuthEnable = false
+	config.IsisAuthEnable = "false"
 	config.VpcEnableIpv6NdSync = "true"
 	config.AbstractIsisInterface = "isis_interface"
 	config.TcamAllocation = "true"
@@ -330,7 +337,7 @@ func (config *FabricConfig) SetConfigDefaults() {
 	config.AbstractOspfInterface = "ospf_interface_11_1"
 	config.MacsecFallbackAlgorithm = ""
 	config.UnnumDhcpEnd = ""
-	config.EnableAaa = false
+	config.EnableAaa = "false"
 	config.DeploymentFreeze = "false"
 	config.L2HostIntfMtuPrev = "9216"
 	config.NetflowMonitorList = ""
@@ -340,13 +347,13 @@ func (config *FabricConfig) SetConfigDefaults() {
 	config.MacsecFallbackKeyString = ""
 	config.StpRootOption = "unmanaged"
 	config.FabricType = "Switch_Fabric"
-	config.IsisOverloadEnable = false
+	config.IsisOverloadEnable = "false"
 	config.NetflowRecordList = ""
 	config.SpineCount = "0"
 	config.AbstractExtraConfigBootstrap = "extra_config_bootstrap_11_1"
 	config.MplsLoopbackIpRange = ""
 	config.LinkStateRoutingTagPrev = ""
-	config.DhcpEnable = false
+	config.DhcpEnable = "false"
 	config.MsoSiteGroupName = ""
 	config.MgmtPrefixInternal = ""
 	config.DhcpIpv6EnableInternal = ""
@@ -355,7 +362,7 @@ func (config *FabricConfig) SetConfigDefaults() {
 	config.TempAnycastGateway = "anycast_gateway"
 	config.BrfieldDebugFlag = "Disable"
 	config.BootstrapMultisubnet = ""
-	config.IsisP2PEnable = false
+	config.IsisP2PEnable = "false"
 	config.EnableNgoam = "true"
 	config.CdpEnable = "false"
 	config.PtpLbId = ""
@@ -447,5 +454,11 @@ func (config *FabricConfig) SetConfigDefaults() {
 	config.SpineAddDelBedugFlag = "Disable"
 	config.ActiveMigration = "false"
 	config.BfdEnable = "false"
-
+	config.EnablePVlan = "false"
+	config.AutoVrfLiteIfcDefaultVrf = "false"
+	config.AutoAsymetricDefaultVrf = "false"
+	config.BrownfieldSkipOverlayNetworkAttachments = "false"
+	config.DefaultPvlanSecNetwork = ""
+	config.DefaultVrfRedisBgpRmap = ""
+	config.EnablePVlanPrev = "false"
 }

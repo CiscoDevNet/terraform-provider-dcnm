@@ -1,6 +1,7 @@
 package dcnm
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -426,6 +427,11 @@ func resourceDCNMFabric() *schema.Resource {
 				Optional: true,
 				Default:  "1-65534",
 			},
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -694,32 +700,44 @@ func setFabricAttributes(d *schema.ResourceData, cont *container.Container) *sch
 	return d
 }
 
-func resourceDCNMFabricImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-	log.Println("[DEBUG] Begining Importer ", d.Id())
+func setFabricCustomTemplateAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+	d.Set("name", stripQuotes(cont.S("fabricName").String()))
+	d.Set("fabric_id", stripQuotes(cont.S("fabricId").String()))
+	d.Set("template", stripQuotes(cont.S("templateName").String()))
+	d.SetId(stripQuotes(cont.S("id").String()))
 
-	dcnmClient := m.(*client.Client)
-
-	fabricName := d.Id()
-
-	cont, err := getRemoteFabric(dcnmClient, fabricName)
-	if err != nil {
-		return nil, err
+	if cont.Exists("serviceVrfTemplate") && stripQuotes(cont.S("serviceVrfTemplate").String()) != "null" {
+		d.Set("service_template", stripQuotes(cont.S("serviceVrfTemplate").String()))
+	}
+	if cont.Exists("source") && stripQuotes(cont.S("source").String()) != "null" {
+		d.Set("source", stripQuotes(cont.S("source").String()))
 	}
 
-	stateImport := setFabricAttributes(d, cont)
+	var strByte []byte
+	if cont.Exists("nvPairs") {
+		strJson := models.G(cont, "nvPairs")
+		// strJson = strings.ReplaceAll(strJson, "\\", "")
+		strByte = []byte(strJson)
+		var fabricTemplateConfig map[string]string
+		json.Unmarshal(strByte, &fabricTemplateConfig)
+		props, ok := d.GetOk("template_props")
 
-	log.Println("[DEBUG] End of Importer ", d.Id())
-	return []*schema.ResourceData{stateImport}, nil
+		map2 := make(map[string]interface{})
+		for k := range props.(map[string]interface{}) {
+			map2[k] = fabricTemplateConfig[k]
+		}
+		if !ok {
+			d.Set("template_props", fabricTemplateConfig)
+		} else {
+
+			d.Set("template_props", map2)
+		}
+	}
+
+	return d
 }
 
-func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
-	log.Println("[DEBUG] Begining Create method ")
-
-	dcnmClient := m.(*client.Client)
-
-	fabric := models.Fabric{}
-	fabric.Name = d.Get("name").(string)
-	fabric.Template = d.Get("template").(string)
+func buildFabricPayload(d *schema.ResourceData, fabric models.Fabric) models.FabricConfig {
 
 	configMap := models.FabricConfig{}
 	configMap.SetConfigDefaults()
@@ -944,7 +962,49 @@ func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
 
 	configMap.FabricTemplate = fabric.Template
 	configMap.FabricName = fabric.Name
-	fabric.Config = configMap
+
+	return configMap
+}
+
+func resourceDCNMFabricImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	log.Println("[DEBUG] Begining Importer ", d.Id())
+
+	dcnmClient := m.(*client.Client)
+
+	fabricName := d.Id()
+
+	cont, err := getRemoteFabric(dcnmClient, fabricName)
+	if err != nil {
+		return nil, err
+	}
+
+	var stateImport *schema.ResourceData
+	if stripQuotes(cont.S("templateName").String()) != "Easy_Fabric" {
+		stateImport = setFabricCustomTemplateAttributes(d, cont)
+	} else {
+		stateImport = setFabricAttributes(d, cont)
+	}
+
+	log.Println("[DEBUG] End of Importer ", d.Id())
+	return []*schema.ResourceData{stateImport}, nil
+}
+
+func resourceDCNMFabricCreate(d *schema.ResourceData, m interface{}) error {
+	log.Println("[DEBUG] Begining Create method ")
+
+	dcnmClient := m.(*client.Client)
+
+	fabric := models.Fabric{}
+	fabric.Name = d.Get("name").(string)
+	fabric.Template = d.Get("template").(string)
+
+	if templateConfig, ok := d.GetOk("template_props"); ok {
+		templateConfigMap := templateConfig.(map[string]interface{})
+		fabric.Config = templateConfigMap
+	} else {
+		configMap := buildFabricPayload(d, fabric)
+		fabric.Config = configMap
+	}
 
 	durl := "/rest/control/fabrics"
 	cont, err := dcnmClient.Save(durl, &fabric)
@@ -968,231 +1028,14 @@ func resourceDCNMFabricUpdate(d *schema.ResourceData, m interface{}) error {
 	fabric.Template = d.Get("template").(string)
 	fabric.FabricId = d.Get("fabric_id").(string)
 
-	configMap := models.FabricConfig{}
-	configMap.SetConfigDefaults()
-
-	if asn, ok := d.GetOk("asn"); ok {
-		configMap.Asn = strconv.Itoa(asn.(int))
-	}
-	if underlayRoutingNumbering, ok := d.GetOk("underlay_interface_numbering"); ok {
-		configMap.UnderlayInterfaceNumbering = underlayRoutingNumbering.(string)
-	}
-	if underlaySubnetMask, ok := d.GetOk("underlay_subnet_mask"); ok {
-		configMap.UnderlaySubnetMask = strconv.Itoa(underlaySubnetMask.(int))
-	}
-	if uderlayRoutingProtocol, ok := d.GetOk("underlay_routing_protocol"); ok {
-		configMap.UnderlayRoutingProcotol = uderlayRoutingProtocol.(string)
-	}
-	if rrCount, ok := d.GetOk("route_reflectors_count"); ok {
-		configMap.RouteReflectorCount = strconv.Itoa(rrCount.(int))
-	}
-	if anycastMac, ok := d.GetOk("anycast_mac"); ok {
-		configMap.AnycastMac = anycastMac.(string)
-	}
-	if replicationMode, ok := d.GetOk("replication_mode"); ok {
-		configMap.ReplicationMode = replicationMode.(string)
-	}
-	if multicastGroupSubnet, ok := d.GetOk("multicast_group_subnet"); ok {
-		configMap.MulticastGroupSubnet = multicastGroupSubnet.(string)
-	}
-	if rpCount, ok := d.GetOk("rendevous_point_count"); ok {
-		configMap.RendevouzPointCount = strconv.Itoa(rpCount.(int))
-	}
-	if rpMode, ok := d.GetOk("rendevous_point_mode"); ok {
-		configMap.RendevouzPointMode = rpMode.(string)
-	}
-	if rpId, ok := d.GetOk("rendevous_loopback_id"); ok {
-		configMap.RendevouzPointLoopbackId = strconv.Itoa(rpId.(int))
-	}
-	if vpcPlVlan, ok := d.GetOk("vpc_peer_link_vlan"); ok {
-		configMap.VpcPeerLinkVlan = strconv.Itoa(vpcPlVlan.(int))
-	}
-	if vpcPkaOption, ok := d.GetOk("vpc_peer_keep_alive_option"); ok {
-		configMap.VpcPeerKeepAliveOption = vpcPkaOption.(string)
-	}
-	if vpcAutoRectime, ok := d.GetOk("vpc_auto_recovery_time"); ok {
-		configMap.VpcAutoRecoveryTime = strconv.Itoa(vpcAutoRectime.(int))
-	}
-	if vpcDelayResTime, ok := d.GetOk("vpc_delay_restore_time"); ok {
-		configMap.VpcDelayRestore = strconv.Itoa(vpcDelayResTime.(int))
-	}
-	if rtLooId, ok := d.GetOk("underlay_routing_loopback_id"); ok {
-		configMap.UnderlayRoutingLoopbackId = strconv.Itoa(rtLooId.(int))
+	if templateConfig, ok := d.GetOk("template_props"); ok {
+		templateConfigMap := templateConfig.(map[string]interface{})
+		fabric.Config = templateConfigMap
 	} else {
-		configMap.UnderlayRoutingLoopbackId = "0"
-	}
-	if vtepLooId, ok := d.GetOk("underlay_vtep_loopback_id"); ok {
-		configMap.UnderlayVtepLoopbackId = strconv.Itoa(vtepLooId.(int))
-	}
-	if rtProtoTag, ok := d.GetOk("underlay_routing_protocol_tag"); ok {
-		configMap.UnderlayRoutingProtocolTag = rtProtoTag.(string)
-	}
-	if ospfAreaId, ok := d.GetOk("ospf_area_id"); ok {
-		configMap.OspfAreaId = ospfAreaId.(string)
+		configMap := buildFabricPayload(d, fabric)
+		fabric.Config = configMap
 	}
 
-	if ospfBfpEnable, ok := d.GetOk("ospf_bfd"); ok {
-		if ospfBfpEnable.(bool) {
-			configMap.BfdOspf = "true"
-			configMap.BfdEnable = "true"
-		} else {
-			configMap.BfdOspf = "false"
-		}
-	} else {
-		configMap.BfdOspf = "false"
-	}
-	if ibgpOspfEnable, ok := d.GetOk("ibgp_bfd"); ok {
-		if ibgpOspfEnable.(bool) {
-			configMap.IbgpOspf = "true"
-			configMap.BfdEnable = "true"
-		} else {
-			configMap.IbgpOspf = "false"
-		}
-	} else {
-		configMap.IbgpOspf = "false"
-	}
-	if isisBfpEnable, ok := d.GetOk("isis_bfd"); ok {
-		if isisBfpEnable.(bool) {
-			configMap.IsisOspf = "true"
-			configMap.BfdEnable = "true"
-		} else {
-			configMap.IsisOspf = "false"
-		}
-	} else {
-		configMap.IsisOspf = "false"
-	}
-	if pimBfpEnable, ok := d.GetOk("pim_bfd"); ok {
-		if pimBfpEnable.(bool) {
-			configMap.PimOspf = "true"
-			configMap.BfdEnable = "true"
-		} else {
-			configMap.PimOspf = "false"
-		}
-	} else {
-		configMap.PimOspf = "false"
-	}
-	if bfd_authentication_key_id, ok := d.GetOk("bfd_authentication_key_id"); ok {
-		configMap.BfdAuthKeyId = strconv.Itoa(bfd_authentication_key_id.(int))
-		configMap.BfdAuthEnable = "true"
-	}
-	if bfd_authentication_key, ok := d.GetOk("bfd_authentication_key"); ok {
-		configMap.BfdAuthKey = bfd_authentication_key.(string)
-	}
-	if ibgpPeerTempConf, ok := d.GetOk("ibgp_peer_template_config"); ok {
-		configMap.IbgpPeerTemplate = ibgpPeerTempConf.(string)
-	}
-	if leafIbgpPeerTempConf, ok := d.GetOk("leaf_ibgp_peer_template_config"); ok {
-		configMap.IbgpPeerTemplateLeaf = leafIbgpPeerTempConf.(string)
-	}
-	if vrfTemp, ok := d.GetOk("vrf_template"); ok {
-		configMap.VrfTemplate = vrfTemp.(string)
-	}
-	if netTemp, ok := d.GetOk("network_template"); ok {
-		configMap.NetworkTemplate = netTemp.(string)
-	}
-	if vrfExtTemp, ok := d.GetOk("vrf_extension_template"); ok {
-		configMap.VrfExtensionTemplate = vrfExtTemp.(string)
-	}
-	if netExtTemp, ok := d.GetOk("network_extension_template"); ok {
-		configMap.NetworkExtensionTemplate = netExtTemp.(string)
-	}
-	if overlayMode, ok := d.GetOk("overlay_mode"); ok {
-		configMap.OverlayMode = overlayMode.(string)
-	}
-	if fabMtu, ok := d.GetOk("intra_fabric_interface_mtu"); ok {
-		configMap.IntraFabricInterfaceMtu = strconv.Itoa(fabMtu.(int))
-	}
-	if hostMtu, ok := d.GetOk("layer_2_host_interface_mtu"); ok {
-		configMap.Layer2HostInterfaceMtu = strconv.Itoa(hostMtu.(int))
-	}
-	if psMode, ok := d.GetOk("power_supply_mode"); ok {
-		configMap.PowerSupplyMode = psMode.(string)
-	}
-	if coppProf, ok := d.GetOk("copp_profile"); ok {
-		configMap.CoppProfile = coppProf.(string)
-	}
-	if enableVxlan, ok := d.GetOk("enable_vxlan_oam"); ok {
-		if enableVxlan.(bool) {
-			configMap.EnableNgoam = "true"
-		} else {
-			configMap.EnableNgoam = "false"
-		}
-	} else {
-		configMap.EnableNgoam = "false"
-	}
-	if enableNxApi, ok := d.GetOk("enable_nx_api"); ok {
-		if enableNxApi.(bool) {
-			configMap.EnableNxapi = "true"
-		} else {
-			configMap.EnableNxapi = "false"
-		}
-	} else {
-		configMap.EnableNxapi = "false"
-	}
-	if enableNxApiHttp, ok := d.GetOk("enable_nx_api_on_http"); ok {
-		if enableNxApiHttp.(bool) {
-			configMap.EnableNxapiHttp = "true"
-		} else {
-			configMap.EnableNxapiHttp = "false"
-		}
-	} else {
-		configMap.EnableNxapiHttp = "false"
-	}
-	if enableNdfcAsTrap, ok := d.GetOk("enable_ndfc_as_trap_host"); ok {
-		if enableNdfcAsTrap.(bool) {
-			configMap.SnmpServerHostTrap = "true"
-		} else {
-			configMap.SnmpServerHostTrap = "false"
-		}
-	} else {
-		configMap.SnmpServerHostTrap = "false"
-	}
-	if rtLooIpRange, ok := d.GetOk("underlay_routing_loopback_ip_range"); ok {
-		configMap.UnderlayRoutingLoopbackIpRange = rtLooIpRange.(string)
-	}
-	if vtepLooIpRange, ok := d.GetOk("underlay_vtep_loopback_ip_range"); ok {
-		configMap.UnderlayVtepLoopbackIpRange = vtepLooIpRange.(string)
-	}
-	if rpLooIpRange, ok := d.GetOk("underlay_rp_loopback_ip_range"); ok {
-		configMap.UnderlayRpLoopbackIpRange = rpLooIpRange.(string)
-	}
-	if subIpRange, ok := d.GetOk("underlay_subnet_ip_range"); ok {
-		configMap.UnderlaySubnetIpRange = subIpRange.(string)
-	}
-	if l2VniRange, ok := d.GetOk("layer_2_vxlan_vni_range"); ok {
-		configMap.Layer2VxlanVniRange = l2VniRange.(string)
-	}
-	if l3VniRange, ok := d.GetOk("layer_3_vxlan_vni_range"); ok {
-		configMap.Layer3VxlanVniRange = l3VniRange.(string)
-	}
-	if netVlanRange, ok := d.GetOk("network_vlan_range"); ok {
-		configMap.NetworkVlanRange = netVlanRange.(string)
-	}
-	if vrfVlanRange, ok := d.GetOk("vrf_vlan_range"); ok {
-		configMap.VrfVlanRange = vrfVlanRange.(string)
-	}
-	if subIfDot1qRange, ok := d.GetOk("subinterface_dot1q_range"); ok {
-		configMap.SubinterfaceDot1qRange = subIfDot1qRange.(string)
-	}
-	if vrfLiteDeployment, ok := d.GetOk("vrf_lite_deployment"); ok {
-		configMap.VrfLiteDeployment = vrfLiteDeployment.(string)
-	}
-	if vrfLifeSubnetIpRange, ok := d.GetOk("vrf_lite_subnet_ip_range"); ok {
-		configMap.VrfLiteSubnetIpRange = vrfLifeSubnetIpRange.(string)
-	}
-	if vrfLiteSubnetMask, ok := d.GetOk("vrf_lite_subnet_mask"); ok {
-		configMap.VrfLiteSubnetMask = strconv.Itoa(vrfLiteSubnetMask.(int))
-	}
-	if svcNetVlanRange, ok := d.GetOk("service_network_vlan_range"); ok {
-		configMap.ServiceNetworkVlanRange = svcNetVlanRange.(string)
-	}
-	if rmSeqRange, ok := d.GetOk("route_map_sequence_number_range"); ok {
-		configMap.RouteMapSequenceNumberRange = rmSeqRange.(string)
-	}
-
-	configMap.FabricTemplate = fabric.Template
-	configMap.FabricName = fabric.Name
-	fabric.Config = configMap
 	idInt, _ := strconv.Atoi(d.Id())
 	fabric.Id = idInt
 
@@ -1220,7 +1063,11 @@ func resourceDCNMFabricRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setFabricAttributes(d, cont)
+	if _, ok := d.GetOk("template_props"); ok {
+		setFabricCustomTemplateAttributes(d, cont)
+	} else {
+		setFabricAttributes(d, cont)
+	}
 
 	log.Println("[DEBUG] End of Read method ", d.Id())
 	return nil

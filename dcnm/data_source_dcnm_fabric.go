@@ -352,6 +352,12 @@ func datasourceDCNMFabric() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -368,7 +374,11 @@ func datasourceDCNMFabricRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setFabricAttributes(d, cont)
+	if stripQuotes(cont.S("templateName").String()) != "Easy_Fabric" {
+		setFabricCustomTemplateAttributes(d, cont)
+	} else {
+		setFabricAttributes(d, cont)
+	}
 
 	return nil
 }
