@@ -18,7 +18,7 @@ resource "dcnm_inventory" "first" {
   username        = ""
   password        = ""
   preserve_config = "false"
-  config_timeout  = 10
+  config_timeout  = 300
   switch_config {
     ip   = ""
     role = "leaf"

@@ -15,23 +15,27 @@ Manages DCNM inventory modules
 ```hcl
 resource "dcnm_inventory" "first" {
   fabric_name   = "fab2"
-  username      = "username for DCNM switches"
-  password      = "password for DCNM switches"
+  username      = "admin"
+  password      = "password"
   max_hops      = 0
   preserve_config = "false"
   auth_protocol = 0
-  config_timeout = 10
+  config_timeout = 15
   switch_config {
-    ip   = "switch IP"
+    ip   = "192.168.10.10"
     role = "leaf"
   }
   switch_config {
-    ip   = "switch IP"
+    ip   = "192.168.10.11"
+    role = "leaf"
+  }
+  switch_config {
+    ip   = "192.168.10.12"
+    role = "border"
+  }
+  switch_config {
+    ip   = "192.168.10.13"
     role = "spine"
-  }
-  switch_config {
-    ip   = "switch IP"
-    role = "leaf"
   }
 }
 ```
@@ -66,10 +70,4 @@ resource "dcnm_inventory" "first" {
 * `switch_config.mode` - Mode of the switch.
 
 ## Importing
-
-An existing switch inventory can be [imported][docs-import] into this resource via its fabric and name, using the following command:
-[docs-import]: https://www.terraform.io/docs/import/index.html
-
-```
-terraform import dcnm_inventory.example <fabric_name>:<switch_name>
-```
+`dcnm_inventory` does not support import in current version
