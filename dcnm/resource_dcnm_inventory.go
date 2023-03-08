@@ -251,6 +251,7 @@ func getSwitchInfo(cont *container.Container) map[string]interface{} {
 	sInfo["switch_db_id"] = models.G(cont, "switchDbID")
 	sInfo["serial_number"] = models.G(cont, "serialNumber")
 	sInfo["model"] = models.G(cont, "model")
+	sInfo["status"] = models.G(cont, "status")
 	sInfo["mode"] = models.G(cont, "mode")
 
 	return sInfo
@@ -434,26 +435,15 @@ func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m 
 	diags := diag.Diagnostics{}
 	dcnmClient := m.(*client.Client)
 
-	fabricName := d.Get("fabric_name").(string)
-
-	if d.HasChange("deploy") && !d.Get("deploy").(bool) {
-		d.Set("deploy", true)
-		return append(diags, diag.Errorf("Deployed switches can not be undeployed")...)
-	}
+	delFlag := false
+	newSwitchFlag := false
 	delSwtiches := make([]string, 0, 1)
-	var delFlag bool
-
-	ipDns := d.Get("ips").([]interface{})
-
+	discoveredIps := make([]string, 0, 1)
 	ips := make([]string, 0, 1)
-	switchInfosOld, switchInfosNew := d.GetChange("switch_config")
+	switchObjs := make([]*models.Switch, 0, 1)
 
-	deleteSwitches := getSerialsForDelete(switchInfosOld.(*schema.Set).List(), switchInfosNew.(*schema.Set).List())
-	err := deleteSpecificSwitches(dcnmClient, fabricName, deleteSwitches)
-	if err != nil {
-		return append(diags, diag.FromErr(err)...)
-	}
-
+	fabricName := d.Get("fabric_name").(string)
+	ipDns := d.Get("ips").([]interface{})
 	inv := models.Inventory{}
 	inv.Username = d.Get("username").(string)
 	inv.Password = d.Get("password").(string)
@@ -473,11 +463,23 @@ func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m 
 	if platform, ok := d.GetOk("platform"); ok {
 		inv.Platform = platform.(string)
 	}
-
-	newSwitchFlag := false
-	discoveredIps := make([]string, 0, 1)
-	switchObjs := make([]*models.Switch, 0, 1)
+	switchInfosOld, switchInfosNew := d.GetChange("switch_config")
 	switchInfos := switchInfosNew.(*schema.Set).List()
+	var swtichInfosCreate []*schema.Set // switch_configs that will be created
+
+	if d.HasChange("deploy") && !d.Get("deploy").(bool) {
+		d.Set("deploy", true)
+		return append(diags, diag.Errorf("Deployed switches can not be undeployed")...)
+	}
+
+	// remove switches that is removed from config
+	deleteSwitches := getSerialsForDelete(switchInfosOld.(*schema.Set).List(), switchInfosNew.(*schema.Set).List())
+	err := deleteSpecificSwitches(dcnmClient, fabricName, deleteSwitches)
+	if err != nil {
+		return append(diags, diag.FromErr(err)...)
+	}
+
+	//update swtich LAN credentials
 	for _, val := range switchInfos {
 
 		sInfo := val.(map[string]interface{})
@@ -508,151 +510,183 @@ func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 		} else {
 			newSwitchFlag = true
-
-			inv.SeedIP = ip
-
-			fabricID, err := extractFabricID(dcnmClient, fabricName)
-			if err != nil {
-				return append(diags, diag.FromErr(err)...)
-			}
-
-			dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/test-reachability", strconv.Itoa(fabricID))
-			cont, err := dcnmClient.Save(dUrl, &inv)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  fmt.Sprintf("error at test reachability for switch %s: %s", ip, err),
-				})
-				continue
-			}
-
-			switchM := extractSwitchinfo(cont)
-
-			if switchM.Selectable != "true" || switchM.Reachable != "true" {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  fmt.Sprintf("Desired switch: is not reachable or not selectable or invalid user/password or bad authentication protocol %s", ip),
-				})
-				continue
-			}
-
 			discoveredIps = append(discoveredIps, ip)
-			switchObjs = append(switchObjs, &switchM)
+			switchInfosCreate = append(switchInfosCreate, &sInfo)
 		}
 	}
 
 	if newSwitchFlag {
-		inv.SeedIP = strings.Join(discoveredIps, ",")
+		// Test reachability of desired switches
+
+		reachabilityDiagsChan := make(chan diag.Diagnostics, len(switchInfosCreate))
+		switchObjectChan := make(chan *models.Switch, len(switchInfosCreate))
+		switchWaitGroup := new(sync.WaitGroup)
+
+		for _, val := range switchInfosCreate {
+			sInfo := val.(map[string]interface{})
+			ip := sInfo["ip"].(string)
+			switchWaitGroup.Add(1)
+			inv.SeedIP = ip
+
+			go testReachabilityRoutine(switchWaitGroup, dcnmClient, inv, fabricName, switchObjectChan, reachabilityDiagsChan)
+		}
+
+		switchWaitGroup.Wait()
+		close(switchObjectChan)
+		close(reachabilityDiagsChan)
+
+		for diag := range reachabilityDiagsChan {
+			if diag.HasError() {
+				return append(diags, diag...)
+			}
+			diags = append(diags, diag...)
+		}
+
+		for switchObj := range switchObjectChan {
+			discoveredIps = append(discoveredIps, switchObj.IP)
+			switchObjs = append(switchObjs, switchObj)
+		}
 		invModel := models.NewSwitch(&inv, switchObjs)
 
+		// Discover reachable switches
 		dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/discover", fabricName)
-		_, err = dcnmClient.Save(dUrl, invModel)
+		_, err := dcnmClient.Save(dUrl, invModel)
 		if err != nil {
-			return append(diags, diag.Errorf("error at discovery for switch : %s", err)...)
+			return append(diags, diag.Errorf("error at discovery for switches: %s", err)...)
 		}
 
-		deployedIps := make([]string, 0, 1)
-		deployedSerial := make([]string, 0, 1)
+		// Prepare for deployment
+		prepareDiagsChan := make(chan diag.Diagnostics, len(switchInfosCreate))
+		deployedIPChan := make(chan string, len(switchInfosCreate))
+		configTimeout := (d.Get("config_timeout").(int)) * 60
+
 		for _, ip := range discoveredIps {
-			var serialNum string
-			configTimeout := (d.Get("config_timeout").(int)) * 60
-			migrate := true
-
-			for configTimeout > 0 {
-				cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
-				if err != nil {
-					diags = append(diags, diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  fmt.Sprintf("error at get call for switch in updation %s: %s", ip, err),
-					})
-					continue
-				}
-				serialNum = models.G(cont, "serialNumber")
-
-				if models.G(cont, "mode") != "Migration" {
-					time.Sleep(10 * time.Second)
-					configTimeout = configTimeout - 10
-					migrate = false
-					break
-				}
-				time.Sleep(5 * time.Second)
-				configTimeout = configTimeout - 5
-			}
-			if migrate {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  fmt.Sprintf("Timeout occurs before going into normal mode. Hence removing it! %s", ip),
-				})
-				delSwtiches = append(delSwtiches, serialNum)
-				delFlag = true
-				continue
-			}
-
-			err := waitUntilFabricConfig(dcnmClient, fabricName, serialNum, configTimeout)
-			if err != nil {
-				delSwtiches = append(delSwtiches, serialNum)
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  fmt.Sprintf("error at switch deployment %s: %s", ip, err),
-				})
-				delFlag = true
-				continue
-			}
-
-			deployedIps = append(deployedIps, ip)
-			deployedSerial = append(deployedSerial, serialNum)
-		}
-
-		if delFlag {
-			for _, serial := range delSwtiches {
-				_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
-				if err == nil {
-					durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
-					_, delerr := dcnmClient.Delete(durl)
-					if delerr != nil {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Warning,
-							Summary:  fmt.Sprintf("error at deletion of switch %s", err),
-						})
-					}
+			var sInfo map[string]interface{}
+			for _, val := range switchInfosCreate {
+				s := val.(map[string]interface{})
+				if s["ip"].(string) == ip && s["role"] != "" {
+					sInfo = val.(map[string]interface{})
 				}
 			}
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
-			})
+			switchWaitGroup.Add(1)
+			go prepareSwitchesRoutine(switchWaitGroup, dcnmClient, fabricName, ip, configTimeout, sInfo, prepareDiagsChan, deployedIPChan)
 		}
 
-		delFlag = false
-		err = deployFabric(dcnmClient, fabricName)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("error at fabric deployment: %s", err),
-			})
-			delFlag = true
-		}
+		switchWaitGroup.Wait()
+		close(deployedIPChan)
+		close(prepareDiagsChan)
+		//deployedIps = append(deployedIps, ip)
+		//deployedSerial = append(deployedSerial, serialNum)
 
-		if delFlag {
-			for _, serial := range deployedSerial {
-				_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
-				if err == nil {
-					durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
-					_, delerr := dcnmClient.Delete(durl)
-					if delerr != nil {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Warning,
-							Summary:  fmt.Sprintf("error at deletion of switch %s", err),
-						})
-					}
-				}
-			}
-		} else {
-			ips = append(ips, deployedIps...)
-		}
+		//dUrl := fmt.Sprintf("/rest/control/fabrics/%s/inventory/discover", fabricName)
+		//_, err = dcnmClient.Save(dUrl, invModel)
+		//if err != nil {
+		//return append(diags, diag.Errorf("error at discovery for switch : %s", err)...)
+		//}
+
+		//deployedIps := make([]string, 0, 1)
+		//deployedSerial := make([]string, 0, 1)
+		//for _, ip := range discoveredIps {
+		//var serialNum string
+		//configTimeout := (d.Get("config_timeout").(int)) * 60
+		//migrate := true
+
+		//for configTimeout > 0 {
+		//cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
+		//if err != nil {
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("error at get call for switch in updation %s: %s", ip, err),
+		//})
+		//continue
+		//}
+		//serialNum = models.G(cont, "serialNumber")
+
+		//if models.G(cont, "mode") != "Migration" {
+		//time.Sleep(10 * time.Second)
+		//configTimeout = configTimeout - 10
+		//migrate = false
+		//break
+		//}
+		//time.Sleep(5 * time.Second)
+		//configTimeout = configTimeout - 5
+		//}
+		//if migrate {
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("Timeout occurs before going into normal mode. Hence removing it! %s", ip),
+		//})
+		//delSwtiches = append(delSwtiches, serialNum)
+		//delFlag = true
+		//continue
+		//}
+
+		//err := waitUntilFabricConfig(dcnmClient, fabricName, serialNum, configTimeout)
+		//if err != nil {
+		//delSwtiches = append(delSwtiches, serialNum)
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("error at switch deployment %s: %s", ip, err),
+		//})
+		//delFlag = true
+		//continue
+		//}
+
+		//deployedIps = append(deployedIps, ip)
+		//deployedSerial = append(deployedSerial, serialNum)
+		//}
+
+		//if delFlag {
+		//for _, serial := range delSwtiches {
+		//_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
+		//if err == nil {
+		//durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
+		//_, delerr := dcnmClient.Delete(durl)
+		//if delerr != nil {
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("error at deletion of switch %s", err),
+		//})
+		//}
+		//}
+		//}
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  "Some switches failed to discover and deploy, resuming procedure for successfully discovered switches",
+		//})
+		//}
+
+		//delFlag = false
+		//err = deployFabric(dcnmClient, fabricName)
+		//if err != nil {
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("error at fabric deployment: %s", err),
+		//})
+		//delFlag = true
+		//}
+
+		//if delFlag {
+		//for _, serial := range deployedSerial {
+		//_, err := getRemoteSwitch(dcnmClient, fabricName, "", serial)
+		//if err == nil {
+		//durl := fmt.Sprintf("/rest/control/fabrics/%s/switches/%s", fabricName, serial)
+		//_, delerr := dcnmClient.Delete(durl)
+		//if delerr != nil {
+		//diags = append(diags, diag.Diagnostic{
+		//Severity: diag.Warning,
+		//Summary:  fmt.Sprintf("error at deletion of switch %s", err),
+		//})
+		//}
+		//}
+		//}
+		//} else {
+		//ips = append(ips, deployedIps...)
+		//}
 
 	}
 
+	// update switch roles
 	for _, ip := range ips {
 		for _, val := range switchInfos {
 			sInfo := val.(map[string]interface{})
@@ -686,12 +720,66 @@ func resourceDCNMInventoryUpdate(ctx context.Context, d *schema.ResourceData, m 
 		}
 	}
 
+	for diag := range prepareDiagsChan {
+		if diag.HasError() {
+			return append(diags, diag...)
+		}
+		diags = append(diags, diag...)
+	}
+	deployedIP := make([]string, 0)
+	for ip := range deployedIPChan {
+		deployedIP = append(deployedIP, ip)
+	}
+
 	err = deployFabric(dcnmClient, fabricName)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  fmt.Sprintf("error at fabric deployment after role assignment: %s", err),
 		})
+	}
+
+	// Remove out-of-sync switches
+	durl := fmt.Sprintf("/rest/control/fabrics/%s/inventory", fabricName)
+	cont, err := dcnmClient.GetviaURL(durl)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	for _, ip := range deployedIP {
+		switchWaitGroup.Add(1)
+		go func(wg *sync.WaitGroup) {
+			serial, err := extractSerialNumber(cont, ip)
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  fmt.Sprintf("error at searching for switch serial-number(%s): %s", ip, err),
+				})
+			}
+			isDeployed, err := checkDeploy(dcnmClient, fabricName, serial)
+			if err != nil {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  fmt.Sprintf("error at checking for switch deployment status (%s): %s", ip, err),
+				})
+			}
+			if !isDeployed {
+				err := deleteSpecificSwitches(dcnmClient, fabricName, []string{ip})
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  fmt.Sprintf("error at removing out-of-sync switch (%s): %s", ip, err),
+					})
+				} else {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  fmt.Sprintf("removed out-of-sync switch (%s)", ip),
+					})
+				}
+			}
+			wg.Done()
+		}(switchWaitGroup)
+		switchWaitGroup.Wait()
 	}
 
 	d.Set("ips", ips)
@@ -831,6 +919,7 @@ func checkDeploy(client *client.Client, fabric, serialNum string) (bool, error) 
 
 	return false, nil
 }
+
 func deployswitch(client *client.Client, fabric, serialNum string) error {
 	durl := fmt.Sprintf("rest/control/fabrics/%s/config-deploy/%s", fabric, serialNum)
 	_, err := client.SaveAndDeploy(durl)
@@ -1002,24 +1091,25 @@ func testReachabilityRoutine(wg *sync.WaitGroup, client *client.Client, inv mode
 
 func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabricName, ip string, configTimeout int, switchInfo map[string]interface{}, prepareDiagsChan chan diag.Diagnostics, deployedIPChan chan string) {
 	var diags diag.Diagnostics
-	// wait until switch is in migration mode
 	var serialNum string
 	migrate := true
 	initTime := time.Now()
+
+	// wait until switch is in migration mode
 	for time.Until(initTime) < (time.Duration(configTimeout) * time.Second) {
+		time.Sleep(10 * time.Second)
 		cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
 		if err != nil {
-			log.Println("Wrror at get call for switch in creation :", ip, err)
+			log.Println("Error at get call for switch in creation :", ip, err)
 			continue
 		}
 		serialNum = models.G(cont, "serialNumber")
 
-		if models.G(cont, "mode") != "Migration" {
+		if models.G(cont, "mode") != "Migration" && models.G(cont, "status") == "ok" {
 			time.Sleep(10 * time.Second)
 			migrate = false
 			break
 		}
-		time.Sleep(5 * time.Second)
 	}
 
 	// if switch mode doesn't update to "Normal" throw a warning to notify the same
@@ -1044,6 +1134,20 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 			Summary:  fmt.Sprintf("Error Rediscovering switch:%s ", ip),
 		})
 	}
+
+	// wait till status of switch becomes ok
+	for time.Until(initTime) < (time.Duration(configTimeout) * time.Second) {
+		time.Sleep(5 * time.Second)
+		cont, err := getRemoteSwitch(dcnmClient, fabricName, ip, "")
+		if err != nil {
+			log.Println("Error at get call for switch in creation :", ip, err)
+			continue
+		}
+		if models.G(cont, "status") == "ok" {
+			break
+		}
+	}
+
 	// Assign roles
 	_, err = dcnmClient.SaveForAttachment(
 		"/rest/control/switches/roles",
@@ -1059,15 +1163,6 @@ func prepareSwitchesRoutine(wg *sync.WaitGroup, dcnmClient *client.Client, fabri
 		})
 	}
 
-	err = waitUntilFabricConfig(dcnmClient, fabricName, serialNum, configTimeout)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("Error at switch deployment %s: %s", ip, err),
-		})
-		prepareDiagsChan <- diags
-		return
-	}
 	prepareDiagsChan <- diags
 	deployedIPChan <- ip
 	wg.Done()
