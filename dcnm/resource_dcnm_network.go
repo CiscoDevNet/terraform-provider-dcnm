@@ -802,7 +802,7 @@ func resourceDCNMNetworkCreate(d *schema.ResourceData, m interface{}) error {
 
 			// Network Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Reponse :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("Network record is created but not deployed yet. Error while attachment : %s", v)
 				}
 			}
@@ -1117,7 +1117,7 @@ func resourceDCNMNetworkUpdate(d *schema.ResourceData, m interface{}) error {
 
 			// Network Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Reponse :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("Network record is updated but not deployed yet. Error while attachment : %s", v)
 				}
 			}
@@ -1270,7 +1270,7 @@ func resourceDCNMNetworkDelete(d *schema.ResourceData, m interface{}) error {
 
 			// Network Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Reponse :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("Error while detachment : %s", v)
 				}
 			}
