@@ -798,7 +798,7 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 
 			// VRF Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Response :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("VRF record is created but not deployed yet. Error while attachment : %s", v)
 				}
 			}
@@ -1144,7 +1144,7 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 
 			// VRF Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Response :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("VRF record is created but not deployed yet. Error while attachment : %s", v)
 				}
 			}
@@ -1363,7 +1363,7 @@ func resourceDCNMVRFDelete(d *schema.ResourceData, m interface{}) error {
 
 			// VRF Deployment
 			for _, v := range cont.Data().(map[string]interface{}) {
-				if v != "SUCCESS" && v != "SUCCESS Peer attach Response :  SUCCESS" {
+				if v != "SUCCESS" && v != "SUCCESS Peer attach Response -  SUCCESS" {
 					return fmt.Errorf("failure at the time of detachment : %s", v)
 				}
 			}
