@@ -204,7 +204,11 @@ func resourceDCNMVRF() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -442,6 +446,47 @@ func setVRFAttributes(d *schema.ResourceData, cont *container.Container) *schema
 	return d
 }
 
+func setVRFCustomTemplateAttributes(d *schema.ResourceData, cont *container.Container) *schema.ResourceData {
+	if cont.Exists("fabric") {
+		d.Set("fabric_name", stripQuotes(cont.S("fabric").String()))
+	}
+	d.Set("name", stripQuotes(cont.S("vrfName").String()))
+	d.Set("template", stripQuotes(cont.S("vrfTemplate").String()))
+	d.Set("extension_template", stripQuotes(cont.S("vrfExtensionTemplate").String()))
+	d.Set("segment_id", stripQuotes(cont.S("vrfId").String()))
+
+	if cont.Exists("serviceVrfTemplate") && stripQuotes(cont.S("serviceVrfTemplate").String()) != "null" {
+		d.Set("service_template", stripQuotes(cont.S("serviceVrfTemplate").String()))
+	}
+	if cont.Exists("source") && stripQuotes(cont.S("source").String()) != "null" {
+		d.Set("source", stripQuotes(cont.S("source").String()))
+	}
+
+	var strByte []byte
+	if cont.Exists("vrfTemplateConfig") {
+		strJson := models.G(cont, "vrfTemplateConfig")
+		strJson = strings.ReplaceAll(strJson, "\\", "")
+		strByte = []byte(strJson)
+		var vrfTemplateConfig map[string]string
+		json.Unmarshal(strByte, &vrfTemplateConfig)
+		props, ok := d.GetOk("template_props")
+
+		map2 := make(map[string]interface{})
+		for k := range props.(map[string]interface{}) {
+			map2[k] = vrfTemplateConfig[k]
+		}
+		if !ok {
+			d.Set("template_props", vrfTemplateConfig)
+		} else {
+
+			d.Set("template_props", map2)
+		}
+	}
+
+	d.SetId(stripQuotes(cont.S("vrfName").String()))
+	return d
+}
+
 func resourceDCNMVRFImporter(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	log.Println("[DEBUG] Begining Importer ", d.Id())
 
@@ -465,7 +510,12 @@ func resourceDCNMVRFImporter(d *schema.ResourceData, m interface{}) ([]*schema.R
 	}
 	d.Set("deploy", flag)
 
-	stateImport := setVRFAttributes(d, cont)
+	var stateImport *schema.ResourceData
+	if stripQuotes(cont.S("vrfTemplate").String()) != "Default_VRF_Universal" {
+		stateImport = setVRFCustomTemplateAttributes(d, cont)
+	} else {
+		stateImport = setVRFAttributes(d, cont)
+	}
 
 	log.Println("[DEBUG] End of Importer ", d.Id())
 	return []*schema.ResourceData{stateImport}, nil
@@ -583,17 +633,28 @@ func resourceDCNMVRFCreate(d *schema.ResourceData, m interface{}) error {
 	if staticR, ok := d.GetOk("static_default_route"); ok {
 		configMap.StaticRoute = staticR.(string)
 	}
-	configMap.SegmentID = vrf.Id
-	configMap.VrfName = vrf.Name
 
-	confStr, err := json.Marshal(configMap)
-	if err != nil {
-		return err
+	if vrfConfig, ok := d.GetOk("template_props"); ok {
+		vrfConfigMap := vrfConfig.(map[string]interface{})
+		vrfConfigMap["vrfSegmentId"] = vrf.Id
+		vrfConfigMap["vrfName"] = vrf.Name
+		confStr, err := json.Marshal(vrfConfigMap)
+		if err != nil {
+			return err
+		}
+		vrf.Config = string(confStr)
+	} else {
+		configMap.SegmentID = vrf.Id
+		configMap.VrfName = vrf.Name
+		confStr, err := json.Marshal(configMap)
+		if err != nil {
+			return err
+		}
+		vrf.Config = string(confStr)
 	}
-	vrf.Config = string(confStr)
 
 	durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs", vrf.Fabric)
-	_, err = dcnmClient.Save(durl, &vrf)
+	_, err := dcnmClient.Save(durl, &vrf)
 	if err != nil {
 		return err
 	}
@@ -924,18 +985,29 @@ func resourceDCNMVRFUpdate(d *schema.ResourceData, m interface{}) error {
 	if staticR, ok := d.GetOk("static_default_route"); ok {
 		configMap.StaticRoute = staticR.(string)
 	}
-	configMap.SegmentID = vrf.Id
-	configMap.VrfName = vrf.Name
 
-	confStr, err := json.Marshal(configMap)
-	if err != nil {
-		return err
+	if vrfConfig, ok := d.GetOk("template_props"); ok {
+		vrfConfigMap := vrfConfig.(map[string]interface{})
+		vrfConfigMap["vrfSegmentId"] = vrf.Id
+		vrfConfigMap["vrfName"] = vrf.Name
+		confStr, err := json.Marshal(vrfConfigMap)
+		if err != nil {
+			return err
+		}
+		vrf.Config = string(confStr)
+	} else {
+		configMap.SegmentID = vrf.Id
+		configMap.VrfName = vrf.Name
+		confStr, err := json.Marshal(configMap)
+		if err != nil {
+			return err
+		}
+		vrf.Config = string(confStr)
 	}
-	vrf.Config = string(confStr)
 
 	dn := d.Id()
 	durl := fmt.Sprintf("/rest/top-down/fabrics/%s/vrfs/%s", vrf.Fabric, dn)
-	_, err = dcnmClient.Update(durl, &vrf)
+	_, err := dcnmClient.Update(durl, &vrf)
 	if err != nil {
 		return err
 	}
@@ -1200,7 +1272,11 @@ func resourceDCNMVRFRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setVRFAttributes(d, cont)
+	if _, ok := d.GetOk("template_props"); ok {
+		setVRFCustomTemplateAttributes(d, cont)
+	} else {
+		setVRFAttributes(d, cont)
+	}
 
 	flag, err := checkvrfDeploy(dcnmClient, fabricName, dn)
 	if err != nil {
