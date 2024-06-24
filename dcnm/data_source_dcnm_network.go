@@ -179,6 +179,12 @@ func datasourceDCNMNetwork() *schema.Resource {
 				Computed: true,
 			},
 
+			"template_props": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"source": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -273,7 +279,11 @@ func datasourceDCNMNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	setNetworkAttributes(d, cont)
+	if stripQuotes(cont.S("networkTemplate").String()) != "Default_Network_Universal" {
+		setNetworkCustomTemplateAttributes(d, cont)
+	} else {
+		setNetworkAttributes(d, cont)
+	}
 
 	deployed, err := checkNetworkDeploy(dcnmClient, fabricName, name)
 	if err != nil {
