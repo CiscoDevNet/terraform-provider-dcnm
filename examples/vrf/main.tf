@@ -76,3 +76,37 @@ resource "dcnm_vrf" "second" {
     loopback_ipv4 = "1.2.3.4"
   }
 }
+
+resource "dcnm_vrf" "third" {
+  fabric_name        = "fab3"
+  name               = "check3"
+  segment_id         = 50050
+  template           = "Template_Universal"
+  extension_template = "Template_Extension_Universal"
+  template_props = {
+    "advertiseDefaultRouteFlag" : "true"
+    "vrfVlanId" : "123"
+    "isRPExternal" : "false"
+    "vrfDescription" : ""
+    "maxBgpPaths" : "6"
+    "maxIbgpPaths" : "6"
+    "borderMaxBgpPaths" : "16"
+    "ipv6LinkLocalFlag" : "false"
+    "vrfRouteMap" : "RM_ADVERTISE_CONNECTED_SVI"
+    "ENABLE_NETFLOW" : "false"
+    "bgpPassword" : ""
+    "mtu" : "9000"
+    "multicastGroup" : ""
+    "isRPAbsent" : "false"
+    "advertiseHostRouteFlag" : "true"
+    "vrfVlanName" : ""
+    "trmEnabled" : "false"
+    "asn" : "4201020601"
+    "vrfIntfDescription" : ""
+    "vrfSegmentId" : "50050"
+    "vrfName" : "check3"
+  }
+  attachments {
+    serial_number = "9ZGMF8CBZK5"
+  }
+}
